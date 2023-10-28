@@ -19,10 +19,10 @@ also below).
 
 The code currently comprises:
 
-* `pyHNC.py` - python module implementing the functionality;
-* `dpd_demo.py` - demonstrate the capabilities for standard DPD;
-* `dpd_gw_compare.py` - compare DPD equation of state to literature;
-* `fftw_test.py` - test FFTW for Fourier-Bessel transforms.
+* `pyHNC.py` : python module implementing the functionality;
+* `dpd_demo.py` : demonstrate the capabilities for standard DPD;
+* `dpd_gw_compare.py` : compare DPD equation of state to literature;
+* `fftw_test.py` : test FFTW for Fourier-Bessel transforms.
 
 For more details see extensive comments in the codes, and also the
 documentation for the parallel
