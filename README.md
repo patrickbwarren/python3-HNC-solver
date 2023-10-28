@@ -55,7 +55,8 @@ mean-spherical approximation or MSA).
 
 ### FFTW and Fourier-Bessel transforms
 
-The Fourier-Bessel forward transform of a function _f_(_r_) is
+The Fourier-Bessel forward transform of a function _f_(_r_) in three
+dimensions is
 
 _g_(_q_) = 4π / _q_ ∫<sub>0</sub><sup>∞</sup>
 d<em>r</em> sin(_qr_) _r_ _f_(_r_) .
@@ -91,12 +92,12 @@ is handled similarly.
 
 ### On FFTW efficiency
 
-Timing test (below) indicate that FFTW is very fast when the array
+Timing tests (below) indicate that FFTW is very fast when the array
 length in the above is a power of two _minus one_, which doesn't quite
 seem to fit with the
 [documentation](https://www.fftw.org/fftw3_doc/Real_002dto_002dReal-Transforms.html).
 Here, the grid size in pyHNC is typically a power of two, but the
-arrays passed to FFTW are one less than this in length.  Some typical
+arrays passed to FFTW are shortened by one.  Some typical
 timing results on a moderately fast Intel NUC11TZi7 (11th Gen Intel
 Core i7-1165G7 @ 2.80GHz) support this:
 ```
@@ -121,7 +122,6 @@ real   0m3.106s
 user   0m3.063s
 sys    0m0.706s
 ```
-
 ### Copying
 
 This program is free software: you can redistribute it and/or modify
