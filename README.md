@@ -57,7 +57,7 @@ mean-spherical approximation or MSA).
 
 The Fourier-Bessel forward transform of a function _f_(_r_) is
 
-_g_(_q_) = 4π/_q_ ∫<sub>0</sub><sup>∞</sup>
+_g_(_q_) = 4π / _q_ ∫<sub>0</sub><sup>∞</sup>
 d<em>r</em> sin(_qr_) _r_ _f_(_r_) .
 
 From the FFTW [documentation](https://www.fftw.org/fftw3_doc/1d-Real_002dodd-DFTs-_0028DSTs_0029.html), `RODFT00` implements
@@ -77,14 +77,14 @@ _X_<sub>_j_</sub> sin(_r_<sub>_j_</sub> _q_<sub>_k_</sub>) .
 In terms of the desired integral we finally have
 
 _g_(_q_<sub>_k_</sub>) = 2 π Δ<em>r</em> / _q_<sub>_k_</sub>
-× 2 ∑<sub>_j_=0</sub><sup>_n_−1</sup>
+× 2 ∑<sub>_j_=0</sub><sup><em>n</em>−1</sup>
 _r_<sub>_j_</sub> _f_(<em>r</em><sub>_j_</sub>)
 sin(_r_<sub>_j_</sub> _q_<sub>_k_</sub>) .
 
 It is this which is implemented in the code.
 The Fourier-Bessel back transform
 
-_f_(_r_) = 1/(2π²<em>r</em>) ∫<sub>0</sub><sup>∞</sup>
+_f_(_r_) = 1 / (2π²<em>r</em>) ∫<sub>0</sub><sup>∞</sup>
 d<em>q</em> sin(_qr_) _q_ _g_(_q_)
 
 is handled similarly.
