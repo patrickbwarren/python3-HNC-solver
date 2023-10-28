@@ -44,14 +44,13 @@ reciprocal space in the form _h_(_q_) = _c_(_q_) + ρ _h_(_q_)
 _c_(_q_), in combination with the HNC closure in real space as
 _g_(_r_) = exp[ − _v_(_r_) + _h_(_r_) − _c_(_r_)], using Picard
 iteration.
-
 Here _c_(_r_) is the direct correlation function, _h_(_r_) = _g_(_r_)
 − 1 is the total correlation function, and _v_(_r_) is the potential.
 In practice the OZ equation and the HNC closure are written and solved
 iteratively in terms of the indirect correlation function _e_(_r_) =
 _h_(_r_) − _c_(_r_).  An initial guess if the solver is not warmed up
 is _c_(_r_) = − _v_(_r_) (this is the random phase approximation or
-RPA,and for systems without hard cores is equivalent to the
+RPA, and for systems without hard cores is equivalent to the
 mean-spherical approximation or MSA).
 
 ### FFTW and Fourier-Bessel transforms
@@ -63,23 +62,23 @@ d<em>r</em> sin(_qr_) _r_ _f_(_r_) .
 
 From the FFTW [documentation](https://www.fftw.org/fftw3_doc/1d-Real_002dodd-DFTs-_0028DSTs_0029.html), `RODFT00` implements
 
-_Y_<sub>_k_</sub> = 2 ∑<sub>_j_=0</sub><sup>_n_−1</sup>
-_X_<sub>_j_</sub> sin[π(_j_+1)(_k_+1)/(_n_+1)] ,
+_Y_<sub>_k_</sub> = 2 ∑<sub>_j_=0</sub><sup><em>n</em>−1</sup>
+_X_<sub>_j_</sub> sin[π (_j_+1) (_k_+1) / (_n_+1)] ,
 
 where _n_ is the common length of the arrays _X_<sub>_j_</sub> and
-_Y_(_k_)_Y_<sub>_k_</sub>.  To cast this into the right form, set
+_Y_<sub>_k_</sub>.  To cast this into the right form, set
 Δ<em>r</em> × Δ<em>q</em> = π / (_n_+1) and assign _r_<sub>_j_</sub> = (_j_+1)
-× Δ<em>r</em> for _j_ = 0 to _n_−1, and likewise _q_<sub>_k_</sub> = (_k_+1) ×
-Δ<em>q</em> for _k_ = 0 to _n_−1, so that
+× Δ<em>r</em> for _j_ = 0 to <em>n</em>−1, and likewise _q_<sub>_k_</sub> = (_k_+1) ×
+Δ<em>q</em> for _k_ = 0 to <em>n</em>−1, so that
 
-_Y_<sub>_k_</sub> = 2 ∑<sub>_j_=0</sub><sup>_n_−1</sup>
+_Y_<sub>_k_</sub> = 2 ∑<sub>_j_=0</sub><sup><em>n</em>−1</sup>
 _X_<sub>_j_</sub> sin(_r_<sub>_j_</sub> _q_<sub>_k_</sub>) .
 
 In terms of the desired integral we finally have
 
 _g_(_q_<sub>_k_</sub>) = 2 π Δ<em>r</em> / _q_<sub>_k_</sub>
 × 2 ∑<sub>_j_=0</sub><sup>_n_−1</sup>
-(_r_ _f_)<sub>_j_</sub>
+_r_<sub>_j_</sub> _f_(<em>r</em><sub>_j_</sub>)
 sin(_r_<sub>_j_</sub> _q_<sub>_k_</sub>) .
 
 It is this which is implemented in the code.
