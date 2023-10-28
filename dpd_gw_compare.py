@@ -52,8 +52,13 @@ for ρ in np.linspace(0.0, 10.0, 41)[1:]: # omit rho = 0.0
 
 hnc_data = pd.DataFrame(results, columns=['rho', 'pexbyArho2', 'error'])
 
-print(hnc_data)
-    
+# Make the data output suitable for plotting if captured by redirection
+# stackoverflow.com/questions/30833409/python-deleting-the-first-2-lines-of-a-string
+
+print('# ' + '\t'.join(hnc_data.columns))
+hnc_data_s = '\n'.join(hnc_data.set_index('rho').to_string().split('\n')[2:])
+print(hnc_data_s)
+
 plt.plot(gw_data.rho, gw_data.pexbyArho2, 'ro', label='Groot & Warren (1997)')
 plt.plot(hnc_data.rho, hnc_data.pexbyArho2, label='HNC')
 plt.xlabel('$\\rho$')
