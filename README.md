@@ -42,9 +42,10 @@ accelerator.
 
 What's being solved here is the Ornstein-Zernike (OZ) equation in
 reciprocal space in the form _h_(_q_) = _c_(_q_) + ρ _h_(_q_)
-_c_(_q_), in combination with the HNC closure in real space as
+_c_(_q_), in combination with the hypernetted-chain (HNC) closure in real space as
 _g_(_r_) = exp[ − _v_(_r_) + _h_(_r_) − _c_(_r_)], using Picard
 iteration.
+
 Here _c_(_r_) is the direct correlation function, _h_(_r_) = _g_(_r_)
 − 1 is the total correlation function, and _v_(_r_) is the potential.
 In practice the OZ equation and the HNC closure are written and solved
@@ -52,9 +53,9 @@ iteratively in terms of the indirect correlation function _e_(_r_) =
 _h_(_r_) − _c_(_r_).
 
 An initial guess if the solver is not warmed up
-is _c_(_r_) = − _v_(_r_) : this is the random phase approximation or
+is _c_(_r_) = − _v_(_r_) : this is the random-phase approximation or
 RPA, and for systems without hard cores is equivalent to the
-mean-spherical approximation or MSA.
+mean spherical approximation or MSA.
 
 ### FFTW and Fourier-Bessel transforms
 
