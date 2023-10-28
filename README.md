@@ -31,6 +31,7 @@ The book "Theory of Simple Liquids" by Jean-Pierre Hansen and Ian
 R. McDonald is foundational -- either the
 [3rd edition](https://shop.elsevier.com/books/theory-of-simple-liquids/hansen/978-0-12-370535-8) (2006)
 or the [4th edition](https://www.sciencedirect.com/book/9780123870322/theory-of-simple-liquids) (2013).
+
 Simplifications compared to
 [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC) include
 the fact that hard cores are not implemented, only a single component
@@ -49,9 +50,9 @@ Here _c_(_r_) is the direct correlation function, _h_(_r_) = _g_(_r_)
 In practice the OZ equation and the HNC closure are written and solved
 iteratively in terms of the indirect correlation function _e_(_r_) =
 _h_(_r_) − _c_(_r_).  An initial guess if the solver is not warmed up
-is _c_(_r_) = − _v_(_r_) (this is the random phase approximation or
+is _c_(_r_) = − _v_(_r_): this is the random phase approximation or
 RPA, and for systems without hard cores is equivalent to the
-mean-spherical approximation or MSA).
+mean-spherical approximation or MSA.
 
 ### FFTW and Fourier-Bessel transforms
 
@@ -126,11 +127,12 @@ In the code, FFTW is set up with the most basic `FFTW_ESTIMATE`
 planner [flag](https://www.fftw.org/fftw3_doc/Planner-Flags.html).
 This may make a difference in the end, but timing tests indicate that
 with a power of two as used here, it takes much longer for FFTW to
-find an optimized plan, than it does if it just uses a simple
+find an optimized plan, than it does if it just uses the simple
 heuristic implied by `FFTW_ESTIMATE`.  Obviously some further
-investigations could be undertaken into this aspect.  The TL;DR
-take-home message is _use a power of two_ for the `ng` parameter in
-the code!
+investigations could be undertaken into this aspect.
+
+The TL;DR take-home message here is _use a power of two_ for the `ng`
+parameter in the code!
 
 ### Copying
 
