@@ -122,6 +122,16 @@ real   0m3.106s
 user   0m3.063s
 sys    0m0.706s
 ```
+In the code, FFTW is set up with the most basic `FFTW_ESTIMATE`
+planner [flag](https://www.fftw.org/fftw3_doc/Planner-Flags.html).
+This may make a difference in the end, but timing tests indicate that
+with a power of two as used here, it takes much longer for FFTW to
+find an optimized plan, than it does if it just uses a simple
+heuristic implied by `FFTW_ESTIMATE`.  Obviously some further
+investigations could be undertaken into this aspect.  The TL;DR
+take-home message is _use a power of two_ for the `ng` parameter in
+the code!
+
 ### Copying
 
 This program is free software: you can redistribute it and/or modify
