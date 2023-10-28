@@ -27,12 +27,10 @@ The code currently comprises:
 For more details see extensive comments in the codes, and also the
 documentation for the parallel
 [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC) project.
-
 The book "Theory of Simple Liquids" by Jean-Pierre Hansen and Ian
 R. McDonald is foundational -- either the
 [3rd edition](https://shop.elsevier.com/books/theory-of-simple-liquids/hansen/978-0-12-370535-8) (2006)
 or the [4th edition](https://www.sciencedirect.com/book/9780123870322/theory-of-simple-liquids) (2013).
-
 Simplifications compared to
 [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC) include
 the fact that hard cores are not implemented, only a single component
