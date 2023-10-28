@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import pyfftw
+import numpy as np
+
+def truncate_to_zero(v, r, rc):
+    '''Utility function to truncate a potential'''
+    v[r>rc] = 0.0
+    return v
+
+# Provide a grid as a working platform.  This is the pair of arrays
+# r(:) and q(:) initialised to match the desired ng (# grid points)
+# and Δr.  Note that the array lengths are actually ng-1.  A real odd
+# discrete Fourier transform (RODFT00) is also initialised, with
+# functions to do forward and backward Fourier-Bessel transforms
+# (radial 3d). For implementation details of FFTW see fftw_test.py.
+# In particular note that Δr×Δk = π / (n+1) where n is the length of
+# the FFT arrays.  Testing indicate the best efficiency is obtained
+# when ng = 2^r with r being an integer.
+
+class Grid:
+
+    def __init__(self, ng=4096, deltar=0.01, monitor=False):
+        '''Initialise grids with the desired size and spacing'''
+        self.version = '1.0' # for reporting purposes
+        self.ng = ng
+        self.deltar = deltar
+        self.deltaq = np.pi / (self.deltar*self.ng) # as above
+        self.r = self.deltar * np.arange(1, self.ng) # start from 1, and of length ng-1
+        self.q = self.deltaq * np.arange(1, self.ng) # ditto
+        self.fftwx = pyfftw.empty_aligned(self.ng-1)
+        self.fftwy = pyfftw.empty_aligned(self.ng-1)
+        self.fftw = pyfftw.FFTW(self.fftwx, self.fftwy, direction='FFTW_RODFT00', flags=('FFTW_ESTIMATE',))
+        if monitor:
+            print('Grid: ng, Δr, Δq =', self.ng, self.deltar, self.deltaq)
+            print('FFTW: initialised, array sizes =', self.ng-1)
+
+    # These functions assume the FFTW has been initialised as above, the
+    # arrays r and q exist, as do the parameters Δr and Δq.
+
+    def fourier_bessel_forward(self, fr):
+        '''Forward transform f(r) to reciprocal space'''
+        self.fftwx[:] = self.r * fr
+        self.fftw.execute()
+        return 2*np.pi*self.deltar/self.q * self.fftwy
+
+    def fourier_bessel_backward(self, fq):
+        '''Back transform f(q) to real space'''
+        self.fftwx[:] = self.q * fq
+        self.fftw.execute()
+        return self.deltaq/(4*np.pi**2*self.r) * self.fftwy
+
+# What's being solved here is the Ornstein-Zernike (OZ) equation in
+# the form h(q) = c(q) + ρ h(q) c(q) in combination with the HNC
+# closure g(r) = exp[ - v(r) + h(r) - c(r)], using Picard iteration.
+# Here c(r) is the direct correlation function, h(r) = g(r) - 1 is the
+# total correlation function, and v(r) is the potential.  In practice
+# the OZ equation and the HNC closure are written in terms of the
+# indirect correlation function e(r) = h(r) - c(r).  An initial guess
+# if the solver is not warmed up is c(r) = - v(r) (ie, the RPA soln).
+
+class PicardHNC:
+
+    def __init__(self, grid, alpha=0.2, tol=1e-12, max_iter=500, monitor=False):
+        '''Initialise basic data structure'''
+        self.grid = grid
+        self.alpha = alpha
+        self.tol = tol
+        self.max_iter = max_iter
+        self.monitor = monitor
+        self.converged = False
+        self.warmed_up = False
+        if self.monitor:
+            print('HNC: grid ng = %i, Δr = %g, Δq = %g' % (self.grid.ng, self.grid.deltar, self.grid.deltaq))
+            print('HNC: α = %g, tol = %0.1e, max_picard = %i' % (self.alpha, self.tol, self.max_iter))
+
+    def solve(self, vr, rho, cr_init=None):
+        '''Solve HNC for a given potential, with an optional initial guess at cr'''
+        if cr_init or not self.warmed_up: # initial guess is -v(r) if not warmed up
+            cr = cr_init if cr_init else -vr
+        for i in range(self.max_iter):
+            cq = self.grid.fourier_bessel_forward(cr) # forward transform c(r) to c(q)
+            eq = cq / (1 - rho*cq) - cq # solve the OZ equation for e(q)
+            er = self.grid.fourier_bessel_backward(eq) # back transform e(q) to e(r)
+            cr_new = np.exp(-vr+er) - er - 1 # iterate with the HNC closure
+            cr = self.alpha * cr_new + (1-self.alpha) * cr # apply a Picard mixing rule
+            self.error = self.grid.deltar * np.sqrt(np.sum((cr_new - cr)**2)) # convergence test
+            self.converged = self.error < self.tol
+            if self.monitor and (i % 50 == 0 or self.converged):
+                print('Picard: iteration %3i, conv = %0.3e' % (i, self.conv))
+            if self.converged:
+                self.cr = cr_new # use the most recent calculation
+                self.cq = self.grid.fourier_bessel_forward(cr)
+                break
+        if self.monitor:
+            if self.converged:
+                print('Picard: converged')
+            else:
+                print('Picard: failed to converge')
+        self.hr = self.cr + er # total correlation function
+        self.hq = self.cq + eq
+        return self # the user can name this 'soln' or something
