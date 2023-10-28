@@ -14,12 +14,12 @@
 # See www.fftw.org/fftw3_doc/What-FFTW-Really-Computes.html
 # under "1d Real-odd DFTs (DSTs)".
 
-# To cast this into the right form, set δr×δq = π/(n+1) and
-# assign r_j = (j+1)×δr for j=0 to n-1, and likewise
-# q_k = (k+1)×δq for j=0 to n-1, so that
+# To cast this into the right form, set Δr×Δq = π/(n+1) and
+# assign r_j = (j+1)×Δr for j=0 to n-1, and likewise
+# q_k = (k+1)×Δq for j=0 to n-1, so that
 # Y_k = 2 ∑_(j=0)^(n-1) X_j sin(r_j q_k)
 # In terms of the desired integral we finally have
-# w(q_k) = 2πδr/q_k × 2 ∑_(j=0)^(n-1) [r w(r)]_j sin(r_j q_k)
+# w(q_k) = 2πΔr/q_k × 2 ∑_(j=0)^(n-1) [r w(r)]_j sin(r_j q_k)
 # It is this which is implemented below.
 # The Fourier back transform w(r) = 1/(2π²r) ∫_0^∞ dq sin(qr) q w(q)
 # is handled similarly.
@@ -50,12 +50,12 @@ parser.add_argument('--show', action='store_true', help='show results')
 args = parser.parse_args()
 
 ng = eval(args.ngrid.replace('^', '**')) # catch 2^10 etc
-δr = args.deltar
-δq = π / (δr*ng) # equivalent to π / (δr*(fftw_n+1))
-print('ng, δr, δq, iters =', ng, δr, δq, args.iters)
+Δr = args.deltar
+Δq = π / (Δr*ng) # equivalent to π / (Δr*(fftw_n+1))
+print('ng, Δr, Δq, iters =', ng, Δr, Δq, args.iters)
 
-r = δr * np.arange(1, ng) # start from 1, and of length ng-1
-q = δq * np.arange(1, ng) # ditto
+r = Δr * np.arange(1, ng) # start from 1, and of length ng-1
+q = Δq * np.arange(1, ng) # ditto
 fftw_n = len(r)
 print('FFTW array sizes =', fftw_n)
 
@@ -71,10 +71,10 @@ fftw = pyfftw.FFTW(fftwx, fftwy, direction='FFTW_RODFT00',
 for i in range(args.iters):
     fftwx[:] = r * wr_exact # note the assigment here
     fftw.execute() # do the transform
-    wq = 2*π*δr/q * fftwy # unwrap the result
+    wq = 2*π*Δr/q * fftwy # unwrap the result
     fftwx[:] = q * wq_exact # the same for the back transform
     fftw.execute()
-    wr = δq/(4*π**2*r) * fftwy
+    wr = Δq/(4*π**2*r) * fftwy
 
 if args.show:
 
