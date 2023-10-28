@@ -49,8 +49,10 @@ Here _c_(_r_) is the direct correlation function, _h_(_r_) = _g_(_r_)
 − 1 is the total correlation function, and _v_(_r_) is the potential.
 In practice the OZ equation and the HNC closure are written and solved
 iteratively in terms of the indirect correlation function _e_(_r_) =
-_h_(_r_) − _c_(_r_).  An initial guess if the solver is not warmed up
-is _c_(_r_) = − _v_(_r_): this is the random phase approximation or
+_h_(_r_) − _c_(_r_).
+
+An initial guess if the solver is not warmed up
+is _c_(_r_) = − _v_(_r_) : this is the random phase approximation or
 RPA, and for systems without hard cores is equivalent to the
 mean-spherical approximation or MSA.
 
