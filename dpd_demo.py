@@ -23,6 +23,22 @@
 # the pair distribution function and the structure factor too.  For
 # details here see also the SunlightHNC documentation.
 
+# For standard DPD at A = 25 and ρ = 3, we have the following table
+
+#           ∆t = 0.02   ∆t = 0.02   MC          HNC     deviation
+# pressure  23.73±0.02  23.69±0.02  23.65±0.02  23.564  (0.4%)
+# energy    13.66±0.02  13.64±0.02  13.63±0.02  13.762  (1.0%)
+# mu^ex     12.14±0.02  12.16±0.02  12.25±0.10  12.171  (0.7%)
+
+# The first two columns are from dynamic simulations.  The excess
+# chemical potential (final row) is measured by Widom insertion in the
+# simulations and calculated by SunlightHNC.  The pressure end energy
+# density are from SunlightHNC and the present code and are in
+# agreement to at least the indicated number of decimals.  The
+# deviation is between HCNC and simulation results.
+
+# Data is from a forthcoming publication on osmotic pressure in DPD.
+
 import argparse
 import numpy as np
 from pyHNC import Grid, PicardHNC, truncate_to_zero
