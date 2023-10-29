@@ -136,7 +136,7 @@ integrals are actually the same, and are essentially equal to the
 value of the potential at the origin in reciprocal space: 2πρ²/3
 ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>³
 <em>f</em>(<em>r</em>) = 2πρ² ∫<sub>0</sub><sup>∞</sup> d<em>r</em>
-<em>r</em>² <em>v</em>(<em>r</em>) = ρ²/2 ∫ d³<bf>r</bf>
+<em>r</em>² <em>v</em>(<em>r</em>) = ρ²/2 ∫ d³<b>r</b>
 <em>v</em>(<em>r</em>) = ρ²/2 <em>v</em>(<em>q</em>=0)
 
 ### FFTW and Fourier-Bessel transforms
