@@ -1,21 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# The results of this calculation can be directly compared with Fig 4
-# of the Groot and Warren [J. Chem. Phys. v107, 4423 (1997)].  The
-# data from that figure is coded below.  This is taken from
-# gw_p_compare.py from SunlightHNC.
-
-# For the virial pressure here, see Eq. (2.5.22) in Hansen & McDonald,
-# "Theory of Simple Liquids" (3rd edition): virial pressure, p = ρ +
-# 2πρ²/3 ∫_0^∞ dr r³ f(r) g(r) where f(r) = −dv/dr is the force.
-
-# The constant term here captures the mean field contribution, that
-# is the integral evaluated with g(r) = 1.  Specifically:
-# ∫_0^∞ dr r³ f(r) = A ∫_0^1 dr r³ (1−r) = A/20 .
-
 # This program is part of pyHNC, copyright (c) 2023 Patrick B Warren
-# Email: patrickbwarren@gmail.com
+# Email: patrick.warren{at}stfc.ac.uk.
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,6 +17,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see
 # <http://www.gnu.org/licenses/>.
+
+# The results of this calculation can be directly compared with Fig 4
+# of the Groot and Warren [J. Chem. Phys. v107, 4423 (1997)].  The
+# data from that figure is coded below.  This is taken from
+# gw_p_compare.py from SunlightHNC.
+
+# For the virial pressure here, see Eq. (2.5.22) in Hansen & McDonald,
+# "Theory of Simple Liquids" (3rd edition): virial pressure, p = ρ +
+# 2πρ²/3 ∫_0^∞ dr r³ f(r) g(r) where f(r) = −dv/dr is the force.
+
+# The constant term here captures the mean field contribution, that
+# is the integral evaluated with g(r) = 1.  Specifically:
+# ∫_0^∞ dr r³ f(r) = A ∫_0^1 dr r³ (1−r) = A/20 .
 
 import numpy as np
 import pandas as pd

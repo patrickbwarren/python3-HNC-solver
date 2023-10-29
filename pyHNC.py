@@ -4,7 +4,7 @@
 # Hyper-netted chain (HNC) solver for Ornstein-Zernike (OZ) equation.
 
 # This program is part of pyHNC, copyright (c) 2023 Patrick B Warren
-# Email: patrickbwarren@gmail.com
+# Email: patrick.warren{at}stfc.ac.uk.
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

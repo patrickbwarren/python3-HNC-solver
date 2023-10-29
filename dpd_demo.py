@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Demonstrate the capabilities of the HNC package for solving DPD
-# potentials, comparing with SunlightHNC if requested, and plotting
-# the pair distribution function and the structure factor too.  For
-# details here see also the SunlightHNC documentation.
-
 # This program is part of pyHNC, copyright (c) 2023 Patrick B Warren
-# Email: patrickbwarren@gmail.com
+# Email: patrick.warren{at}stfc.ac.uk.
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,6 +17,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see
 # <http://www.gnu.org/licenses/>.
+
+# Demonstrate the capabilities of the HNC package for solving DPD
+# potentials, comparing with SunlightHNC if requested, and plotting
+# the pair distribution function and the structure factor too.  For
+# details here see also the SunlightHNC documentation.
 
 import argparse
 import numpy as np
