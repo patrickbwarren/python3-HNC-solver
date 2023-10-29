@@ -122,7 +122,7 @@ mean-field estimates (<em>i. e.</em> the above with
 ### FFTW and Fourier-Bessel transforms
 
 The Fourier-Bessel forward transform of a function
-<em>f</em>(<em>r</em>) in three dimensions is
+<em>f</em>(<em>r</em>) in three dimensions is (see [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC) documentation):
 
 <em>g</em>(<em>q</em>) = 4π / <em>q</em> ∫<sub>0</sub><sup>∞</sup>
 d<em>r</em> sin(<em>qr</em>) <em>r</em> <em>f</em>(<em>r</em>) .
@@ -175,7 +175,30 @@ seem to fit with the
 Here, the grid size <em>N</em><sub>g</sub> in pyHNC is typically a power of two, but the
 arrays passed to FFTW are shortened to <em>N</em><sub>g</sub> − 1.  Some typical
 timing results on a moderately fast Intel NUC11TZi7 (11th Gen Intel
-Core i7-1165G7 @ 2.80GHz) support this:
+Core i7-1165G7 @ 2.80GHz) support this.  For example
+```
+$ time ./fftw_test.py --ng=4096 --deltar=0.01 --iter=500
+ng, Δr, Δq, iters = 4096 0.01 0.07669903939428206 500
+FFTW array sizes = 4095
+real	0m0.336s
+user	0m0.427s
+sys	0m0.575s
+
+$ time ./fftw_test.py --ng=4095 --deltar=0.01 --iter=500
+ng, Δr, Δq, iters = 4095 0.01 0.07671776931843206 500
+FFTW array sizes = 4094
+real	0m0.376s
+user	0m0.491s
+sys	0m0.556s
+
+$ time ./fftw_test.py --ng=4097 --deltar=0.01 --iter=500
+ng, Δr, Δq, iters = 4097 0.01 0.07668031861337059 500
+FFTW array sizes = 4096
+real	0m0.521s
+user	0m0.668s
+sys	0m0.521s
+```
+With a grid of order one million grid points,
 ```
 $ time ./fftw_test.py --ng=2^20 --deltar=1e-3
 ng, Δr, Δq, iters = 1048576 0.001 0.0029960562263391427 10
