@@ -25,10 +25,10 @@
 
 # For standard DPD at A = 25 and ρ = 3, we have the following table
 
-#           ∆t = 0.02   ∆t = 0.02   MC          HNC     deviation
-# pressure  23.73±0.02  23.69±0.02  23.65±0.02  23.564  (0.4%)
-# energy    13.66±0.02  13.64±0.02  13.63±0.02  13.762  (1.0%)
-# mu^ex     12.14±0.02  12.16±0.02  12.25±0.10  12.171  (0.7%)
+#           ∆t = 0.02   ∆t = 0.02   Monte-Carlo  HNC   deviation
+# pressure  23.73±0.02  23.69±0.02  23.65±0.02   23.564  (0.4%)
+# energy    13.66±0.02  13.64±0.02  13.63±0.02   13.762  (1.0%)
+# mu^ex     12.14±0.02  12.16±0.02  12.25±0.10   12.171  (0.7%)
 
 # The first two columns are from dynamic simulations.  The excess
 # chemical potential (final row) is measured by Widom insertion in the
@@ -92,6 +92,8 @@ hr, hq = soln.hr, soln.hq # extract for use in a moment
 energy = 2*π*ρ**2 * (A/60 + 2*A*np.trapz(r**2*wr*hr, dx=Δr))
 pressure = ρ + 2*π*ρ**2/3 * (A/20 + 2*A*np.trapz(r**3*minusdwdr*hr, dx=Δr))
 
+if A == 25.0 and ρ == 3.0:
+    print('Monte-Carlo:   energy density, virial pressure =\t\t13.63±0.02\t23.65±0.02')
 print('pyHNC v%s:    energy density, virial pressure =\t\t%0.5f\t%0.5f' % (grid.version, energy, pressure))
 
 if args.sunlight:
