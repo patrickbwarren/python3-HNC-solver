@@ -37,8 +37,10 @@ Simplifications compared to the (faster)
 [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC) include
 the fact that hard cores are not implemented, only a single component
 is assumed, and simple Picard iteration is used rather than the Ng
-accelerator.  It is also implemented entirely in python, rather than 
-[SunlightHNC](https://github.com/patrickbwarren/SunlightHNC) which is mostly implemented in FORTRAN 90.
+accelerator.  The present code is also implemented entirely in python,
+rather than
+[SunlightHNC](https://github.com/patrickbwarren/SunlightHNC) which is
+mostly implemented in FORTRAN 90.
 
 The `--sunlight` option for `dpd_demo.py` compares the present
 implementation to results from
