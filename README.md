@@ -67,21 +67,21 @@ is equivalent to the mean spherical approximation (MSA).
 
 ### Algorithm
 
-Given an initial guess <em>c</em>(<em>r</em>), the solver iterates the
+Given an initial guess <em>c</em>(<em>r</em>), the solver implements the
 following scheme (<em>cf</em> [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC)):
 
-* forward transform <em>c</em>(<em>r</em>) →
-  <em>c</em>(<em>q</em>) (<em>i. e.</em> Fourier-Bessel);
+* Fourier-Bessel forward transform <em>c</em>(<em>r</em>) →
+  <em>c</em>(<em>q</em>) ;
 * solve the OZ equation for <em>e</em>(<em>q</em>) =
   <em>c</em>(<em>q</em>) / [1 − ρ <em>c</em>(<em>q</em>)] −
   <em>c</em>(<em>q</em>) ;
-* back transform <em>e</em>(<em>q</em>) →
-  <em>e</em>(<em>r</em>) (<em>i. e.</em> Fourier-Bessel);
+* Fourier-Bessel back transform <em>e</em>(<em>q</em>) →
+  <em>e</em>(<em>r</em>) ;
 * implement the HNC closure as <em>c</em>'(<em>r</em>) =
-  exp[−<em>v</em>(<em>r</em>)+<em>e</em>(<em>r</em>)] −
+  exp[ − <em>v</em>(<em>r</em>) + <em>e</em>(<em>r</em>)] −
   <em>e</em>(<em>r</em>) − 1 ;
-* calculate <em>c</em>(<em>r</em>) =
-  α <em>c</em>′(<em>r</em>) + (1−α) <em>c</em>'(<em>r</em>) (Picard
+* replace <em>c</em>(<em>r</em>) by
+  α <em>c</em>′(<em>r</em>) + (1−α) <em>c</em>(<em>r</em>) (Picard
   mixing step);
 * check for convergence by comparing <em>c</em>(<em>r</em>) and
   <em>c'</em>(<em>r</em>) ;
@@ -156,10 +156,10 @@ For the desired integral we can then write
 ∑<sub><em>j</em>=0</sub><sup><em>n</em>−1</sup>
 <em>r</em><sub><em>j</em></sub>
 <em>f</em>(<em>r</em><sub><em>j</em></sub>)
-sin(<em>r</em><sub><em>j</em></sub> <em>q</em><sub><em>k</em></sub>) .
+sin(<em>r</em><sub><em>j</em></sub> <em>q</em><sub><em>k</em></sub>) ,
 
-It is this which is implemented in the code.  The Fourier-Bessel back
-transform
+with the factor after the multiplication sign being calculated by
+`RODFT00`.  The Fourier-Bessel back transform
 
 <em>f</em>(<em>r</em>) = 1 / (2π²<em>r</em>) ∫<sub>0</sub><sup>∞</sup>
 d<em>q</em> sin(<em>qr</em>) <em>q</em> <em>g</em>(<em>q</em>)
