@@ -236,7 +236,7 @@ user   0m3.063s
 sys    0m0.706s
 ```
 In the code, FFTW is set up with the most basic `FFTW_ESTIMATE`
-planner [flag](https://www.fftw.org/fftw3_doc/Planner-Flags.html).
+[planner flag](https://www.fftw.org/fftw3_doc/Planner-Flags.html).
 This may make a difference in the end, but timing tests indicate that
 with a power of two as used here, it takes much longer for FFTW to
 find an optimized plan, than it does if it just uses the simple
