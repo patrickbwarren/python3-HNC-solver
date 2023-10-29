@@ -265,6 +265,6 @@ along with this program.  If not, see
 
 This program is copyright &copy; 2023 Patrick B Warren.  
 
-#### Contact
+### Contact
 
 Send email to patrick.warren{at}stfc.ac.uk.
