@@ -17,7 +17,7 @@ wrapper.
 The code is intended for rapid prototyping but is also partly
 pedagogical, and has the intent of attempting to capture some of the
 [tacit knowledge](https://en.wikipedia.org/wiki/Tacit_knowledge)
-involved in undertaking this calculations. It currently comprises:
+involved in undertaking this kind of calculation. It currently comprises:
 
 * `pyHNC.py` : python module implementing the functionality;
 * `dpd_demo.py` : demonstrate the capabilities for standard DPD;
