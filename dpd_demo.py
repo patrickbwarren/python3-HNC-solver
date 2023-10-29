@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# This program is part of pyHNC, copyright (c) 2023 Patrick B Warren
+# This program is part of pyHNC, copyright (c) 2023 Patrick B Warren (STFC).
 # Email: patrick.warren{at}stfc.ac.uk.
 
 # This program is free software: you can redistribute it and/or modify

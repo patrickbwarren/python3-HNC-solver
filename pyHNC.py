@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Hyper-netted chain (HNC) solver for Ornstein-Zernike (OZ) equation.
-
-# This program is part of pyHNC, copyright (c) 2023 Patrick B Warren
+# This program is part of pyHNC, copyright (c) 2023 Patrick B Warren (STFC).
 # Email: patrick.warren{at}stfc.ac.uk.
 
 # This program is free software: you can redistribute it and/or modify
@@ -19,6 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see
 # <http://www.gnu.org/licenses/>.
+
+# Hyper-netted chain (HNC) solver for Ornstein-Zernike (OZ) equation.
 
 import pyfftw
 import numpy as np
