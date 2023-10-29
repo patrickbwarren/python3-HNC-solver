@@ -188,8 +188,8 @@ seem to fit with the
 [documentation](https://www.fftw.org/fftw3_doc/Real_002dto_002dReal-Transforms.html).
 Here, the grid size <em>N</em><sub>g</sub> in pyHNC is typically a power of two, but the
 arrays passed to FFTW are shortened to <em>N</em><sub>g</sub> − 1.  Some typical
-timing results on a moderately fast [Intel<sup>®</sup> NUC11TZi7](https://www.intel.com/content/www/us/en/products/sku/205605/intel-nuc-11-pro-kit-nuc11tnhi7/specifications.html) (11th Gen [Intel<sup>®</sup>
-Core™ i7-1165G7](https://www.intel.com/content/www/us/en/products/sku/205605/intel-nuc-11-pro-kit-nuc11tnhi7/specifications.html) @ 2.80GHz) support this.  For example
+timing results on a moderately fast [Intel<sup>®</sup> NUC11TZi7](https://www.intel.com/content/www/us/en/products/sku/205605/intel-nuc-11-pro-kit-nuc11tnhi7/specifications.html) with an [11th Gen Intel<sup>®</sup>
+Core™ i7-1165G7](https://www.intel.com/content/www/us/en/products/sku/205605/intel-nuc-11-pro-kit-nuc11tnhi7/specifications.html) processor (up to 4.70GHz) support this.  For example
 ```
 $ time ./fftw_test.py --ng=4096 --deltar=0.01 --iter=500
 ng, Δr, Δq, iters = 4096 0.01 0.07669903939428206 500
