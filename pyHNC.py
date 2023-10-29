@@ -96,8 +96,7 @@ class PicardHNC:
 
     def solve(self, vr, rho, cr_init=None):
         '''Solve HNC for a given potential, with an optional initial guess at cr'''
-        if cr_init or not self.warmed_up: # initial guess is -v(r) if not warmed up
-            cr = cr_init if cr_init else -vr
+        cr = cr_init if cr_init else self.cr if self.warmed_up else -vr
         for i in range(self.max_iter):
             cq = self.grid.fourier_bessel_forward(cr) # forward transform c(r) to c(q)
             eq = cq / (1 - rho*cq) - cq # solve the OZ equation for e(q)
@@ -109,15 +108,19 @@ class PicardHNC:
             if self.monitor and (i % 50 == 0 or self.converged):
                 print('Picard: iteration %3i, error = %0.3e' % (i, self.error))
             if self.converged:
-                self.cr = cr_new # use the most recent calculation
-                self.cq = self.grid.fourier_bessel_forward(cr)
-                self.warmed_up = True
                 break
+        if self.converged: 
+            self.cr = cr_new # use the most recent calculation
+            self.cq = self.grid.fourier_bessel_forward(cr)
+            self.hr = self.cr + er # total correlation function
+            self.hq = self.cq + eq
+            self.warmed_up = True
+        else: # we leave it to the user to check if self.converged is False :-)
+            pass
         if self.monitor:
             if self.converged:
                 print('Picard: converged')
             else:
+                print('Picard: iteration %3i, error = %0.3e' % (i, self.error))
                 print('Picard: failed to converge')
-        self.hr = self.cr + er # total correlation function
-        self.hq = self.cq + eq
         return self # the user can name this 'soln' or something
