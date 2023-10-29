@@ -18,8 +18,8 @@
 # assign r_j = (j+1)×Δr for j=0 to n-1, and likewise
 # q_k = (k+1)×Δq for j=0 to n-1, so that
 # Y_k = 2 ∑_(j=0)^(n-1) X_j sin(r_j q_k)
-# In terms of the desired integral we finally have
-# w(q_k) = 2πΔr/q_k × 2 ∑_(j=0)^(n-1) [r w(r)]_j sin(r_j q_k)
+# For the desired integral we can then write
+# w(q_k) = 2πΔr/q_k × 2 ∑_(j=0)^(n-1) r_j w(r_j) sin(r_j q_k)
 # It is this which is implemented below.
 # The Fourier back transform w(r) = 1/(2π²r) ∫_0^∞ dq sin(qr) q w(q)
 # is handled similarly.
@@ -53,16 +53,11 @@ from numpy import pi as π
 from numpy import sin, cos
 
 parser = argparse.ArgumentParser(description='RPM one off calculator')
-parser.add_argument('-n', '--ngrid', action='store', default='2^16',
-                    help='number of grid points, default 2^16 = 65536')
-parser.add_argument('-i', '--iters', action='store', default=10, type=int,
-                    help='number of iterations for timing, default 10')
-parser.add_argument('-d', '--deltar', action='store', default=1e-3, type=float,
-                    help='grid spacing, default 1e-3')
-parser.add_argument('--rmax', action='store', default=3.0, type=float,
-                    help='maximum in r for plotting, default 3.0')
-parser.add_argument('--qmax', action='store', default=15.0, type=float,
-                    help='maximum in q for plotting, default 15.0')
+parser.add_argument('-n', '--ngrid', action='store', default='2^16', help='number of grid points, default 2^16 = 65536')
+parser.add_argument('-i', '--iters', action='store', default=10, type=int, help='number of iterations for timing, default 10')
+parser.add_argument('-d', '--deltar', action='store', default=1e-3, type=float, help='grid spacing, default 1e-3')
+parser.add_argument('--rmax', action='store', default=3.0, type=float, help='maximum in r for plotting, default 3.0')
+parser.add_argument('--qmax', action='store', default=15.0, type=float, help='maximum in q for plotting, default 15.0')
 parser.add_argument('--show', action='store_true', help='show results')
 args = parser.parse_args()
 
@@ -82,8 +77,7 @@ wq_exact = 2*π*(2*q + q*cos(q) - 3*sin(q)) / q**5
 
 fftwx = pyfftw.empty_aligned(fftw_n)
 fftwy = pyfftw.empty_aligned(fftw_n)
-fftw = pyfftw.FFTW(fftwx, fftwy, direction='FFTW_RODFT00',
-                   flags=('FFTW_ESTIMATE',))
+fftw = pyfftw.FFTW(fftwx, fftwy, direction='FFTW_RODFT00', flags=('FFTW_ESTIMATE',))
 
 for i in range(args.iters):
     fftwx[:] = r * wr_exact # note the assigment here

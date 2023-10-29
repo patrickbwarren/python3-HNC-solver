@@ -6,16 +6,17 @@ v1.0 - initial working version
 
 ### Summary
 
-Implements a python module `pyHNC` for solving the Ornstein-Zernike (OZ)
-equation using the hypernetted-chain (HNC) closure, for
-single-component systems, with soft potentials (no hard cores).  It
-uses the [FFTW](https://www.fftw.org/) library to do the Fourier
-transforms, accessed _via_ the [pyFFTW](https://pyfftw.readthedocs.io/en/latest/)
+Implements a python module `pyHNC` for solving the Ornstein-Zernike
+(OZ) equation using the hypernetted-chain (HNC) closure, for
+single-component systems, with soft potentials (no hard cores) such as
+dissipative particle dynamics (DPD).  It uses the
+[FFTW](https://www.fftw.org/) library to do the Fourier transforms,
+accessed _via_ the [pyFFTW](https://pyfftw.readthedocs.io/en/latest/)
 wrapper.
 
-The code is intended to be partly pedagogical.  It illustrates how to
-implement three-dimensional Fourier-Bessel transforms using FFTW (see
-also below).
+The code is intended for rapid prototyping but is also partly
+pedagogical.  It illustrates how to implement three-dimensional
+Fourier-Bessel transforms using FFTW (see also below).
 
 The code currently comprises:
 
@@ -32,65 +33,136 @@ R. McDonald is foundational -- either the
 [3rd edition](https://shop.elsevier.com/books/theory-of-simple-liquids/hansen/978-0-12-370535-8) (2006)
 or the [4th edition](https://www.sciencedirect.com/book/9780123870322/theory-of-simple-liquids) (2013).
 
-Simplifications compared to
+Simplifications compared to the (faster)
 [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC) include
 the fact that hard cores are not implemented, only a single component
-is assumed, and Picard iteration is used rather than the Ng
-accelerator.
+is assumed, and simple Picard iteration is used rather than the Ng
+accelerator.  It is also implemented entirely in python, rather than 
+[SunlightHNC](https://github.com/patrickbwarren/SunlightHNC) which is mostly implemented in FORTRAN 90.
 
 ### HNC closure of the OZ equation
 
 What's being solved here is the Ornstein-Zernike (OZ) equation in
-reciprocal space in the form _h_(_q_) = _c_(_q_) + ρ _h_(_q_)
-_c_(_q_), in combination with the hypernetted-chain (HNC) closure in real space as
-_g_(_r_) = exp[ − _v_(_r_) + _h_(_r_) − _c_(_r_)], using Picard
-iteration.
+reciprocal space in the form <em>h</em>(<em>q</em>) =
+<em>c</em>(<em>q</em>) + ρ <em>h</em>(<em>q</em>)
+<em>c</em>(<em>q</em>), in combination with the hypernetted-chain
+(HNC) closure in real space as <em>g</em>(<em>r</em>) = exp[ −
+<em>v</em>(<em>r</em>) + <em>h</em>(<em>r</em>) −
+<em>c</em>(<em>r</em>)], using Picard iteration.
 
-Here _c_(_r_) is the direct correlation function, _h_(_r_) = _g_(_r_)
-− 1 is the total correlation function, and _v_(_r_) is the potential.
-In practice the OZ equation and the HNC closure are written and solved
-iteratively in terms of the indirect correlation function _e_(_r_) =
-_h_(_r_) − _c_(_r_).
+Here ρ is the number density, <em>v</em>(<em>r</em>) is the potential
+in units of <em>k</em><sub>B</sub><em>T</em>, <em>g</em>(<em>r</em>)
+is the pair correlation function, <em>h</em>(<em>r</em>) =
+<em>g</em>(<em>r</em>) − 1 is the total correlation function, and
+<em>c</em>(<em>r</em>) is the direct correlation function which is
+defined by the OZ equation.  In practice the OZ equation and the HNC
+closure are written and solved iteratively (see next) in terms of the
+indirect correlation function <em>e</em>(<em>r</em>) =
+<em>h</em>(<em>r</em>) − <em>c</em>(<em>r</em>).
 
-An initial guess if the solver is not warmed up
-is _c_(_r_) = − _v_(_r_) : this is the random-phase approximation or
-RPA, and for systems without hard cores is equivalent to the
-mean spherical approximation or MSA.
+An initial guess if the solver is not warmed up is
+<em>c</em>(<em>r</em>) = − <em>v</em>(<em>r</em>) ; this is the
+random-phase approximation (RPA), which for systems without hard cores
+is equivalent to the mean spherical approximation (MSA).
+
+### Algorithm
+
+Given an initial guess <em>c</em>(<em>r</em>), the solver iterates the
+following scheme (<em>cf</em> [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC)):
+
+* forward transform <em>c</em>(<em>r</em>) →
+  <em>c</em>(<em>q</em>) (<em>i. e.</em> Fourier-Bessel);
+* solve the OZ equation for <em>e</em>(<em>q</em>) =
+  <em>c</em>(<em>q</em>) / [1 − ρ <em>c</em>(<em>q</em>)] −
+  <em>c</em>(<em>q</em>) ;
+* back transform <em>e</em>(<em>q</em>) →
+  <em>e</em>(<em>r</em>) (<em>i. e.</em> Fourier-Bessel);
+* implement the HNC closure as <em>c</em>'(<em>r</em>) =
+  exp[−<em>v</em>(<em>r</em>)+<em>e</em>(<em>r</em>)] −
+  <em>e</em>(<em>r</em>) − 1 ;
+* calculate <em>c</em>(<em>r</em>) =
+  α <em>c</em>′(<em>r</em>) + (1−α) <em>c</em>'(<em>r</em>) (Picard
+  mixing step);
+* check for convergence by comparing <em>c</em>(<em>r</em>) and
+  <em>c'</em>(<em>r</em>) ;
+* if not converged, repeat.
+
+Typically this works for a Picard mixing fraction α = 0.2, and for
+standard DPD for example convergence to an accuracy of
+10<sup>−12</sup> for a grid size <em>N</em><sub>g</sub> =
+2<sup>12</sup> = 4096 (see below!) with a grid spacing Δ<em>r</em> = 0.01 is
+achieved with a few hundred iterations (a fraction of a second CPU
+time).
+
+Once converged, the pair correlation function and static structure
+factor can be found from:
+
+* <em>g</em>(<em>r</em>) = 1 + <em>h</em>(<em>r</em>) where
+  <em>h</em>(<em>r</em>) = <em>e</em>(<em>r</em>) +
+  <em>c</em>(<em>r</em>) ;
+* <em>S</em>(<em>q</em>) = 1 + ρ <em>h</em>(<em>q</em>) where
+  <em>h</em>(<em>q</em>) = <em>e</em>(<em>q</em>) +
+  <em>c</em>(<em>q</em>) .
+
+Thermodynamic quantities can also now be computed, for example the
+energy density and virial pressure follow from Eqs. (2.5.20) and (2.5.22) in
+Hansen and McDonald, "Theory of Simple Liquids" (3rd edition) as:
+
+* <em>e</em> = 2πρ² ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
+  <em>v</em>(<em>r</em>) <em>g</em>(<em>r</em>) ;
+* <em>p</em> = ρ + 2πρ²/3 ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>³
+  <em>f</em>(<em>r</em>) <em>g</em>(<em>r</em>) where
+  <em>f</em>(<em>r</em>) = − d<em>v</em>/d<em>r</em> .
+
+In practice these should usually be calculated with
+<em>h</em>(<em>r</em>) = <em>g</em>(<em>r</em>) − 1, since the
+mean-field estimates (<em>i. e.</em> the above with
+<em>g</em>(<em>r</em>) = 1) can usually be calculated analytically.
 
 ### FFTW and Fourier-Bessel transforms
 
-The Fourier-Bessel forward transform of a function _f_(_r_) in three
-dimensions is
+The Fourier-Bessel forward transform of a function
+<em>f</em>(<em>r</em>) in three dimensions is
 
-_g_(_q_) = 4π / _q_ ∫<sub>0</sub><sup>∞</sup>
-d<em>r</em> sin(_qr_) _r_ _f_(_r_) .
+<em>g</em>(<em>q</em>) = 4π / <em>q</em> ∫<sub>0</sub><sup>∞</sup>
+d<em>r</em> sin(<em>qr</em>) <em>r</em> <em>f</em>(<em>r</em>) .
 
-From the FFTW [documentation](https://www.fftw.org/fftw3_doc/1d-Real_002dodd-DFTs-_0028DSTs_0029.html), `RODFT00` implements
+From the FFTW
+[documentation](https://www.fftw.org/fftw3_doc/1d-Real_002dodd-DFTs-_0028DSTs_0029.html),
+`RODFT00` implements
 
-_Y_<sub>_k_</sub> = 2 ∑<sub>_j_=0</sub><sup><em>n</em>−1</sup>
-_X_<sub>_j_</sub> sin[π (_j_+1) (_k_+1) / (_n_+1)] ,
+<em>Y</em><sub><em>k</em></sub> = 2
+∑<sub><em>j</em>=0</sub><sup><em>n</em>−1</sup>
+<em>X</em><sub><em>j</em></sub> sin[π (<em>j</em>+1) (<em>k</em>+1) /
+(<em>n</em>+1)] ,
 
-where _n_ is the common length of the arrays _X_<sub>_j_</sub> and
-_Y_<sub>_k_</sub>.  To cast this into the right form, set
-Δ<em>r</em> × Δ<em>q</em> = π / (_n_+1) and assign _r_<sub>_j_</sub> = (_j_+1)
-× Δ<em>r</em> for _j_ = 0 to <em>n</em>−1, and likewise _q_<sub>_k_</sub> = (_k_+1) ×
-Δ<em>q</em> for _k_ = 0 to <em>n</em>−1, so that
+where <em>n</em> is the common length of the arrays
+<em>X</em><sub><em>j</em></sub> and <em>Y</em><sub><em>k</em></sub>.
+To cast this into the right form, set Δ<em>r</em> × Δ<em>q</em> = π /
+(<em>n</em>+1) and assign <em>r</em><sub><em>j</em></sub> =
+(<em>j</em>+1) × Δ<em>r</em> for <em>j</em> = 0 to <em>n</em>−1, and
+likewise <em>q</em><sub><em>k</em></sub> = (<em>k</em>+1) ×
+Δ<em>q</em> for <em>k</em> = 0 to <em>n</em>−1, so that
 
-_Y_<sub>_k_</sub> = 2 ∑<sub>_j_=0</sub><sup><em>n</em>−1</sup>
-_X_<sub>_j_</sub> sin(_r_<sub>_j_</sub> _q_<sub>_k_</sub>) .
+<em>Y</em><sub><em>k</em></sub> = 2
+∑<sub><em>j</em>=0</sub><sup><em>n</em>−1</sup>
+<em>X</em><sub><em>j</em></sub> sin(<em>r</em><sub><em>j</em></sub>
+<em>q</em><sub><em>k</em></sub>) .
 
-In terms of the desired integral we finally have
+For the desired integral we can then write
 
-_g_(_q_<sub>_k_</sub>) = 2 π Δ<em>r</em> / _q_<sub>_k_</sub>
-× 2 ∑<sub>_j_=0</sub><sup><em>n</em>−1</sup>
-_r_<sub>_j_</sub> _f_(<em>r</em><sub>_j_</sub>)
-sin(_r_<sub>_j_</sub> _q_<sub>_k_</sub>) .
+<em>g</em>(<em>q</em><sub><em>k</em></sub>) = 2 π Δ<em>r</em> /
+<em>q</em><sub><em>k</em></sub> × 2
+∑<sub><em>j</em>=0</sub><sup><em>n</em>−1</sup>
+<em>r</em><sub><em>j</em></sub>
+<em>f</em>(<em>r</em><sub><em>j</em></sub>)
+sin(<em>r</em><sub><em>j</em></sub> <em>q</em><sub><em>k</em></sub>) .
 
-It is this which is implemented in the code.
-The Fourier-Bessel back transform
+It is this which is implemented in the code.  The Fourier-Bessel back
+transform
 
-_f_(_r_) = 1 / (2π²<em>r</em>) ∫<sub>0</sub><sup>∞</sup>
-d<em>q</em> sin(_qr_) _q_ _g_(_q_)
+<em>f</em>(<em>r</em>) = 1 / (2π²<em>r</em>) ∫<sub>0</sub><sup>∞</sup>
+d<em>q</em> sin(<em>qr</em>) <em>q</em> <em>g</em>(<em>q</em>)
 
 is handled similarly.
 
@@ -100,8 +172,8 @@ Timing tests (below) indicate that FFTW is very fast when the array
 length in the above is a power of two _minus one_, which doesn't quite
 seem to fit with the
 [documentation](https://www.fftw.org/fftw3_doc/Real_002dto_002dReal-Transforms.html).
-Here, the grid size in pyHNC is typically a power of two, but the
-arrays passed to FFTW are shortened by one.  Some typical
+Here, the grid size <em>N</em><sub>g</sub> in pyHNC is typically a power of two, but the
+arrays passed to FFTW are shortened to <em>N</em><sub>g</sub> − 1.  Some typical
 timing results on a moderately fast Intel NUC11TZi7 (11th Gen Intel
 Core i7-1165G7 @ 2.80GHz) support this:
 ```
@@ -134,8 +206,8 @@ find an optimized plan, than it does if it just uses the simple
 heuristic implied by `FFTW_ESTIMATE`.  Obviously some further
 investigations could be undertaken into this aspect.
 
-The TL;DR take-home message here is _use a power of two_ for the `ng`
-parameter in the code!
+The TL;DR take-home message here is _use a power of two_ for the
+<em>N</em><sub>g</sub> parameter in the code!
 
 ### Copying
 

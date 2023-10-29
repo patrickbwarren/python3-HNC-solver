@@ -64,18 +64,19 @@ hr, hq = soln.hr, soln.hq # extract for use in a moment
 
 # For the integrals here, see Eqs. (2.5.20) and (2.5.22) in
 # Hansen & McDonald, "Theory of Simple Liquids" (3rd edition):
-# energy density, e = 2πρ² ∫_0^∞ dr r² v(r) g(r) ;
-# virial pressure, p = ρ - 2πρ²/3 ∫_0^∞ dr r³ dv/dr g(r) .
+# for the energy density, e = 2πρ² ∫_0^∞ dr r² v(r) g(r) 
+# and virial pressure, p = ρ + 2πρ²/3 ∫_0^∞ dr r³ f(r) g(r)
+# where f(r) = −dv/dr is the force.
 
 # The constant terms here capture the mean field contributions, that
 # is the integrals evaluated with g(r) = 1.  Specifically:
-# ∫_0^∞ dr r² v(r) g(r) = A ∫_0^1 dr r²(1-r)²/2 = A/60 ;
-# -∫_0^∞ dr r³ dv/dr g(r) = A ∫_0^1 dr r³(1-r) = A/20 .
+# ∫_0^∞ dr r² v(r) = A ∫_0^1 dr r² (1−r)²/2 = A/60 ;
+# ∫_0^∞ dr r³ f(r) = A ∫_0^1 dr r³ (1−r) = A/20 .
 
 energy = 2*π*ρ**2 * (A/60 + 2*A*np.trapz(r**2*wr*hr, dx=Δr))
 pressure = ρ + 2*π*ρ**2/3 * (A/20 + 2*A*np.trapz(r**3*minusdwdr*hr, dx=Δr))
 
-print('pyHNC v%s:    virial pressure, energy density =\t\t%0.5f\t%0.5f' % (grid.version, pressure, energy))
+print('pyHNC v%s:    energy density, virial pressure =\t\t%0.5f\t%0.5f' % (grid.version, energy, pressure))
 
 if args.sunlight:
     
@@ -88,7 +89,7 @@ if args.sunlight:
     w.hnc_solve()
     
     version = str(w.version, 'utf-8').strip()
-    print('SunlightHNC v%s: virial pressure, energy density =\t\t%0.5f\t%0.5f' % (version, w.press, w.uex))
+    print('SunlightHNC v%s: energy density,  virial pressure =\t\t%0.5f\t%0.5f' % (version, w.uex, w.press))
 
 if args.show:
 

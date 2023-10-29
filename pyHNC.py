@@ -107,10 +107,11 @@ class PicardHNC:
             self.error = self.grid.deltar * np.sqrt(np.sum((cr_new - cr)**2)) # convergence test
             self.converged = self.error < self.tol
             if self.monitor and (i % 50 == 0 or self.converged):
-                print('Picard: iteration %3i, conv = %0.3e' % (i, self.conv))
+                print('Picard: iteration %3i, error = %0.3e' % (i, self.error))
             if self.converged:
                 self.cr = cr_new # use the most recent calculation
                 self.cq = self.grid.fourier_bessel_forward(cr)
+                self.warmed_up = True
                 break
         if self.monitor:
             if self.converged:

@@ -6,13 +6,13 @@
 # data from that figure is coded below.  This is taken from
 # gw_p_compare.py from SunlightHNC.
 
-# For the virial pressure here, see Eq. (2.5.22) in
-# Hansen & McDonald, "Theory of Simple Liquids" (3rd edition):
-# virial pressure, p = ρ - 2πρ²/3 ∫_0^∞ dr r³ dv/dr g(r) .
+# For the virial pressure here, see Eq. (2.5.22) in Hansen & McDonald,
+# "Theory of Simple Liquids" (3rd edition): virial pressure, p = ρ +
+# 2πρ²/3 ∫_0^∞ dr r³ f(r) g(r) where f(r) = −dv/dr is the force.
 
 # The constant term here captures the mean field contribution, that
 # is the integral evaluated with g(r) = 1.  Specifically:
-# -∫_0^∞ dr r³ dv/dr g(r) = A ∫_0^1 dr r³(1-r) = A/20 .
+# ∫_0^∞ dr r³ f(r) = A ∫_0^1 dr r³ (1−r) = A/20 .
 
 # This program is part of pyHNC, copyright (c) 2023 Patrick B Warren
 # Email: patrickbwarren@gmail.com
@@ -37,16 +37,8 @@ from numpy import pi as π
 from pyHNC import Grid, PicardHNC, truncate_to_zero
 import matplotlib.pyplot as plt
 
-gw_data = pd.DataFrame([[0.0, 0.0379935086163],
-                        [1.5, 0.0751786298043],
-                        [2.5, 0.0886823425022],
-                        [3.0, 0.0924251622846],
-                        [3.5, 0.0946639891655],
-                        [4.0, 0.0965259421847],
-                        [5.0, 0.0987451548125],
-                        [6.0, 0.0998358473824],
-                        [7.0, 0.1005510671090],
-                        [8.0,  0.102017933031]],
+gw_data = pd.DataFrame([[0.0, 0.038], [1.5, 0.075], [2.5, 0.089], [3.0, 0.092], [3.5, 0.095],
+                        [4.0, 0.097], [5.0, 0.099], [6.0, 0.100], [7.0, 0.101], [8.0, 0.102]],
                        columns=['rho', 'pexbyArho2'])
 
 A = 25.0
