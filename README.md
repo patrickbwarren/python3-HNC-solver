@@ -140,8 +140,7 @@ The Fourier-Bessel forward transform of a function
 <em>g</em>(<em>q</em>) = 4π / <em>q</em> ∫<sub>0</sub><sup>∞</sup>
 d<em>r</em> sin(<em>qr</em>) <em>r</em> <em>f</em>(<em>r</em>) .
 
-From the FFTW
-[documentation](https://www.fftw.org/fftw3_doc/1d-Real_002dodd-DFTs-_0028DSTs_0029.html),
+From the [FFTW documentation](https://www.fftw.org/fftw3_doc/1d-Real_002dodd-DFTs-_0028DSTs_0029.html),
 `RODFT00` implements
 
 <em>Y</em><sub><em>k</em></sub> = 2
@@ -172,7 +171,9 @@ For the desired integral we can then write
 sin(<em>r</em><sub><em>j</em></sub> <em>q</em><sub><em>k</em></sub>) ,
 
 with the factor after the multiplication sign being calculated by
-`RODFT00`.  The Fourier-Bessel back transform
+`RODFT00`.
+
+The Fourier-Bessel back transform
 
 <em>f</em>(<em>r</em>) = 1 / (2π²<em>r</em>) ∫<sub>0</sub><sup>∞</sup>
 d<em>q</em> sin(<em>qr</em>) <em>q</em> <em>g</em>(<em>q</em>)
@@ -187,8 +188,8 @@ seem to fit with the
 [documentation](https://www.fftw.org/fftw3_doc/Real_002dto_002dReal-Transforms.html).
 Here, the grid size <em>N</em><sub>g</sub> in pyHNC is typically a power of two, but the
 arrays passed to FFTW are shortened to <em>N</em><sub>g</sub> − 1.  Some typical
-timing results on a moderately fast Intel NUC11TZi7 (11th Gen Intel
-Core i7-1165G7 @ 2.80GHz) support this.  For example
+timing results on a moderately fast [Intel<sup>®</sup> NUC11TZi7](https://www.intel.com/content/www/us/en/products/sku/205605/intel-nuc-11-pro-kit-nuc11tnhi7/specifications.html) (11th Gen [Intel<sup>®</sup>
+Core™ i7-1165G7](https://www.intel.com/content/www/us/en/products/sku/205605/intel-nuc-11-pro-kit-nuc11tnhi7/specifications.html) @ 2.80GHz) support this.  For example
 ```
 $ time ./fftw_test.py --ng=4096 --deltar=0.01 --iter=500
 ng, Δr, Δq, iters = 4096 0.01 0.07669903939428206 500
