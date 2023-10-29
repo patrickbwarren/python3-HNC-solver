@@ -15,9 +15,7 @@ accessed _via_ the [pyFFTW](https://pyfftw.readthedocs.io/en/latest/)
 wrapper.
 
 The code is intended for rapid prototyping but is also partly
-pedagogical.  
-
-The code currently comprises:
+pedagogical. It currently comprises:
 
 * `pyHNC.py` : python module implementing the functionality;
 * `dpd_demo.py` : demonstrate the capabilities for standard DPD;
