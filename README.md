@@ -131,12 +131,11 @@ In practice these should usually be calculated with
 <em>h</em>(<em>r</em>) = <em>g</em>(<em>r</em>) − 1, since the
 mean-field estimates (<em>i. e.</em> the above with
 <em>g</em>(<em>r</em>) = 1) can usually be calculated analytically.
-Note that in this case the an integration by parts shows that the two
-integrals are actually the same:
-
-2πρ² ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
-<em>v</em>(<em>r</em>) = 2πρ²/3 ∫<sub>0</sub><sup>∞</sup> d<em>r</em>
-<em>r</em>³ <em>f</em>(<em>r</em>) .
+Note that in this case an integration by parts shows that the two
+integrals are actually the same: 2πρ²/3 ∫<sub>0</sub><sup>∞</sup>
+d<em>r</em> <em>r</em>³ <em>f</em>(<em>r</em>) = 2πρ²
+∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
+<em>v</em>(<em>r</em>).
 
 ### FFTW and Fourier-Bessel transforms
 
