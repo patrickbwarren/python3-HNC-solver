@@ -56,7 +56,7 @@ r, q = grid.r, grid.q # extract the co-ordinate arrays for use below
 # potential, and its derivative, then solve the HNC problem.
 
 wr = truncate_to_zero(1/4*(1-r)**2, r, 1.0) # the array here is size ng-1, same as r[:]
-minusdwdr = truncate_to_zero(1/2*(1-r), r, 1.0) # the derivate (negative)
+minusdwdr = truncate_to_zero(1/2*(1-r), r, 1.0) # the negated derivate
 
 solver = PicardHNC(grid, alpha=args.alpha, tol=args.tol, max_iter=args.picard, monitor=args.verbose)
 soln = solver.solve(2*A*wr, ρ) # solve for the DPD potential, being 2A × the weight function
@@ -101,7 +101,7 @@ if args.show:
     plt.figure(1)
     cut = r < args.rmax
     if args.sunlight:
-        imax = int(3.0 / w.deltar)
+        imax = int(args.rmax / w.deltar)
         plt.plot(w.r[0:imax], 1.0+w.hr[0:imax,0,0], '.')
         plt.plot(r[cut], gr[cut], '--')
     else:
@@ -112,7 +112,7 @@ if args.show:
     plt.figure(2)
     cut = q < args.qmax
     if args.sunlight:
-        jmax = int(25.0 / w.deltak)
+        jmax = int(args.qmax / w.deltak)
         plt.plot(w.k[0:jmax], w.sk[0:jmax,0,0]/ρ, '.')
         plt.plot(q[cut], sq[cut], '--')
     else:

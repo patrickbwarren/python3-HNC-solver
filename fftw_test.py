@@ -105,8 +105,8 @@ if args.show:
 
 else:
 
-    print('r, wr-1/4, wr_wexact-1/4 =',
-          r[0], wr[0]-1/4, wr_exact[0]-1/4)
+    print('r, wr*4, wr_wexact*4 =',
+          r[0], 4*wr[0], 4*wr_exact[0])
 
-    print('q, wq-π/30, wq_wexact-π/30 =',
-          q[0], wq[0]-π/30, wq_exact[0]-π/30)
+    print('q, wq*π/30, wq_wexact*π/30 =',
+          q[0], 30/π*wq[0], 30/π*wq_exact[0])

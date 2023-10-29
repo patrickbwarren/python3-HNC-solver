@@ -40,6 +40,17 @@ is assumed, and simple Picard iteration is used rather than the Ng
 accelerator.  It is also implemented entirely in python, rather than 
 [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC) which is mostly implemented in FORTRAN 90.
 
+The `--sunlight` option for `dpd_demo.py` compares the present
+implementation to results from
+[SunlightHNC](https://github.com/patrickbwarren/SunlightHNC).  For
+this to work, the compiled python interface (`*.pyf`) and shared object
+dynamically-linked library (`*.so`) from
+[SunlightHNC](https://github.com/patrickbwarren/SunlightHNC) should be
+made acessible to `dpd_demo.py`.  This can be done for example by
+copying `oz.pyf` and `oz.*.so` from
+[SunlightHNC](https://github.com/patrickbwarren/SunlightHNC)
+(avaliable after running `make`) to the directory containing `dpd_demo.py`.
+
 ### HNC closure of the OZ equation
 
 What's being solved here is the Ornstein-Zernike (OZ) equation in
