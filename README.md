@@ -15,8 +15,7 @@ accessed _via_ the [pyFFTW](https://pyfftw.readthedocs.io/en/latest/)
 wrapper.
 
 The code is intended for rapid prototyping but is also partly
-pedagogical.  It illustrates how to implement three-dimensional
-Fourier-Bessel transforms using FFTW (see also below).
+pedagogical.  
 
 The code currently comprises:
 
@@ -134,6 +133,8 @@ mean-field estimates (<em>i. e.</em> the above with
 
 ### FFTW and Fourier-Bessel transforms
 
+The code illustrates how to implement three-dimensional
+Fourier-Bessel transforms using FFTW.
 The Fourier-Bessel forward transform of a function
 <em>f</em>(<em>r</em>) in three dimensions is (see [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC) documentation):
 
