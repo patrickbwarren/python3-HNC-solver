@@ -42,13 +42,14 @@ mostly implemented in FORTRAN 90.
 The `--sunlight` option for `dpd_demo.py` compares the present
 implementation to results from
 [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC).  For
-this to work, the compiled python interface (`*.pyf`) and shared object
-dynamically-linked library (`*.so`) from
+this to work, the compiled python interface (`*.pyf`) and shared
+object (`*.so`) dynamically-linked library from
 [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC) should be
 made acessible to `dpd_demo.py`.  This can be done for example by
 copying `oz.pyf` and `oz.*.so` from
 [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC)
-(avaliable after running `make`) to the directory containing `dpd_demo.py`.
+(avaliable after running `make`) to the directory containing
+`dpd_demo.py`.
 
 ### HNC closure of the OZ equation
 
