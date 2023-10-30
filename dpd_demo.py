@@ -41,18 +41,14 @@
 
 import argparse
 import numpy as np
-from pyHNC import Grid, PicardHNC, truncate_to_zero
 from numpy import pi as π
+from pyHNC import Grid, PicardHNC, add_grid_args, grid_args, add_solver_args, solver_args, truncate_to_zero
 
 parser = argparse.ArgumentParser(description='DPD HNC calculator')
-parser.add_argument('-v', '--verbose', action='store_true', help='report convergence')
-parser.add_argument('--ngrid', action='store', default='2^12', help='number of grid points, default 2^12 = 4096')
-parser.add_argument('--deltar', action='store', default=1e-2, type=float, help='grid spacing, default 1e-2')
+add_grid_args(parser)
+add_solver_args(parser)
 parser.add_argument('--A', action='store', default=25.0, type=float, help='repulsion amplitude, default 25.0')
 parser.add_argument('--rho', action='store', default=3.0, type=float, help='density, default 3.0')
-parser.add_argument('--alpha', action='store', default=0.2, type=float, help='Picard mixing fraction, default 0.2')
-parser.add_argument('--picard', action='store', default=500, type=int, help='max number of Picard steps, default 500')
-parser.add_argument('--tol', action='store', default=1e-12, type=float, help='tolerance for convergence, default 1e-12')
 parser.add_argument('--rmax', action='store', default=3.0, type=float, help='maximum in r for plotting, default 3.0')
 parser.add_argument('--qmax', action='store', default=25.0, type=float, help='maximum in q for plotting, default 25.0')
 parser.add_argument('--sunlight', action='store_true', help='compare to SunlightHNC')
@@ -61,12 +57,9 @@ args = parser.parse_args()
 
 A, ρ = args.A, args.rho
 
-print('Model: standard DPD with A = %f, ρ = %f' % (A, ρ))
+grid = Grid(**grid_args(args)) # make the initial working grid
 
-ng = eval(args.ngrid.replace('^', '**')) # catch 2^10 etc
-Δr = args.deltar
-grid = Grid(ng, Δr) # make the initial working grid
-r, q = grid.r, grid.q # extract the co-ordinate arrays for use below
+r, Δr, q = grid.r, grid.deltar, grid.q # extract the co-ordinate arrays for use below
 
 # Define the canonical unnormalised weight function used in the DPD
 # potential, and its derivative, then solve the HNC problem.
@@ -74,7 +67,7 @@ r, q = grid.r, grid.q # extract the co-ordinate arrays for use below
 wr = truncate_to_zero(1/4*(1-r)**2, r, 1.0) # the array here is size ng-1, same as r[:]
 minusdwdr = truncate_to_zero(1/2*(1-r), r, 1.0) # the negated derivate
 
-solver = PicardHNC(grid, alpha=args.alpha, tol=args.tol, max_iter=args.picard, monitor=args.verbose)
+solver = PicardHNC(grid, **solver_args(args))
 soln = solver.solve(2*A*wr, ρ) # solve for the DPD potential, being 2A × the weight function
 hr, hq = soln.hr, soln.hq # extract for use in a moment
 
@@ -91,6 +84,8 @@ hr, hq = soln.hr, soln.hq # extract for use in a moment
 
 energy = 2*π*ρ**2 * (A/60 + 2*A*np.trapz(r**2*wr*hr, dx=Δr))
 pressure = ρ + 2*π*ρ**2/3 * (A/20 + 2*A*np.trapz(r**3*minusdwdr*hr, dx=Δr))
+
+print('Model: standard DPD with A = %f, ρ = %f' % (A, ρ))
 
 if A == 25.0 and ρ == 3.0:
     print('Monte-Carlo:   energy density, virial pressure =\t\t13.63±0.02\t23.65±0.02')

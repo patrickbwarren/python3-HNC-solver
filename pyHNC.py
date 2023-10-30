@@ -70,6 +70,17 @@ class Grid:
         self.fftw.execute()
         return self.deltaq/(4*np.pi**2*self.r) * self.fftwy
 
+def add_grid_args(parser):
+    '''Add generic grid arguments to a parser'''
+    parser.add_argument('-m', '--monitor', action='store_true', help='monitor convergence')
+    parser.add_argument('--ngrid', action='store', default='2^12', help='number of grid points, default 2^12 = 4096')
+    parser.add_argument('--deltar', action='store', default=1e-2, type=float, help='grid spacing, default 1e-2')
+
+def grid_args(args):
+    '''Return a dict of grid args, that can be used as **grid_args()'''
+    ng = eval(args.ngrid.replace('^', '**')) # catch 2^10 etc
+    return {'ng':ng, 'deltar': args.deltar, 'monitor': args.monitor}
+
 # What's being solved here is the Ornstein-Zernike (OZ) equation in
 # the form h(q) = c(q) + ρ h(q) c(q) in combination with the HNC
 # closure g(r) = exp[ - v(r) + h(r) - c(r)], using Picard iteration.
@@ -124,3 +135,13 @@ class PicardHNC:
                 print('Picard: iteration %3i, error = %0.3e' % (i, self.error))
                 print('Picard: failed to converge')
         return self # the user can name this 'soln' or something
+
+def add_solver_args(parser):
+    '''Add generic solver args to parser (monitor is assigned already)'''
+    parser.add_argument('--alpha', action='store', default=0.2, type=float, help='Picard mixing fraction, default 0.2')
+    parser.add_argument('--picard', action='store', default=500, type=int, help='max number of Picard steps, default 500')
+    parser.add_argument('--tol', action='store', default=1e-12, type=float, help='tolerance for convergence, default 1e-12')
+
+def solver_args(args):
+    '''Return a dict of generic solver args that can be used as **solver_args()'''
+    return {'alpha': args.alpha, 'tol': args.tol, 'max_iter': args.picard, 'monitor': args.monitor}
