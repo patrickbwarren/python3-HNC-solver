@@ -70,17 +70,6 @@ class Grid:
         self.fftw.execute()
         return self.deltaq/(4*np.pi**2*self.r) * self.fftwy
 
-def add_grid_args(parser):
-    '''Add generic grid arguments to a parser'''
-    parser.add_argument('-m', '--monitor', action='store_true', help='monitor convergence')
-    parser.add_argument('--ngrid', action='store', default='2^12', help='number of grid points, default 2^12 = 4096')
-    parser.add_argument('--deltar', action='store', default=1e-2, type=float, help='grid spacing, default 1e-2')
-
-def grid_args(args):
-    '''Return a dict of grid args, that can be used as **grid_args()'''
-    ng = eval(args.ngrid.replace('^', '**')) # catch 2^10 etc
-    return {'ng':ng, 'deltar': args.deltar, 'monitor': args.monitor}
-
 # What's being solved here is the Ornstein-Zernike (OZ) equation in
 # the form h(q) = c(q) + ρ h(q) c(q) in combination with the HNC
 # closure g(r) = exp[ - v(r) + h(r) - c(r)], using Picard iteration.
@@ -114,7 +103,7 @@ class PicardHNC:
             er = self.grid.fourier_bessel_backward(eq) # back transform e(q) to e(r)
             cr_new = np.exp(-vr+er) - er - 1 # iterate with the HNC closure
             cr = self.alpha * cr_new + (1-self.alpha) * cr # apply a Picard mixing rule
-            self.error = self.grid.deltar * np.sqrt(np.sum((cr_new - cr)**2)) # convergence test
+            self.error = np.sqrt(np.trapz((cr_new - cr)**2, dx=self.grid.deltar)) # convergence test
             self.converged = self.error < self.tol
             if self.monitor and (i % 50 == 0 or self.converged):
                 print('Picard: iteration %3i, error = %0.3e' % (i, self.error))
@@ -136,6 +125,19 @@ class PicardHNC:
                 print('Picard: failed to converge')
         return self # the user can name this 'soln' or something
 
+# Utility functions below here for setting arguments, pretty printing dataframes
+
+def add_grid_args(parser):
+    '''Add generic grid arguments to a parser'''
+    parser.add_argument('-m', '--monitor', action='store_true', help='monitor convergence')
+    parser.add_argument('--ngrid', action='store', default='2^12', help='number of grid points, default 2^12 = 4096')
+    parser.add_argument('--deltar', action='store', default=1e-2, type=float, help='grid spacing, default 1e-2')
+
+def grid_args(args):
+    '''Return a dict of grid args, that can be used as **grid_args()'''
+    ng = eval(args.ngrid.replace('^', '**')) # catch 2^10 etc
+    return {'ng':ng, 'deltar': args.deltar, 'monitor': args.monitor}
+
 def add_solver_args(parser):
     '''Add generic solver args to parser (monitor is assigned already)'''
     parser.add_argument('--alpha', action='store', default=0.2, type=float, help='Picard mixing fraction, default 0.2')
@@ -145,3 +147,18 @@ def add_solver_args(parser):
 def solver_args(args):
     '''Return a dict of generic solver args that can be used as **solver_args()'''
     return {'alpha': args.alpha, 'tol': args.tol, 'max_iter': args.picard, 'monitor': args.monitor}
+
+# Make the data output suitable for plotting in xmgrace if captured by redirection
+# stackoverflow.com/questions/30833409/python-deleting-the-first-2-lines-of-a-string
+
+def df_to_agr(df):
+    '''Convert a pandas DataFrame to a string for an xmgrace data set'''
+    header_row = '# ' + '\t'.join([f'{col}({i+1})' for i, col in enumerate(df.columns)])
+    data_rows = df.to_string(index=False).split('\n')[2:]
+    return '\n'.join([header_row] + data_rows)
+
+def as_linspace(as_range):
+    '''Convert an Abramowitz and Stegun style range "start(step)end" to an np array'''
+    start, step, end = [float(eval(x)) for x in as_range.replace('(', ':').replace(')', ':').split(':')]
+    npt = int((end-start)/step + 1.5)
+    return np.linspace(start, end, npt)

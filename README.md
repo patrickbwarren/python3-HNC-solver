@@ -21,6 +21,7 @@ involved in undertaking this kind of calculation. It currently comprises:
 
 * `pyHNC.py` : python module implementing the functionality;
 * `dpd_demo.py` : demonstrate the capabilities for standard DPD;
+* `dpd_eos.py` : calculate data for standard DPD equation of state;
 * `dpd_gw_compare.py` : compare DPD equation of state to literature;
 * `fftw_test.py` : test FFTW for Fourier-Bessel transforms.
 

@@ -34,12 +34,12 @@
 import numpy as np
 import pandas as pd
 from numpy import pi as π
-from pyHNC import Grid, PicardHNC, truncate_to_zero
+from pyHNC import Grid, PicardHNC, truncate_to_zero, df_to_agr
 import matplotlib.pyplot as plt
 
-gw_data = pd.DataFrame([[0.0, 0.038], [1.5, 0.075], [2.5, 0.089], [3.0, 0.092], [3.5, 0.095],
-                        [4.0, 0.097], [5.0, 0.099], [6.0, 0.100], [7.0, 0.101], [8.0, 0.102]],
-                       columns=['rho', 'pexbyArho2'])
+gw_data_df = pd.DataFrame([[0.0, 0.038], [1.5, 0.075], [2.5, 0.089], [3.0, 0.092], [3.5, 0.095],
+                           [4.0, 0.097], [5.0, 0.099], [6.0, 0.100], [7.0, 0.101], [8.0, 0.102]],
+                          columns=['rho', 'pexbyArho2'])
 
 A = 25.0
 ng, Δr = 4096, 0.01
@@ -51,25 +51,19 @@ fr = truncate_to_zero((1-r), r, 1.0) # the derivate (negative), omitting the amp
 
 solver = PicardHNC(grid)
 
-results = []
-
+hnc_data = []
 for ρ in np.linspace(0.0, 10.0, 41)[1:]: # omit rho = 0.0
     soln = solver.solve(vr, ρ)
     hr = soln.hr
     pexbyArho2 = 2*π/3 * (1/20 + np.trapz(r**3*fr*hr, dx=Δr))
-    results.append([ρ, pexbyArho2, solver.error])
+    p = ρ+ A*ρ**2*pexbyArho2
+    hnc_data.append([ρ, p, pexbyArho2, solver.error])
 
-hnc_data = pd.DataFrame(results, columns=['rho', 'pexbyArho2', 'error'])
+hnc_data_df = pd.DataFrame(hnc_data, columns=['rho', 'p', 'pexbyArho2', 'error'])
+print(df_to_agr(hnc_data_df))
 
-# Make the data output suitable for plotting if captured by redirection
-# stackoverflow.com/questions/30833409/python-deleting-the-first-2-lines-of-a-string
-
-print('# ' + '\t'.join(hnc_data.columns))
-hnc_data_s = '\n'.join(hnc_data.set_index('rho').to_string().split('\n')[2:])
-print(hnc_data_s)
-
-plt.plot(gw_data.rho, gw_data.pexbyArho2, 'ro', label='Groot & Warren (1997)')
-plt.plot(hnc_data.rho, hnc_data.pexbyArho2, label='HNC')
+plt.plot(gw_data_df.rho, gw_data_df.pexbyArho2, 'ro', label='Groot & Warren (1997)')
+plt.plot(hnc_data_df.rho, hnc_data_df.pexbyArho2, label='HNC')
 plt.xlabel('$\\rho$')
 plt.ylabel('$(p-\\rho)/A\\rho^2$')
 plt.legend(loc='lower right')
