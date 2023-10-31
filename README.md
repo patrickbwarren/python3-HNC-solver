@@ -190,7 +190,7 @@ d<em>q</em> sin(<em>qr</em>) <em>q</em> <em>g</em>(<em>q</em>)
 
 is handled similarly.
 
-### On FFTW efficiency
+#### On FFTW efficiency
 
 Timing tests (below) indicate that FFTW is very fast when the array
 length in the above is a power of two _minus one_, which doesn't quite
@@ -255,6 +255,21 @@ investigations could be undertaken into this aspect.
 
 The TL;DR take-home message here is _use a power of two_ for the
 <em>N</em><sub>g</sub> parameter in the code!
+
+#### Choice of grid size
+
+From above Δ<em>r</em> × Δ<em>q</em> = π / (<em>n</em>+1) can be
+inverted to suggest <em>N</em><sub>g</sub> = π /
+Δ<em>r</em> Δ<em>q</em>.  Since presumably we want the grid resolution
+in real space and reciprocal space to be comparable, Δ<em>r</em> ≈
+Δ<em>q</em>, and we want <em>N</em><sub>g</sub> =
+2<sup><em>r</em></sup>, this suggests the following table (where
+Δ<em>q</em> is computed from Δ<em>r</em> and <em>N</em><sub>g</sub>):
+```
+--deltar=0.05 --ng=2048  ( ⇒ Δq ≈ 0.031  )
+--deltar=0.02 --ng=8192  ( ⇒ Δq ≈ 0.019  )
+--deltar=0.01 --ng=32768 ( ⇒ Δq ≈ 0.0096 )
+```
 
 ### Copying
 
