@@ -104,9 +104,9 @@ following scheme (<em>cf</em> [SunlightHNC](https://github.com/patrickbwarren/Su
 Typically this works for a Picard mixing fraction α = 0.2, and for
 standard DPD for example convergence to an accuracy of
 10<sup>−12</sup> for a grid size <em>N</em><sub>g</sub> =
-2<sup>12</sup> = 4096 (see below!) with a grid spacing Δ<em>r</em> = 0.01 is
-achieved with a few hundred iterations (a fraction of a second CPU
-time).
+2<sup>12</sup> = 8192 (see below!) with a grid spacing Δ<em>r</em> =
+0.02 is achieved with a few hundred iterations (a fraction of a second
+CPU time).
 
 Once converged, the pair correlation function and static structure
 factor can be found from:
@@ -201,50 +201,51 @@ arrays passed to FFTW are shortened to <em>N</em><sub>g</sub> − 1.  Some typic
 timing results on a moderately fast [Intel<sup>®</sup> NUC11TZi7](https://www.intel.com/content/www/us/en/products/sku/205605/intel-nuc-11-pro-kit-nuc11tnhi7/specifications.html) with an [11th Gen Intel<sup>®</sup>
 Core™ i7-1165G7](https://www.intel.com/content/www/us/en/products/sku/205605/intel-nuc-11-pro-kit-nuc11tnhi7/specifications.html) processor (up to 4.70GHz) support this.  For example
 ```
-$ time ./fftw_test.py --ng=4096 --deltar=0.01 --iter=500
-ng, Δr, Δq, iters = 4096 0.01 0.07669903939428206 500
-FFTW array sizes = 4095
-real	0m0.336s
-user	0m0.427s
-sys	0m0.575s
+$ time ./fftw_test.py --ng=8192 --deltar=0.02
+ng, Δr, Δq, iters = 8192 0.02 0.019174759848570515 10
+FFTW array sizes = 8191
+real	0m0.321s
+user	0m0.399s
+sys	0m0.580s
 
-$ time ./fftw_test.py --ng=4095 --deltar=0.01 --iter=500
-ng, Δr, Δq, iters = 4095 0.01 0.07671776931843206 500
-FFTW array sizes = 4094
-real	0m0.376s
-user	0m0.491s
-sys	0m0.556s
+$ time ./fftw_test.py --ng=8193 --deltar=0.02
+ng, Δr, Δq, iters = 8193 0.02 0.019172419465335 10
+FFTW array sizes = 8192
+real	0m0.347s
+user	0m0.498s
+sys	0m0.518s
 
-$ time ./fftw_test.py --ng=4097 --deltar=0.01 --iter=500
-ng, Δr, Δq, iters = 4097 0.01 0.07668031861337059 500
-FFTW array sizes = 4096
-real	0m0.521s
-user	0m0.668s
-sys	0m0.521s
+$ time ./fftw_test.py --ng=8191 --deltar=0.02
+ng, Δr, Δq, iters = 8191 0.02 0.019177100803258414 10
+FFTW array sizes = 8190
+real	0m0.337s
+user	0m0.457s
+sys	0m0.547s
 ```
-With a grid of order one million grid points,
+The same, but with 4.2 million grid points
 ```
-$ time ./fftw_test.py --ng=2^20 --deltar=1e-3
-ng, Δr, Δq, iters = 1048576 0.001 0.0029960562263391427 10
-FFTW array sizes = 1048575
-real   0m0.946s
-user   0m1.065s
-sys    0m0.539s
+$ time ./fftw_test.py --ng=2^22 --deltar=1e-3
+ng, Δr, Δq, iters = 4194304 0.001 0.0007490140565847857 10
+FFTW array sizes = 4194303
+real	0m4.087s
+user	0m3.928s
+sys	0m0.822s
 
-$ time ./fftw_test.py --ng=2^20-1 --deltar=1e-3
-ng, Δr, Δq, iters = 1048575 0.001 0.0029960590836037413 10
-FFTW array sizes = 1048574
-real   0m1.807s
-user   0m1.876s
-sys    0m0.565s
+$ time ./fftw_test.py --ng=2^22+1 --deltar=1e-3
+ng, Δr, Δq, iters = 4194305 0.001 0.0007490138780059611 10
+FFTW array sizes = 4194304
+real	0m10.682s
+user	0m9.840s
+sys	0m1.505s
 
-$ time ./fftw_test.py --ng=2^20+1 --deltar=1e-3
-ng, Δr, Δq, iters = 1048577 0.001 0.0029960533690799943 10
-FFTW array sizes = 1048576
-real   0m3.106s
-user   0m3.063s
-sys    0m0.706s
+$ time ./fftw_test.py --ng=2^22-1 --deltar=1e-3
+ng, Δr, Δq, iters = 4194303 0.001 0.0007490142351636954 10
+FFTW array sizes = 4194302
+real	0m14.539s
+user	0m14.079s
+sys	0m1.121s
 ```
+
 In the code, FFTW is set up with the most basic `FFTW_ESTIMATE`
 [planner flag](https://www.fftw.org/fftw3_doc/Planner-Flags.html).
 This may make a difference in the end, but timing tests indicate that
@@ -269,6 +270,7 @@ in real space and reciprocal space to be comparable, Δ<em>r</em> ≈
 --deltar=0.05 --ng=2048  ( ⇒ Δq ≈ 0.031  )
 --deltar=0.02 --ng=8192  ( ⇒ Δq ≈ 0.019  )
 --deltar=0.01 --ng=32768 ( ⇒ Δq ≈ 0.0096 )
+--deltar=1e-3 --ng=2^22  (ng=4194304 ⇒ Δq ≈ 0.749e-3)
 ```
 
 ### Copying

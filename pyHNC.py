@@ -40,7 +40,7 @@ def truncate_to_zero(v, r, rc):
 
 class Grid:
 
-    def __init__(self, ng=4096, deltar=0.01, monitor=False):
+    def __init__(self, ng=8192, deltar=0.02, monitor=False):
         '''Initialise grids with the desired size and spacing'''
         self.version = '1.0' # for reporting purposes
         self.ng = ng

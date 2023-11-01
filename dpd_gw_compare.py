@@ -42,7 +42,7 @@ gw_data_df = pd.DataFrame([[0.0, 0.038], [1.5, 0.075], [2.5, 0.089], [3.0, 0.092
                           columns=['rho', 'pexbyArho2'])
 
 A = 25.0
-ng, Δr = 4096, 0.01
+ng, Δr = 8192, 0.02
 grid = Grid(ng, Δr) # make the initial working grid
 r = grid.r # extract the co-ordinate array for use below
 

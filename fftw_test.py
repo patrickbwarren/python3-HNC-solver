@@ -53,9 +53,9 @@ from numpy import pi as π
 from numpy import sin, cos
 
 parser = argparse.ArgumentParser(description='RPM one off calculator')
-parser.add_argument('-n', '--ngrid', action='store', default='2^16', help='number of grid points, default 2^16 = 65536')
+parser.add_argument('-n', '--ngrid', action='store', default='2^15', help='number of grid points, default 2^15 = 32768')
 parser.add_argument('-i', '--iters', action='store', default=10, type=int, help='number of iterations for timing, default 10')
-parser.add_argument('-d', '--deltar', action='store', default=1e-3, type=float, help='grid spacing, default 1e-3')
+parser.add_argument('-d', '--deltar', action='store', default=0.01, type=float, help='grid spacing, default 0.01')
 parser.add_argument('--rmax', action='store', default=3.0, type=float, help='maximum in r for plotting, default 3.0')
 parser.add_argument('--qmax', action='store', default=15.0, type=float, help='maximum in q for plotting, default 15.0')
 parser.add_argument('--show', action='store_true', help='show results')
