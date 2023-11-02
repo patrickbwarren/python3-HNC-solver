@@ -25,7 +25,7 @@
 
 # For standard DPD at A = 25 and ρ = 3, we have the following table
 
-#           ∆t = 0.02   ∆t = 0.02   Monte-Carlo  HNC   deviation
+#           ∆t = 0.02   ∆t = 0.01   Monte-Carlo  HNC   deviation
 # pressure  23.73±0.02  23.69±0.02  23.65±0.02   23.564  (0.4%)
 # energy    13.66±0.02  13.64±0.02  13.63±0.02   13.762  (1.0%)
 # mu^ex     12.14±0.02  12.16±0.02  12.25±0.10   12.171  (0.7%)
