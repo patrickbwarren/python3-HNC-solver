@@ -52,7 +52,7 @@ class Grid:
         self.fftwy = pyfftw.empty_aligned(self.ng-1)
         self.fftw = pyfftw.FFTW(self.fftwx, self.fftwy, direction='FFTW_RODFT00', flags=('FFTW_ESTIMATE',))
         if monitor:
-            print('Grid: ng, Δr, Δq =', self.ng, self.deltar, self.deltaq)
+            print('Grid: ng, Δr, Δq =', self.ng, f'(2^{int(0.5+np.log(self.ng)/np.log(2.0))})', self.deltar, self.deltaq)
             print('FFTW: initialised, array sizes =', self.ng-1)
 
     # These functions assume the FFTW has been initialised as above, the
@@ -130,11 +130,20 @@ class PicardHNC:
 def add_grid_args(parser):
     '''Add generic grid arguments to a parser'''
     parser.add_argument('-m', '--monitor', action='store_true', help='monitor convergence')
+    parser.add_argument('--grid', action='store', default=None, help='grid definition using deltar or deltar/ng, eg 0.02 or 0.02/8192')
     parser.add_argument('--ngrid', action='store', default='2^13', help='number of grid points, default 2^13 = 8192')
     parser.add_argument('--deltar', action='store', default=0.02, type=float, help='grid spacing, default 0.02')
 
 def grid_args(args):
     '''Return a dict of grid args, that can be used as **grid_args()'''
+    if args.grid:
+        if '/' in args.grid:
+            args_deltar, args.ngrid = args.grid.split('/')
+            args.deltar = float(args_deltar)
+        else:
+            args.deltar = float(args.grid)
+            args.r = int(1+np.log(np.pi/(args.deltar**2))/np.log(2.0))
+            args.ngrid = str(2**args.r)
     ng = eval(args.ngrid.replace('^', '**')) # catch 2^10 etc
     return {'ng':ng, 'deltar': args.deltar, 'monitor': args.monitor}
 

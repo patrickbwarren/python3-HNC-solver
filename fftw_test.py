@@ -50,9 +50,10 @@ import pyfftw
 import argparse
 import numpy as np
 from numpy import pi as π
-from numpy import sin, cos
+from numpy import log, sin, cos
 
 parser = argparse.ArgumentParser(description='RPM one off calculator')
+parser.add_argument('--grid', action='store', default=None, help='grid definition as deltar/ng, eg 0.02/8192')
 parser.add_argument('-n', '--ngrid', action='store', default='2^15', help='number of grid points, default 2^15 = 32768')
 parser.add_argument('-i', '--iters', action='store', default=10, type=int, help='number of iterations for timing, default 10')
 parser.add_argument('-d', '--deltar', action='store', default=0.01, type=float, help='grid spacing, default 0.01')
@@ -61,10 +62,19 @@ parser.add_argument('--qmax', action='store', default=15.0, type=float, help='ma
 parser.add_argument('--show', action='store_true', help='show results')
 args = parser.parse_args()
 
+if args.grid:
+    if '/' in args.grid:
+        args_deltar, args.ngrid = args.grid.split('/')
+        args.deltar = float(args_deltar)
+    else:
+        args.deltar = float(args.grid)
+        r = int(1+log(π/(args.deltar**2))/log(2.0))
+        args.ngrid = str(2**r)
+
 ng = eval(args.ngrid.replace('^', '**')) # catch 2^10 etc
 Δr = args.deltar
 Δq = π / (Δr*ng) # equivalent to π / (Δr*(fftw_n+1))
-print('ng, Δr, Δq, iters =', ng, Δr, Δq, args.iters)
+print('ng, Δr, Δq, iters =', ng, f'(2^{int(0.5+log(ng)/log(2.0))})', Δr, Δq, args.iters)
 
 r = Δr * np.arange(1, ng) # start from 1, and of length ng-1
 q = Δq * np.arange(1, ng) # ditto

@@ -193,13 +193,17 @@ is handled similarly.
 #### On FFTW efficiency
 
 Timing tests (below) indicate that FFTW is very fast when the array
-length in the above is a power of two _minus one_, which doesn't quite
-seem to fit with the
+length <em>n</em> in the above is a power of two _minus one_, which
+doesn't quite seem to fit with the
 [documentation](https://www.fftw.org/fftw3_doc/Real_002dto_002dReal-Transforms.html).
-Here, the grid size <em>N</em><sub>g</sub> in pyHNC is typically a power of two, but the
-arrays passed to FFTW are shortened to <em>N</em><sub>g</sub> − 1.  Some typical
-timing results on a moderately fast [Intel<sup>®</sup> NUC11TZi7](https://www.intel.com/content/www/us/en/products/sku/205605/intel-nuc-11-pro-kit-nuc11tnhi7/specifications.html) with an [11th Gen Intel<sup>®</sup>
-Core™ i7-1165G7](https://www.intel.com/content/www/us/en/products/sku/205605/intel-nuc-11-pro-kit-nuc11tnhi7/specifications.html) processor (up to 4.70GHz) support this.  For example
+Hence, the grid size <em>N</em><sub>g</sub> = <em>n</em> + 1 in pyHNC
+is typically a power of two, but the arrays passed to FFTW are
+shortened to <em>N</em><sub>g</sub> − 1.  Some typical timing results
+on a moderately fast [Intel<sup>®</sup>
+NUC11TZi7](https://www.intel.com/content/www/us/en/products/sku/205605/intel-nuc-11-pro-kit-nuc11tnhi7/specifications.html)
+with an [11th Gen Intel<sup>®</sup> Core™
+i7-1165G7](https://www.intel.com/content/www/us/en/products/sku/205605/intel-nuc-11-pro-kit-nuc11tnhi7/specifications.html)
+processor (up to 4.70GHz) support this.  For example
 ```
 $ time ./fftw_test.py --ng=8192 --deltar=0.02
 ng, Δr, Δq, iters = 8192 0.02 0.019174759848570515 10
@@ -259,7 +263,7 @@ The TL;DR take-home message here is _use a power of two_ for the
 
 #### Choice of grid size
 
-From above Δ<em>r</em> × Δ<em>q</em> = π / (<em>n</em>+1) can be
+From above Δ<em>r</em> × Δ<em>q</em> = π / <em>N</em><sub>g</sub> can be
 inverted to suggest <em>N</em><sub>g</sub> = π /
 Δ<em>r</em> Δ<em>q</em>.  Since presumably we want the grid resolution
 in real space and reciprocal space to be comparable, Δ<em>r</em> ≈
@@ -267,10 +271,10 @@ in real space and reciprocal space to be comparable, Δ<em>r</em> ≈
 2<sup><em>r</em></sup>, this suggests the following table (where
 Δ<em>q</em> is computed from Δ<em>r</em> and <em>N</em><sub>g</sub>):
 ```
---deltar=0.05 --ng=2048  ( ⇒ Δq ≈ 0.031  )
---deltar=0.02 --ng=8192  ( ⇒ Δq ≈ 0.019  )
---deltar=0.01 --ng=32768 ( ⇒ Δq ≈ 0.0096 )
---deltar=1e-3 --ng=2^22  (ng=4194304 ⇒ Δq ≈ 0.749e-3)
+--deltar=0.05 --ng=2^11 (ng=2048 ⇒ Δq ≈ 0.031  )
+--deltar=0.02 --ng=2^13 (ng=8192 ⇒ Δq ≈ 0.019  )
+--deltar=0.01 --ng=2^15 (ng=32768 ⇒ Δq ≈ 0.0096 )
+--deltar=1e-3 --ng=2^22 (ng=4194304 ⇒ Δq ≈ 0.749e-3)
 ```
 
 ### Copying
