@@ -42,20 +42,19 @@ gw_data_df = pd.DataFrame([[0.0, 0.038], [1.5, 0.075], [2.5, 0.089], [3.0, 0.092
                           columns=['rho', 'pexbyArho2'])
 
 A = 25.0
-ng, Δr = 8192, 0.02
+Δr, ng = 0.02, 8192
 grid = Grid(ng, Δr) # make the initial working grid
 r = grid.r # extract the co-ordinate array for use below
 
-vr = truncate_to_zero(A/2*(1-r)**2, r, 1.0) # DPD potential - the array here is size ng-1, same as r[:]
-fr = truncate_to_zero((1-r), r, 1.0) # the derivate (negative), omitting the amplitude
+φ = truncate_to_zero(A/2*(1-r)**2, r, 1) # DPD potential
+fbyA = truncate_to_zero((1-r), r, 1) # the force f(r) = −dφ/dr, omitting the amplitude
 
 solver = PicardHNC(grid)
 
 hnc_data = []
 for ρ in np.linspace(0.0, 10.0, 41)[1:]: # omit rho = 0.0
-    soln = solver.solve(vr, ρ)
-    hr = soln.hr
-    pexbyArho2 = 2*π/3 * (1/20 + np.trapz(r**3*fr*hr, dx=Δr))
+    hr = solver.solve(φ, ρ).hr
+    pexbyArho2 = 2*π/3 * (1/20 + np.trapz(r**3*fbyA*hr, dx=Δr))
     p = ρ+ A*ρ**2*pexbyArho2
     hnc_data.append([ρ, p, pexbyArho2, solver.error])
 

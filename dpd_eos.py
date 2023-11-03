@@ -42,11 +42,11 @@ solver = pyHNC.PicardHNC(grid, **pyHNC.solver_args(args))
 # DPD potential and force law omitting amplitude;
 # the array sizes here are ng-1, same as r[:].
 
-vr = truncate_to_zero(1/2*(1-r)**2, r, 1.0)
-fr = truncate_to_zero((1-r), r, 1.0)
+φbyA = truncate_to_zero(1/2*(1-r)**2, r, 1)
+fbyA = truncate_to_zero((1-r), r, 1)
 
 # The virial pressure, p = ρ + 2πρ²/3 ∫_0^∞ dr r³ f(r) g(r) where
-# f(r) = −dv/dr is the force.  See Eq. (2.5.22) in Hansen & McDonald,
+# f(r) = −d φ/dr is the force.  See Eq. (2.5.22) in Hansen & McDonald,
 # "Theory of Simple Liquids" (3rd edition).  The constant term is the
 # mean field contribution, that is the integral evaluated with g(r) = 1,
 # namely ∫_0^∞ dr r³ f(r) = A ∫_0^1 dr r³ (1−r) = A/20.
@@ -55,8 +55,8 @@ data = []
 for A in pyHNC.as_linspace(args.Arange):
     solver.warmed_up = False # fresh start with lowest density
     for ρ in pyHNC.as_linspace(args.rhorange):
-        hr = solver.solve(A*vr, ρ).hr
-        pexbyA = 2*π*ρ**2/3 * (1/20 + np.trapz(r**3*fr*hr, dx=Δr))
+        hr = solver.solve(A*φbyA, ρ).hr
+        pexbyA = 2*π*ρ**2/3 * (1/20 + np.trapz(r**3*fbyA*hr, dx=Δr))
         p = ρ + A*pexbyA
         data.append((A, ρ, ρ**2, p, pexbyA, solver.error))
 

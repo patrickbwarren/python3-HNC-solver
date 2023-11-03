@@ -61,35 +61,35 @@ grid = Grid(**grid_args(args)) # make the initial working grid
 
 r, Δr, q = grid.r, grid.deltar, grid.q # extract the co-ordinate arrays for use below
 
-# Define the canonical unnormalised weight function used in the DPD
-# potential, and its derivative, then solve the HNC problem.
+# Define the DPD potential, and its derivative, then solve the HNC
+# problem.  The arrays here are all size ng-1, same as r[:]
 
-wr = truncate_to_zero(1/4*(1-r)**2, r, 1.0) # the array here is size ng-1, same as r[:]
-minusdwdr = truncate_to_zero(1/2*(1-r), r, 1.0) # the negated derivate
+φ = truncate_to_zero(A/2*(1-r)**2, r, 1) # the DPD potential
+f = truncate_to_zero(A*(1-r), r, 1) # the force f = -dφ/dr
 
 solver = PicardHNC(grid, **solver_args(args))
-soln = solver.solve(2*A*wr, ρ) # solve for the DPD potential, being 2A × the weight function
+soln = solver.solve(φ, ρ) # solve for the DPD potential
 hr, hq = soln.hr, soln.hq # extract for use in a moment
 
 # For the integrals here, see Eqs. (2.5.20) and (2.5.22) in
 # Hansen & McDonald, "Theory of Simple Liquids" (3rd edition):
-# for the energy density, e = 2πρ² ∫_0^∞ dr r² v(r) g(r) 
+# for the (excess) energy density, e = 2πρ² ∫_0^∞ dr r² φ(r) g(r) 
 # and virial pressure, p = ρ + 2πρ²/3 ∫_0^∞ dr r³ f(r) g(r)
-# where f(r) = −dv/dr is the force.
+# where f(r) = −dφ/dr is the force.
 
 # The constant terms here capture the mean field contributions, that
 # is the integrals evaluated with g(r) = 1.  Specifically:
-# ∫_0^∞ dr r² v(r) = A ∫_0^1 dr r² (1−r)²/2 = A/60 ;
+# ∫_0^∞ dr r² φ(r) = A/2 ∫_0^1 dr r² (1−r)² = A/60 ;
 # ∫_0^∞ dr r³ f(r) = A ∫_0^1 dr r³ (1−r) = A/20 .
 
-energy = 2*π*ρ**2 * (A/60 + 2*A*np.trapz(r**2*wr*hr, dx=Δr))
-pressure = ρ + 2*π*ρ**2/3 * (A/20 + 2*A*np.trapz(r**3*minusdwdr*hr, dx=Δr))
+e = 2*π*ρ**2 * (A/60 + np.trapz(r**2*φ*hr, dx=Δr))
+p = ρ + 2*π*ρ**2/3 * (A/20 + np.trapz(r**3*f*hr, dx=Δr))
 
 print('Model: standard DPD with A = %f, ρ = %f' % (A, ρ))
 
-if A == 25.0 and ρ == 3.0:
+if A == 25 and ρ == 3:
     print('Monte-Carlo:   energy density, virial pressure =\t\t13.63±0.02\t23.65±0.02')
-print('pyHNC v%s:    energy density, virial pressure =\t\t%0.5f\t%0.5f' % (grid.version, energy, pressure))
+print('pyHNC v%s:    energy density, virial pressure =\t\t%0.5f\t%0.5f' % (grid.version, e, p))
 
 if args.sunlight:
     

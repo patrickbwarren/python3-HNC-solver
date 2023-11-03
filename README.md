@@ -12,7 +12,7 @@ single-component systems, with soft potentials (no hard cores) such as
 dissipative particle dynamics (DPD).  It uses the
 [FFTW](https://www.fftw.org/) library to do the Fourier transforms,
 accessed _via_ the [pyFFTW](https://pyfftw.readthedocs.io/en/latest/)
-wrapper.
+wrapper, together with basic [NumPy](https://numpy.org/) function calls.
 
 The code is intended for rapid prototyping, but is also partly
 pedagogical with the intent of attempting to capture some of the
@@ -54,7 +54,9 @@ copying `oz.pyf` and `oz.*.so` from
 (avaliable after running `make`) to the directory containing
 `dpd_demo.py`.
 
-### HNC closure of the OZ equation
+### What's being solved here?
+
+#### HNC closure of the OZ equation
 
 What's being solved here is the Ornstein-Zernike (OZ) equation in
 reciprocal space in the form <em>h</em>(<em>q</em>) =
@@ -79,7 +81,7 @@ An initial guess if the solver is not warmed up is
 random-phase approximation (RPA), which for systems without hard cores
 is equivalent to the mean spherical approximation (MSA).
 
-### Algorithm
+#### Algorithm
 
 Given an initial guess <em>c</em>(<em>r</em>), the solver implements the
 following scheme (<em>cf</em> [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC)):
@@ -118,7 +120,9 @@ factor can be found from:
   <em>h</em>(<em>q</em>) = <em>e</em>(<em>q</em>) +
   <em>c</em>(<em>q</em>) .
 
-Thermodynamic quantities can also now be computed, for example the
+#### Thermodynamics
+
+Thermodynamic quantities can also now be computed, for example the excess
 energy density and virial pressure follow from Eqs. (2.5.20) and (2.5.22) in
 Hansen and McDonald, "Theory of Simple Liquids" (3rd edition) as:
 
@@ -130,7 +134,7 @@ Hansen and McDonald, "Theory of Simple Liquids" (3rd edition) as:
 
 In practice these should usually be calculated with
 <em>h</em>(<em>r</em>) = <em>g</em>(<em>r</em>) − 1, since the
-mean-field estimates (<em>i. e.</em> the above with
+mean-field contributions (<em>i. e.</em> the above with
 <em>g</em>(<em>r</em>) = 1) can usually be calculated analytically.
 Note that in this case an integration by parts shows that the two
 integrals are actually the same, and are essentially equal to the
@@ -138,7 +142,75 @@ value of the potential at the origin in reciprocal space: 2πρ²/3
 ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>³
 <em>f</em>(<em>r</em>) = 2πρ² ∫<sub>0</sub><sup>∞</sup> d<em>r</em>
 <em>r</em>² <em>v</em>(<em>r</em>) = ρ²/2 ∫ d³<b>r</b>
-<em>v</em>(<em>r</em>) = ρ²/2 <em>v</em>(<em>q</em>=0)
+<em>v</em>(<em>r</em>) = ρ²/2 <em>v</em>(<em>q</em>=0).
+
+The ideal contributions in units of <em>k</em><sub>B</sub><em>T</em>
+are, respectively, 3ρ/2 and ρ.
+
+#### Coupling constant integration
+
+It follows from the basic definition e<sup>−<em>F</em></sup> = ∫
+d<sup><em>N</em></sup>{<b>r</b>} e<sup>−<em>U</em></sup> that
+∂<em>F</em>/∂λ = ⟨∂<em>U</em>/∂λ⟩ where λ is a parameter in the
+potential function <em>U</em>.  We can therefore calculate the free
+energy from <em>F</em> = <em>F</em><sub>0</sub> +
+∫<sub>0</sub><sup>1</sup> dλ ⟨∂<em>U</em>/∂λ⟩<sub>λ</sub>.  If λ is
+simply a multiplicative scaling, <em>U</em> → λ <em>U</em>, then
+∂<em>U</em>/∂λ = <em>U</em> and we have the _coupling constant
+integration_ scheme <em>F</em> = <em>F</em><sub>0</sub> +
+∫<sub>0</sub><sup>1</sup> dλ ⟨<em>U</em>⟩<sub>λ</sub> where the
+indicated average should be taken with the potential energy scaled by
+a factor λ. In this scheme <em>F</em><sub>0</sub> is just the free
+energy of an ideal gas of non-interacting particles since λ → 0
+switches off the interactions.
+
+Since the free energy can be differentiated to find the
+pressure, this is the basis for the so-called energy route to the
+pressure.  For example, if the free energy density is available as a
+function of density, <em>f</em>(ρ), the pressure follows from p =
+−∂<em>F</em>/∂<em>V</em> as <em>p</em> = ρ d<em>f</em>/dρ − <em>f</em>
+= ρ² d(<em>f</em> / ρ)/dρ where <em>f</em> / ρ is the free energy per
+particle.
+
+The mean-field contribution to this can be calculated immediately
+since the contribution to the energy density 2πρ²
+∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
+<em>v</em>(<em>r</em>) is independent of λ and therefore
+∫<sub>0</sub><sup>1</sup> dλ applied to this term trivially evaluates
+to the same.  Since this term is ∝ ρ², following the indicated route
+to the pressure shows that this exact same term appears there too.  So
+the mean-field contribution to the pressure here is the same as the
+virial route.
+
+For the non-mean-field contribution we sketch the algorithm:
+
+* solve the HNC closure of OZ equation for the _scaled_ pair potential
+  λ<em>v</em>(<em>r</em>) to get <em>h</em>(<em>r</em>; λ) ;
+
+* calculate the excess non-mean-field energy with the
+ _unscaled_ pair potential, <em>∆e</em>(λ) = 2πρ²
+ ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
+ <em>v</em>(<em>r</em>) <em>h</em>(<em>r</em>; λ) ;
+
+* the excess non-mean-field free energy is then the integral
+  <em>∆f</em> = ∫<sub>0</sub><sup>1</sup> dλ <em>∆e</em>(λ) .
+
+* the excess non-mean-field pressure then follows from ∆p = ρ²
+d(<em>∆f</em> / ρ)/dρ .  This should be added to the mean-field
+contribution to obtain the excess pressure, and the whole added to the
+ideal contribution to find the total pressure.
+
+In practice the coupling constant integration can be performed by any
+number of numerical methods, from a basic trapezium rule to
+sophisticated adaptive quadrature algorithms.  For the final step, the
+derivative of the excess non-mean-field free energy per particle is
+usually computed numerically too.
+
+For the HNC closure, which is free energy based, in fact it should be
+_exactly_ true that the energy route pressure is the same as the
+virial route pressure, not just the mean-field contributions.  So
+differences here are a test of the numerics rather than the physical
+approximations.
 
 ### FFTW and Fourier-Bessel transforms
 

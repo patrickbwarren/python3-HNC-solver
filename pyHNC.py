@@ -130,7 +130,7 @@ class PicardHNC:
 def add_grid_args(parser):
     '''Add generic grid arguments to a parser'''
     parser.add_argument('-m', '--monitor', action='store_true', help='monitor convergence')
-    parser.add_argument('--grid', action='store', default=None, help='grid definition using deltar or deltar/ng, eg 0.02 or 0.02/8192')
+    parser.add_argument('--grid', action='store', default=None, help='grid using deltar or deltar/ng, eg 0.02 or 0.02/8192')
     parser.add_argument('--ngrid', action='store', default='2^13', help='number of grid points, default 2^13 = 8192')
     parser.add_argument('--deltar', action='store', default=0.02, type=float, help='grid spacing, default 0.02')
 
