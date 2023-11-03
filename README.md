@@ -144,8 +144,8 @@ value of the potential at the origin in reciprocal space: 2πρ²/3
 <em>r</em>² <em>v</em>(<em>r</em>) = ρ²/2 ∫ d³<b>r</b>
 <em>v</em>(<em>r</em>) = ρ²/2 <em>v</em>(<em>q</em>=0).
 
-The ideal contributions in units of <em>k</em><sub>B</sub><em>T</em>
-are, respectively, 3ρ/2 and ρ.
+The ideal contributions, in units of <em>k</em><sub>B</sub><em>T</em>,
+are respectively 3ρ/2 and ρ.
 
 #### Coupling constant integration
 
@@ -169,7 +169,7 @@ pressure, this is the basis for the so-called energy route to the
 pressure.  For example, if the free energy density is available as a
 function of density, <em>f</em>(ρ), the pressure follows from p =
 −∂<em>F</em>/∂<em>V</em> as <em>p</em> = ρ d<em>f</em>/dρ − <em>f</em>
-= ρ² d(<em>f</em> / ρ)/dρ where <em>f</em> / ρ is the free energy per
+= ρ² d(<em>f</em>/ρ)/dρ where <em>f</em>/ρ is the free energy per
 particle.
 
 The mean-field contribution to this can be calculated immediately
@@ -187,10 +187,10 @@ For the non-mean-field contribution we sketch the algorithm:
 * solve the HNC closure of OZ equation for the _scaled_ pair potential
   λ<em>v</em>(<em>r</em>) to get <em>h</em>(<em>r</em>; λ) ;
 
-* calculate the excess non-mean-field energy with the
- _unscaled_ pair potential, <em>∆e</em>(λ) = 2πρ²
+* calculate  <em>∆e</em>(λ) = 2πρ²
  ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
- <em>v</em>(<em>r</em>) <em>h</em>(<em>r</em>; λ) ;
+ <em>v</em>(<em>r</em>) <em>h</em>(<em>r</em>; λ) with the
+ _unscaled_ pair potential;
 
 * the excess non-mean-field free energy is then the integral
   <em>∆f</em> = ∫<sub>0</sub><sup>1</sup> dλ <em>∆e</em>(λ) .
@@ -201,8 +201,8 @@ contribution to obtain the excess pressure, and the whole added to the
 ideal contribution to find the total pressure.
 
 In practice the coupling constant integration can be performed by any
-number of numerical methods, from a basic trapezium rule to
-sophisticated adaptive quadrature algorithms.  For the final step, the
+number of numerical quadrature methods, from a basic trapezium rule to
+sophisticated adaptive algorithms.  For the final step, the
 derivative of the excess non-mean-field free energy per particle is
 usually computed numerically too.
 
