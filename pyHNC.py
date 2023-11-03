@@ -40,7 +40,7 @@ def truncate_to_zero(v, r, rc):
 
 class Grid:
 
-    def __init__(self, ng=8192, deltar=0.02, monitor=False):
+    def __init__(self, ng=8192, deltar=0.02):
         '''Initialise grids with the desired size and spacing'''
         self.version = '1.0' # for reporting purposes
         self.ng = ng
@@ -51,9 +51,12 @@ class Grid:
         self.fftwx = pyfftw.empty_aligned(self.ng-1)
         self.fftwy = pyfftw.empty_aligned(self.ng-1)
         self.fftw = pyfftw.FFTW(self.fftwx, self.fftwy, direction='FFTW_RODFT00', flags=('FFTW_ESTIMATE',))
-        if monitor:
-            print('Grid: ng, Δr, Δq =', self.ng, f'(2^{int(0.5+np.log(self.ng)/np.log(2.0))})', self.deltar, self.deltaq)
-            print('FFTW: initialised, array sizes =', self.ng-1)
+
+    def details(self):
+        '''Return a string containing details of the grid parameters'''
+        r = round(0.5+np.log(self.ng)/np.log(2.0))
+        return '\n'.join([f'Grid: ng = {self.ng} = 2^{r}, Δr = {self.deltar}, Δq = {self.deltaq}'
+                          f'FFTW: initialised, array sizes = {self.ng-1}'])
 
     # These functions assume the FFTW has been initialised as above, the
     # arrays r and q exist, as do the parameters Δr and Δq.
@@ -90,9 +93,11 @@ class PicardHNC:
         self.monitor = monitor
         self.converged = False
         self.warmed_up = False
-        if self.monitor:
-            print('HNC: grid ng = %i, Δr = %g, Δq = %g' % (self.grid.ng, self.grid.deltar, self.grid.deltaq))
-            print('HNC: α = %g, tol = %0.1e, max_picard = %i' % (self.alpha, self.tol, self.max_iter))
+
+    def details(self):
+        '''Return a string containing details of the HNC algorithm parameters'''
+        return '\n'.join([f'HNC: grid ng = {self.grid.ng}, Δr = {self.grid.deltar}, Δq = {self.grid.deltaq}',
+                          'HNC: α = %g, tol = %0.1e, max_picard = %i' % (self.alpha, self.tol, self.max_iter)])
 
     def solve(self, vr, rho, cr_init=None):
         '''Solve HNC for a given potential, with an optional initial guess at cr'''
@@ -142,8 +147,8 @@ def grid_args(args):
             args.deltar = float(args_deltar)
         else:
             args.deltar = float(args.grid)
-            args.r = int(1+np.log(np.pi/(args.deltar**2))/np.log(2.0))
-            args.ngrid = str(2**args.r)
+            r = 1 + round(np.log(np.pi/(args.deltar**2))/np.log(2))
+            args.ngrid = str(2**r)
     ng = eval(args.ngrid.replace('^', '**')) # catch 2^10 etc
     return {'ng':ng, 'deltar': args.deltar, 'monitor': args.monitor}
 
@@ -166,8 +171,19 @@ def df_to_agr(df):
     data_rows = df.to_string(index=False).split('\n')[2:]
     return '\n'.join([header_row] + data_rows)
 
+# Convert a variety of formats and return the corresponding numpy linspace object.
+# Options can be Abramowitz and Stegun style 'start:step:end' or 'start(step)end',
+# or Numpy style 'start,end,npt'
+
 def as_linspace(as_range):
-    '''Convert an Abramowitz and Stegun style range "start(step)end" to an np array'''
-    start, step, end = [float(eval(x)) for x in as_range.replace('(', ':').replace(')', ':').split(':')]
-    npt = int((end-start)/step + 1.5)
-    return np.linspace(start, end, npt)
+    '''Convert a range expressed as a string to an np.linspace array'''
+    if ',' in as_range:
+        start, end, npt = [float(eval(x)) for x in as_range.split(',')]
+    elif ':' in as_range or '(' in as_range:
+        start, step, end = [float(eval(x)) for x in as_range.replace('(', ':').replace(')', ':').split(':')]
+        npt = (end-start)/step + 1.5 # as a float
+    return np.linspace(start, end, int(npt))
+
+def grid_spacing(x):
+    '''Utility to return the grid space assuming the array is evenly spaced'''
+    return x[1] - x[0]

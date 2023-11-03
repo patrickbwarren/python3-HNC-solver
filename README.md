@@ -182,7 +182,7 @@ to the pressure shows that this exact same term appears there too.  So
 the mean-field contribution to the pressure here is the same as the
 virial route.
 
-For the non-mean-field contribution we sketch the algorithm:
+For the non-mean-field correlation contribution we sketch the algorithm:
 
 * solve the HNC closure of OZ equation for the _scaled_ pair potential
   λ<em>v</em>(<em>r</em>) to get <em>h</em>(<em>r</em>; λ) ;
@@ -192,10 +192,10 @@ For the non-mean-field contribution we sketch the algorithm:
  <em>v</em>(<em>r</em>) <em>h</em>(<em>r</em>; λ) with the
  _unscaled_ pair potential;
 
-* the excess non-mean-field free energy is then the integral
+* the excess correlation free energy is then the integral
   <em>∆f</em> = ∫<sub>0</sub><sup>1</sup> dλ <em>∆e</em>(λ) .
 
-* the excess non-mean-field pressure then follows from ∆p = ρ²
+* the excess correlation pressure then follows from ∆p = ρ²
 d(<em>∆f</em> / ρ)/dρ .  This should be added to the mean-field
 contribution to obtain the excess pressure, and the whole added to the
 ideal contribution to find the total pressure.
@@ -203,7 +203,7 @@ ideal contribution to find the total pressure.
 In practice the coupling constant integration can be performed by any
 number of numerical quadrature methods, from a basic trapezium rule to
 sophisticated adaptive algorithms.  For the final step, the
-derivative of the excess non-mean-field free energy per particle is
+derivative of the excess correlation free energy per particle is
 usually computed numerically too.
 
 For the HNC closure, which is free energy based, in fact it should be

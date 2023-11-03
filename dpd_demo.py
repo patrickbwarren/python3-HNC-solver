@@ -42,13 +42,16 @@
 import argparse
 import numpy as np
 from numpy import pi as π
-from pyHNC import Grid, PicardHNC, add_grid_args, grid_args, add_solver_args, solver_args, truncate_to_zero
+import pyHNC
+from scipy.integrate import quadrature as integrate
+from pyHNC import Grid, PicardHNC, truncate_to_zero
 
 parser = argparse.ArgumentParser(description='DPD HNC calculator')
-add_grid_args(parser)
-add_solver_args(parser)
+pyHNC.add_grid_args(parser)
+pyHNC.add_solver_args(parser)
 parser.add_argument('--A', action='store', default=25.0, type=float, help='repulsion amplitude, default 25.0')
 parser.add_argument('--rho', action='store', default=3.0, type=float, help='density, default 3.0')
+parser.add_argument('--dlambda', action='store', default=0.05, type=float, help='spacing for coupling constant integration')
 parser.add_argument('--rmax', action='store', default=3.0, type=float, help='maximum in r for plotting, default 3.0')
 parser.add_argument('--qmax', action='store', default=25.0, type=float, help='maximum in q for plotting, default 25.0')
 parser.add_argument('--sunlight', action='store_true', help='compare to SunlightHNC')
@@ -57,7 +60,7 @@ args = parser.parse_args()
 
 A, ρ = args.A, args.rho
 
-grid = Grid(**grid_args(args)) # make the initial working grid
+grid = Grid(**pyHNC.grid_args(args)) # make the initial working grid
 
 r, Δr, q = grid.r, grid.deltar, grid.q # extract the co-ordinate arrays for use below
 
@@ -67,9 +70,11 @@ r, Δr, q = grid.r, grid.deltar, grid.q # extract the co-ordinate arrays for use
 φ = truncate_to_zero(A/2*(1-r)**2, r, 1) # the DPD potential
 f = truncate_to_zero(A*(1-r), r, 1) # the force f = -dφ/dr
 
-solver = PicardHNC(grid, **solver_args(args))
-soln = solver.solve(φ, ρ) # solve for the DPD potential
-hr, hq = soln.hr, soln.hq # extract for use in a moment
+solver = PicardHNC(grid, **pyHNC.solver_args(args))
+
+# function to calculate the excess non-mean-field energy with coupling
+# constant λ.  Uses a bunch of variables that are 'in scope' here, but
+# hr is locally scoped in the function and masks the main routine hr.
 
 # For the integrals here, see Eqs. (2.5.20) and (2.5.22) in
 # Hansen & McDonald, "Theory of Simple Liquids" (3rd edition):
@@ -82,18 +87,47 @@ hr, hq = soln.hr, soln.hq # extract for use in a moment
 # ∫_0^∞ dr r² φ(r) = A/2 ∫_0^1 dr r² (1−r)² = A/60 ;
 # ∫_0^∞ dr r³ f(r) = A ∫_0^1 dr r³ (1−r) = A/20 .
 
-e = 2*π*ρ**2 * (A/60 + np.trapz(r**2*φ*hr, dx=Δr))
-p = ρ + 2*π*ρ**2/3 * (A/20 + np.trapz(r**3*f*hr, dx=Δr))
+soln = solver.solve(φ, ρ) # solve for the DPD potential
+hr, hq = soln.hr, soln.hq # extract for use in a moment
+
+f_mf = e_mf = p_mf = π*A*ρ**2/30 # all the same for these
+
+e_xc = 2*π*ρ**2 * np.trapz(r**2*φ*hr, dx=Δr)
+p_xc = 2*π*ρ**2/3 * np.trapz(r**3*f*hr, dx=Δr)
+
+e_ex = e_mf + e_xc
+p_ex = p_mf + p_xc
+e = 3*ρ/ + e_ex
+p = ρ + p_ex
+
+# Coupling constant integration for the free energy
+
+def excess(λ):
+    '''Return the excess correlation energy with coupling λ'''
+    h = 0 if λ == 0 else solver.solve(λ*φ, ρ).hr # presumed will converge !
+    e_xc = 2*π*ρ**2 * np.trapz(r**2*φ*h, dx=Δr)
+    return e_xc
+
+λ_arr = np.linspace(0, 1, 1+round(1/args.dlambda))
+dλ = pyHNC.grid_spacing(λ_arr)
+print(dλ)
+e_xc_arr = np.array([excess(λ) for λ in np.flip(λ_arr)]) # descend, to assure convergence
+f_xc = np.trapz(e_xc_arr, dx=dλ) # the coupling constant integral
+f_ex = f_mf + f_xc
+
+print('f_ex = %f + %f = %f' % (f_mf, f_xc, f_ex))
 
 print('Model: standard DPD with A = %f, ρ = %f' % (A, ρ))
 
-if A == 25 and ρ == 3:
-    print('Monte-Carlo:   energy density, virial pressure =\t\t13.63±0.02\t23.65±0.02')
-print('pyHNC v%s:    energy density, virial pressure =\t\t%0.5f\t%0.5f' % (grid.version, e, p))
+print('Monte-Carlo (A, ρ =25, 3):      energy, virial pressure =\t13.63±0.02\t\t\t23.65±0.02')
+print('pyHNC v%s:        energy, free energy, virial pressure =\t%0.5f\t%0.5f\t%0.5f' % (grid.version, e_ex, f_ex, p))
 
 if args.sunlight:
     
     from oz import wizard as w
+
+    w.ng = grid.ng
+    w.deltar = grid.deltar
 
     w.initialise()
     w.arep[0,0] = A
@@ -102,7 +136,7 @@ if args.sunlight:
     w.hnc_solve()
     
     version = str(w.version, 'utf-8').strip()
-    print('SunlightHNC v%s: energy density,  virial pressure =\t\t%0.5f\t%0.5f' % (version, w.uex, w.press))
+    print('SunlightHNC v%s: energy, free energy, virial pressure =\t%0.5f\t%0.5f\t%0.5f' % (version, w.uex, w.aex, w.press))
 
 if args.show:
 
