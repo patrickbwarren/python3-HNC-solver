@@ -149,38 +149,38 @@ are respectively 3ρ/2 and ρ.
 
 #### Coupling constant integration
 
-It follows from the basic definition e<sup>−<em>F</em></sup> = ∫
+It follows from the basic definition of the free energy <em>F</em> = − ln ∫
 d<sup><em>N</em></sup>{<b>r</b>} e<sup>−<em>U</em></sup> that
 ∂<em>F</em>/∂λ = ⟨∂<em>U</em>/∂λ⟩ where λ is a parameter in the
-potential function <em>U</em>.  We can therefore calculate the free
-energy from <em>F</em> = <em>F</em><sub>0</sub> +
-∫<sub>0</sub><sup>1</sup> dλ ⟨∂<em>U</em>/∂λ⟩<sub>λ</sub>.  If λ is
-simply a multiplicative scaling, <em>U</em> → λ <em>U</em>, then
-∂<em>U</em>/∂λ = <em>U</em> and we have the _coupling constant
-integration_ scheme <em>F</em> = <em>F</em><sub>0</sub> +
-∫<sub>0</sub><sup>1</sup> dλ ⟨<em>U</em>⟩<sub>λ</sub> where the
-indicated average should be taken with the potential energy scaled by
-a factor λ. In this scheme <em>F</em><sub>0</sub> is just the free
-energy of an ideal gas of non-interacting particles since λ → 0
-switches off the interactions.
+potential function <em>U</em>.
 
-Since the free energy can be differentiated to find the
-pressure, this is the basis for the so-called energy route to the
-pressure.  For example, if the free energy density is available as a
-function of density, <em>f</em>(ρ), the pressure follows from p =
-−∂<em>F</em>/∂<em>V</em> as <em>p</em> = ρ d<em>f</em>/dρ − <em>f</em>
-= ρ² d(<em>f</em>/ρ)/dρ where <em>f</em>/ρ is the free energy per
-particle.
+We can therefore calculate the free energy from <em>F</em> =
+<em>F</em><sub>0</sub> + ∫<sub>0</sub><sup>1</sup> dλ
+⟨∂<em>U</em>/∂λ⟩<sub>λ</sub>.  If λ is simply a multiplicative
+scaling, <em>U</em> → λ <em>U</em>, then ∂<em>U</em>/∂λ = <em>U</em>
+and we have a _coupling constant integration_ scheme <em>F</em> =
+<em>F</em><sub>0</sub> + ∫<sub>0</sub><sup>1</sup> dλ
+⟨<em>U</em>⟩<sub>λ</sub> where the indicated average should be taken
+with the potential energy scaled by a factor λ. In this scheme
+<em>F</em><sub>0</sub> is just the free energy of an ideal gas of
+non-interacting particles since λ → 0 switches off the interactions.
+
+Since the free energy can be differentiated to find the pressure, this
+is the basis for the so-called energy route to the pressure.  For
+example, if the free energy density is available as a function of
+density, <em>f</em>(ρ), the pressure follows from p =
+−∂<em>F</em>/∂<em>V</em> as <em>p</em> = ρ² d(<em>f</em>/ρ)/dρ where
+<em>f</em>/ρ is the free energy per particle.
 
 The mean-field contribution to this can be calculated immediately
 since the contribution to the energy density 2πρ²
 ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
 <em>v</em>(<em>r</em>) is independent of λ and therefore
 ∫<sub>0</sub><sup>1</sup> dλ applied to this term trivially evaluates
-to the same.  Since this term is ∝ ρ², following the indicated route
-to the pressure shows that this exact same term appears there too.  So
-the mean-field contribution to the pressure here is the same as the
-virial route.
+to the same.  Furthermore, since this term is ∝ ρ², following the
+indicated route to the pressure shows that this exact same term
+appears there too.  So the mean-field contribution to the pressure
+here is the same as the virial route.
 
 For the non-mean-field correlation contribution we sketch the algorithm:
 
@@ -202,9 +202,8 @@ ideal contribution to find the total pressure.
 
 In practice the coupling constant integration can be performed by any
 number of numerical quadrature methods, from a basic trapezium rule to
-sophisticated adaptive algorithms.  For the final step, the
-derivative of the excess correlation free energy per particle is
-usually computed numerically too.
+sophisticated adaptive algorithms.  The derivative with respect to
+density is usually computed numerically too.
 
 For the HNC closure, which is free energy based, in fact it should be
 _exactly_ true that the energy route pressure is the same as the
@@ -214,10 +213,11 @@ approximations.
 
 ### FFTW and Fourier-Bessel transforms
 
-The code illustrates how to implement three-dimensional
-Fourier-Bessel transforms using FFTW.
-The Fourier-Bessel forward transform of a function
-<em>f</em>(<em>r</em>) in three dimensions is (see [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC) documentation):
+The code illustrates how to implement three-dimensional Fourier-Bessel
+transforms using FFTW.  The Fourier-Bessel forward transform of a
+function <em>f</em>(<em>r</em>) in three dimensions is (see
+[SunlightHNC](https://github.com/patrickbwarren/SunlightHNC)
+documentation):
 
 <em>g</em>(<em>q</em>) = 4π / <em>q</em> ∫<sub>0</sub><sup>∞</sup>
 d<em>r</em> <em>r</em> <em>f</em>(<em>r</em>) sin <em>qr</em> .
@@ -232,6 +232,7 @@ From the [FFTW documentation](https://www.fftw.org/fftw3_doc/1d-Real_002dodd-DFT
 
 where <em>n</em> is the common length of the arrays
 <em>X</em><sub><em>j</em></sub> and <em>Y</em><sub><em>k</em></sub>.
+
 To cast this into the right form, set Δ<em>r</em> × Δ<em>q</em> = π /
 (<em>n</em>+1) and assign <em>r</em><sub><em>j</em></sub> =
 (<em>j</em>+1) × Δ<em>r</em> for <em>j</em> = 0 to <em>n</em>−1, and
@@ -240,8 +241,8 @@ likewise <em>q</em><sub><em>k</em></sub> = (<em>k</em>+1) ×
 
 <em>Y</em><sub><em>k</em></sub> = 2
 ∑<sub><em>j</em>=0</sub><sup><em>n</em>−1</sup>
-<em>X</em><sub><em>j</em></sub> sin(<em>r</em><sub><em>j</em></sub>
-<em>q</em><sub><em>k</em></sub>) .
+<em>X</em><sub><em>j</em></sub>
+sin <em>q</em><sub><em>k</em></sub><em>r</em><sub><em>j</em></sub> .
 
 For the desired integral we can then write
 
@@ -250,15 +251,15 @@ For the desired integral we can then write
 ∑<sub><em>j</em>=0</sub><sup><em>n</em>−1</sup>
 <em>r</em><sub><em>j</em></sub>
 <em>f</em>(<em>r</em><sub><em>j</em></sub>)
-sin(<em>r</em><sub><em>j</em></sub> <em>q</em><sub><em>k</em></sub>) ,
+sin <em>q</em><sub><em>k</em></sub><em>r</em><sub><em>j</em></sub> ,
 
 with the factor after the multiplication sign being calculated by
 `RODFT00`.
 
-The Fourier-Bessel back transform
+The Fourier-Bessel back transform,
 
 <em>f</em>(<em>r</em>) = 1 / (2π²<em>r</em>) ∫<sub>0</sub><sup>∞</sup>
-d<em>q</em> <em>q</em> <em>g</em>(<em>q</em>) sin <em>qr</em>
+d<em>q</em> <em>q</em> <em>g</em>(<em>q</em>) sin <em>qr</em> ,
 
 is handled similarly.
 
