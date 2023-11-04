@@ -49,14 +49,14 @@ from pyHNC import Grid, PicardHNC, truncate_to_zero
 parser = argparse.ArgumentParser(description='DPD HNC calculator')
 pyHNC.add_grid_args(parser)
 pyHNC.add_solver_args(parser)
+parser.add_argument('-v', '--verbose', action='count', help='more details (repeat as required)')
 parser.add_argument('--A', action='store', default=25.0, type=float, help='repulsion amplitude, default 25.0')
 parser.add_argument('--rho', action='store', default=3.0, type=float, help='density, default 3.0')
-parser.add_argument('--dlambda', action='store', default=0.05, type=float, help='spacing for coupling constant integration')
+parser.add_argument('--dlambda', action='store', default=0.05, type=float, help='for coupling constant integration, default 0.05')
 parser.add_argument('--rmax', action='store', default=3.0, type=float, help='maximum in r for plotting, default 3.0')
 parser.add_argument('--qmax', action='store', default=25.0, type=float, help='maximum in q for plotting, default 25.0')
 parser.add_argument('--sunlight', action='store_true', help='compare to SunlightHNC')
 parser.add_argument('--show', action='store_true', help='show results')
-parser.add_argument('-v', '--show', action='store_true', help='show results')
 args = parser.parse_args()
 
 A, ρ = args.A, args.rho
@@ -64,6 +64,9 @@ A, ρ = args.A, args.rho
 grid = Grid(**pyHNC.grid_args(args)) # make the initial working grid
 
 r, Δr, q = grid.r, grid.deltar, grid.q # extract the co-ordinate arrays for use below
+
+if args.verbose:
+    print(grid.details)
 
 # Define the DPD potential, and its derivative, then solve the HNC
 # problem.  The arrays here are all size ng-1, same as r[:]
@@ -73,9 +76,11 @@ f = truncate_to_zero(A*(1-r), r, 1) # the force f = -dφ/dr
 
 solver = PicardHNC(grid, **pyHNC.solver_args(args))
 
-# function to calculate the excess non-mean-field energy with coupling
-# constant λ.  Uses a bunch of variables that are 'in scope' here, but
-# hr is locally scoped in the function and masks the main routine hr.
+if args.verbose:
+    print(solver.details)
+
+soln = solver.solve(φ, ρ, monitor=args.verbose) # solve for the DPD potential
+hr, hq = soln.hr, soln.hq # extract for use in a moment
 
 # For the integrals here, see Eqs. (2.5.20) and (2.5.22) in
 # Hansen & McDonald, "Theory of Simple Liquids" (3rd edition):
@@ -85,38 +90,38 @@ solver = PicardHNC(grid, **pyHNC.solver_args(args))
 
 # The constant terms here capture the mean field contributions, that
 # is the integrals evaluated with g(r) = 1.  Specifically:
-# ∫_0^∞ dr r² φ(r) = A/2 ∫_0^1 dr r² (1−r)² = A/60 ;
-# ∫_0^∞ dr r³ f(r) = A ∫_0^1 dr r³ (1−r) = A/20 .
+# e_mf = 2πρ² ∫_0^∞ dr r² φ(r) = πAρ² ∫_0^1 dr r² (1−r)² = πAρ²/30 ;
+# p_mf = 2πρ²/3 ∫_0^∞ dr r³ f(r) = A ∫_0^1 dr r³ (1−r) = πAρ²/30 .
 
-soln = solver.solve(φ, ρ) # solve for the DPD potential
-hr, hq = soln.hr, soln.hq # extract for use in a moment
-
-f_mf = e_mf = p_mf = π*A*ρ**2/30 # all the same for these
+e_mf = p_mf = π*A*ρ**2/30 # all the same for these
 
 e_xc = 2*π*ρ**2 * np.trapz(r**2*φ*hr, dx=Δr)
-p_xc = 2*π*ρ**2/3 * np.trapz(r**3*f*hr, dx=Δr)
-
 e_ex = e_mf + e_xc
-p_ex = p_mf + p_xc
 e = 3*ρ/ + e_ex
+
+p_xc = 2*π*ρ**2/3 * np.trapz(r**3*f*hr, dx=Δr)
+p_ex = p_mf + p_xc
 p = ρ + p_ex
 
 # Coupling constant integration for the free energy
 
+# Function to calculate the excess non-mean-field energy with coupling
+# constant λ.  Uses a bunch of main script variables that are 'in
+# scope' here.
+
 def excess(λ):
     '''Return the excess correlation energy with coupling λ'''
     h = 0 if λ == 0 else solver.solve(λ*φ, ρ).hr # presumed will converge !
-    e_xc = 2*π*ρ**2 * np.trapz(r**2*φ*h, dx=Δr)
+    e_xc = 2*π*ρ**2 * np.trapz(r**2*φ*h, dx=Δr) # the integral above
+    if args.verbose and args.verbose > 1:
+        print('excess: λ = %0.3f, e_xc = %f' % (λ, e_xc))
     return e_xc
 
 λ_arr = np.linspace(0, 1, 1+round(1/args.dlambda))
 dλ = pyHNC.grid_spacing(λ_arr)
-print(dλ)
 e_xc_arr = np.array([excess(λ) for λ in np.flip(λ_arr)]) # descend, to assure convergence
 f_xc = np.trapz(e_xc_arr, dx=dλ) # the coupling constant integral
-f_ex = f_mf + f_xc
-
-print('f_ex = %f + %f = %f' % (f_mf, f_xc, f_ex))
+f_ex = e_mf + f_xc # f_mf = e_mf in this case
 
 print('Model: standard DPD with A = %f, ρ = %f' % (A, ρ))
 

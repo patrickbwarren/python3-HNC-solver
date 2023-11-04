@@ -51,12 +51,8 @@ class Grid:
         self.fftwx = pyfftw.empty_aligned(self.ng-1)
         self.fftwy = pyfftw.empty_aligned(self.ng-1)
         self.fftw = pyfftw.FFTW(self.fftwx, self.fftwy, direction='FFTW_RODFT00', flags=('FFTW_ESTIMATE',))
-
-    def details(self):
-        '''Return a string containing details of the grid parameters'''
-        r = round(0.5+np.log(self.ng)/np.log(2.0))
-        return '\n'.join([f'Grid: ng = {self.ng} = 2^{r}, Δr = {self.deltar}, Δq = {self.deltaq}'
-                          f'FFTW: initialised, array sizes = {self.ng-1}'])
+        r = round(0.5+np.log(self.ng)/np.log(2.0)) # the exponent if ng = 2^r
+        self.details = f'Grid: ng = {self.ng} = 2^{r}, Δr = {self.deltar}, Δq = %0.3g, |FFTW arrays| = {self.ng-1}' % self.deltaq
 
     # These functions assume the FFTW has been initialised as above, the
     # arrays r and q exist, as do the parameters Δr and Δq.
@@ -84,22 +80,17 @@ class Grid:
 
 class PicardHNC:
 
-    def __init__(self, grid, alpha=0.2, tol=1e-12, max_iter=500, monitor=False):
+    def __init__(self, grid, alpha=0.2, tol=1e-12, max_iter=500):
         '''Initialise basic data structure'''
         self.grid = grid
         self.alpha = alpha
         self.tol = tol
         self.max_iter = max_iter
-        self.monitor = monitor
         self.converged = False
         self.warmed_up = False
+        self.details = 'HNC: α = %g, tol = %0.1e, max_picard = %i' % (self.alpha, self.tol, self.max_iter)
 
-    def details(self):
-        '''Return a string containing details of the HNC algorithm parameters'''
-        return '\n'.join([f'HNC: grid ng = {self.grid.ng}, Δr = {self.grid.deltar}, Δq = {self.grid.deltaq}',
-                          'HNC: α = %g, tol = %0.1e, max_picard = %i' % (self.alpha, self.tol, self.max_iter)])
-
-    def solve(self, vr, rho, cr_init=None):
+    def solve(self, vr, rho, cr_init=None, monitor=False):
         '''Solve HNC for a given potential, with an optional initial guess at cr'''
         cr = cr_init if cr_init else self.cr if self.warmed_up else -vr
         for i in range(self.max_iter):
@@ -110,7 +101,7 @@ class PicardHNC:
             cr = self.alpha * cr_new + (1-self.alpha) * cr # apply a Picard mixing rule
             self.error = np.sqrt(np.trapz((cr_new - cr)**2, dx=self.grid.deltar)) # convergence test
             self.converged = self.error < self.tol
-            if self.monitor and (i % 50 == 0 or self.converged):
+            if monitor and (i % 50 == 0 or self.converged):
                 print('Picard: iteration %3i, error = %0.3e' % (i, self.error))
             if self.converged:
                 break
@@ -122,7 +113,7 @@ class PicardHNC:
             self.warmed_up = True
         else: # we leave it to the user to check if self.converged is False :-)
             pass
-        if self.monitor:
+        if monitor:
             if self.converged:
                 print('Picard: converged')
             else:
@@ -134,7 +125,6 @@ class PicardHNC:
 
 def add_grid_args(parser):
     '''Add generic grid arguments to a parser'''
-    parser.add_argument('-m', '--monitor', action='store_true', help='monitor convergence')
     parser.add_argument('--grid', action='store', default=None, help='grid using deltar or deltar/ng, eg 0.02 or 0.02/8192')
     parser.add_argument('--ngrid', action='store', default='2^13', help='number of grid points, default 2^13 = 8192')
     parser.add_argument('--deltar', action='store', default=0.02, type=float, help='grid spacing, default 0.02')
@@ -150,17 +140,17 @@ def grid_args(args):
             r = 1 + round(np.log(np.pi/(args.deltar**2))/np.log(2))
             args.ngrid = str(2**r)
     ng = eval(args.ngrid.replace('^', '**')) # catch 2^10 etc
-    return {'ng':ng, 'deltar': args.deltar, 'monitor': args.monitor}
+    return {'ng':ng, 'deltar': args.deltar}
 
 def add_solver_args(parser):
-    '''Add generic solver args to parser (monitor is assigned already)'''
+    '''Add generic solver args to parser'''
     parser.add_argument('--alpha', action='store', default=0.2, type=float, help='Picard mixing fraction, default 0.2')
     parser.add_argument('--picard', action='store', default=500, type=int, help='max number of Picard steps, default 500')
     parser.add_argument('--tol', action='store', default=1e-12, type=float, help='tolerance for convergence, default 1e-12')
 
 def solver_args(args):
     '''Return a dict of generic solver args that can be used as **solver_args()'''
-    return {'alpha': args.alpha, 'tol': args.tol, 'max_iter': args.picard, 'monitor': args.monitor}
+    return {'alpha': args.alpha, 'tol': args.tol, 'max_iter': args.picard}
 
 # Make the data output suitable for plotting in xmgrace if captured by redirection
 # stackoverflow.com/questions/30833409/python-deleting-the-first-2-lines-of-a-string
