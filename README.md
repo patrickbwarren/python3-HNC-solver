@@ -220,7 +220,7 @@ The Fourier-Bessel forward transform of a function
 <em>f</em>(<em>r</em>) in three dimensions is (see [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC) documentation):
 
 <em>g</em>(<em>q</em>) = 4π / <em>q</em> ∫<sub>0</sub><sup>∞</sup>
-d<em>r</em> sin(<em>qr</em>) <em>r</em> <em>f</em>(<em>r</em>) .
+d<em>r</em> <em>r</em> <em>f</em>(<em>r</em>) sin <em>qr</em> .
 
 From the [FFTW documentation](https://www.fftw.org/fftw3_doc/1d-Real_002dodd-DFTs-_0028DSTs_0029.html),
 `RODFT00` implements
@@ -258,7 +258,7 @@ with the factor after the multiplication sign being calculated by
 The Fourier-Bessel back transform
 
 <em>f</em>(<em>r</em>) = 1 / (2π²<em>r</em>) ∫<sub>0</sub><sup>∞</sup>
-d<em>q</em> sin(<em>qr</em>) <em>q</em> <em>g</em>(<em>q</em>)
+d<em>q</em> <em>q</em> <em>g</em>(<em>q</em>) sin <em>qr</em>
 
 is handled similarly.
 
