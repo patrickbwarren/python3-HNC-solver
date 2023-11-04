@@ -56,6 +56,7 @@ parser.add_argument('--rmax', action='store', default=3.0, type=float, help='max
 parser.add_argument('--qmax', action='store', default=25.0, type=float, help='maximum in q for plotting, default 25.0')
 parser.add_argument('--sunlight', action='store_true', help='compare to SunlightHNC')
 parser.add_argument('--show', action='store_true', help='show results')
+parser.add_argument('-v', '--show', action='store_true', help='show results')
 args = parser.parse_args()
 
 A, ρ = args.A, args.rho
