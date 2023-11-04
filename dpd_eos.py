@@ -30,8 +30,8 @@ from pyHNC import truncate_to_zero
 parser = argparse.ArgumentParser(description='DPD EoS calculator')
 pyHNC.add_grid_args(parser)
 pyHNC.add_solver_args(parser)
-parser.add_argument('--Arange', action='store', default='10(10)50', help='repulsion amplitude range')
-parser.add_argument('--rhorange', action='store', default='1(1)10', help='density range')
+parser.add_argument('--Arange', default='10(10)50', help='repulsion amplitude range')
+parser.add_argument('--rhorange', default='1(1)10', help='density range')
 args = parser.parse_args()
 
 grid = pyHNC.Grid(**pyHNC.grid_args(args)) # make the initial working grid
