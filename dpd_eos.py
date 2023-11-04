@@ -47,18 +47,21 @@ fbyA = truncate_to_zero((1-r), r, 1)
 
 # The virial pressure, p = ρ + 2πρ²/3 ∫_0^∞ dr r³ f(r) g(r) where
 # f(r) = −d φ/dr is the force.  See Eq. (2.5.22) in Hansen & McDonald,
-# "Theory of Simple Liquids" (3rd edition).  The constant term is the
-# mean field contribution, that is the integral evaluated with g(r) = 1,
-# namely ∫_0^∞ dr r³ f(r) = A ∫_0^1 dr r³ (1−r) = A/20.
+# "Theory of Simple Liquids" (3rd edition).
 
-data = []
+# The constant term is the mean field contribution, namely
+# 2πρ²/3 ∫_0^∞ dr r³ f(r) = A ∫_0^1 dr r³ (1−r) = πAρ²/30.
+
+data = [] # this will grow as computations proceed
+
 for A in pyHNC.as_linspace(args.Arange):
     solver.warmed_up = False # fresh start with lowest density
     for ρ in pyHNC.as_linspace(args.rhorange):
-        hr = solver.solve(A*φbyA, ρ).hr
-        pexbyA = 2*π*ρ**2/3 * (1/20 + np.trapz(r**3*fbyA*hr, dx=Δr))
+        h = solver.solve(A*φbyA, ρ).hr # just keep h(r)
+        pexbyA = π*ρ**2/30 + 2*π*ρ**2/3 * np.trapz(r**3*fbyA*h, dx=Δr)
         p = ρ + A*pexbyA
         data.append((A, ρ, ρ**2, p, pexbyA, solver.error))
 
 df = pd.DataFrame(data, columns=['A', 'rho', 'rhosq', 'p', 'pexbyA', 'error'])
-print(pyHNC.df_to_agr(df))
+
+print(pyHNC.df_to_agr(df)) # use a utility here to convert to xmgrace format
