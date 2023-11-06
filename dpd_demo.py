@@ -39,10 +39,11 @@
 
 # Data is from a forthcoming publication on osmotic pressure in DPD.
 
+import os
+import pyHNC
 import argparse
 import numpy as np
 from numpy import pi as π
-import pyHNC
 from scipy.integrate import quadrature as integrate
 from pyHNC import Grid, PicardHNC, truncate_to_zero
 
@@ -59,6 +60,8 @@ parser.add_argument('--sunlight', action='store_true', help='compare to Sunlight
 parser.add_argument('--show', action='store_true', help='show results')
 args = parser.parse_args()
 
+args.script = os.path.basename(__file__)
+
 A, ρ = args.A, args.rho
 
 grid = Grid(**pyHNC.grid_args(args)) # make the initial working grid
@@ -66,7 +69,7 @@ grid = Grid(**pyHNC.grid_args(args)) # make the initial working grid
 r, Δr, q = grid.r, grid.deltar, grid.q # extract the co-ordinate arrays for use below
 
 if args.verbose:
-    print(grid.details)
+    print(f'{args.script}: {grid.details}')
 
 # Define the DPD potential, and its derivative, then solve the HNC
 # problem.  The arrays here are all size ng-1, same as r[:]
@@ -77,7 +80,7 @@ f = truncate_to_zero(A*(1-r), r, 1) # the force f = -dφ/dr
 solver = PicardHNC(grid, **pyHNC.solver_args(args))
 
 if args.verbose:
-    print(solver.details)
+    print(f'{args.script}: {solver.details}')
 
 soln = solver.solve(φ, ρ, monitor=args.verbose) # solve for the DPD potential
 hr, hq = soln.hr, soln.hq # extract for use in a moment
@@ -114,7 +117,7 @@ def excess(λ):
     h = 0 if λ == 0 else solver.solve(λ*φ, ρ).hr # presumed will converge !
     e_xc = 2*π*ρ**2 * np.trapz(r**2*φ*h, dx=Δr) # the integral above
     if args.verbose and args.verbose > 1:
-        print(f'excess: λ = {λ:0.3f}, e_xc = {e_xc:f}')
+        print(f'{args.script}: excess: λ = {λ:0.3f}, e_xc = {e_xc:f}')
     return e_xc
 
 λ_arr = np.linspace(0, 1, 1+round(1/args.dlambda))
@@ -123,10 +126,11 @@ e_xc_arr = np.array([excess(λ) for λ in np.flip(λ_arr)]) # descend, to assure
 f_xc = np.trapz(e_xc_arr, dx=dλ) # the coupling constant integral
 f_ex = e_mf + f_xc # f_mf = e_mf in this case
 
-print(f'Model: standard DPD with A = {A:g}, ρ = {ρ:g}')
+print(f'{args.script}: model: standard DPD with A = {A:g}, ρ = {ρ:g}')
 
-print('Monte-Carlo (A, ρ=25, 3):      energy, virial pressure =\t13.63±0.02\t\t\t23.65±0.02')
-print('pyHNC v%s:        energy, free energy, virial pressure =\t%0.5f\t%0.5f\t%0.5f' % (grid.version, e_ex, f_ex, p))
+print(f'{args.script}: Monte-Carlo (A,ρ = 25,3):      energy, virial pressure =\t13.63±0.02\t\t\t23.65±0.02')
+print(f'{args.script}: pyHNC v{pyHNC.version}:        energy, free energy, virial pressure =',
+      '\t%0.5f\t%0.5f\t%0.5f' % (e_ex, f_ex, p))
 
 if args.sunlight:
     
@@ -141,8 +145,9 @@ if args.sunlight:
     w.rho[0] = ρ
     w.hnc_solve()
     
-    version = str(w.version, 'utf-8').strip()
-    print('SunlightHNC v%s: energy, free energy, virial pressure =\t%0.5f\t%0.5f\t%0.5f' % (version, w.uex, w.aex, w.press))
+    sunlight_version = str(w.version, 'utf-8').strip()
+    print(f'{args.script}: SunlightHNC v{sunlight_version}: energy, free energy, virial pressure =',
+          '\t%0.5f\t%0.5f\t%0.5f' % (w.uex, w.aex, w.press))
 
 if args.show:
 

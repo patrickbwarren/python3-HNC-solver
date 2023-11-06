@@ -21,7 +21,10 @@
 # Hyper-netted chain (HNC) solver for Ornstein-Zernike (OZ) equation.
 
 import pyfftw
+import argparse
 import numpy as np
+
+version = '1.0' # for reporting purposes
 
 # The following code snippet is adapted from
 # https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
@@ -55,7 +58,6 @@ class Grid:
 
     def __init__(self, ng=8192, deltar=0.02):
         '''Initialise grids with the desired size and spacing'''
-        self.version = '1.0' # for reporting purposes
         self.ng = ng
         self.deltar = deltar
         self.deltaq = np.pi / (self.deltar*self.ng) # as above
@@ -116,7 +118,7 @@ class PicardHNC:
             self.error = np.sqrt(np.trapz((cr_new - cr)**2, dx=self.grid.deltar)) # convergence test
             self.converged = self.error < self.tol
             if monitor and (i % 50 == 0 or self.converged):
-                print(f'Picard: iteration {i:3d}, error = {self.error:0.3e}')
+                print(f'pyHNC.solve: Picard iteration {i:3d}, error = {self.error:0.3e}')
             if self.converged:
                 break
         if self.converged: 
@@ -129,13 +131,13 @@ class PicardHNC:
             pass
         if monitor:
             if self.converged:
-                print('Picard: converged')
+                print('pyHNC.solve: Picard converged')
             else:
-                print(f'Picard: iteration {i:3d}, error = {self.error:0.3e}')
-                print('Picard: failed to converge')
+                print(f'pyHNC.solve: Picard iteration {i:3d}, error = {self.error:0.3e}')
+                print('pyHNC.solve: Picard failed to converge')
         return self # the user can name this 'soln' or something
 
-# Utility functions below here for setting arguments, pretty printing dataframes
+# Utility functions below here for setting arguments, pretty printing dataframes, etc
 
 def add_grid_args(parser):
     '''Add generic grid arguments to a parser'''
@@ -171,7 +173,7 @@ def solver_args(args):
 
 def df_to_agr(df):
     '''Convert a pandas DataFrame to a string for an xmgrace data set'''
-    header_row = '# ' + '\t'.join([f'{col}({i+1})' for i, col in enumerate(df.columns)])
+    header_row = '#  ' + '  '.join([f'{col}({i+1})' for i, col in enumerate(df.columns)])
     data_rows = df.to_string(index=False).split('\n')[2:]
     return '\n'.join([header_row] + data_rows)
 
