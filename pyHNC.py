@@ -23,10 +23,23 @@
 import pyfftw
 import numpy as np
 
-def truncate_to_zero(v, r, rc):
-    '''Utility function to truncate a potential'''
-    v[r>rc] = 0.0
-    return v
+# The following code snippet is adapted from
+# https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
+
+class ExtendedArgumentParser(argparse.ArgumentParser):
+
+    def add_bool_arg(self, long_opt, short_opt=None, default=False, help=None):
+        '''Add a mutually exclusive --opt, --no-opt group with optional short opt'''
+        opt = long_opt.removeprefix('--')
+        group = self.add_mutually_exclusive_group(required=False)
+        help_string = None if not help else help if not default else f'{help} (default)'
+        if short_opt:    
+            group.add_argument(short_opt, f'--{opt}', dest=opt, action='store_true', help=help_string)
+        else:
+            group.add_argument(f'--{opt}', dest=opt, action='store_true', help=help_string)
+        help_string = None if not help else f"don't {help}" if default else f"don't {help} (default)"        
+        group.add_argument(f'--no-{opt}', dest=opt, action='store_false', help=help_string)
+        self.set_defaults(**{opt:default})
 
 # Provide a grid as a working platform.  This is the pair of arrays
 # r(:) and q(:) initialised to match the desired ng (# grid points)
@@ -180,6 +193,11 @@ def as_linspace(as_range):
     else:
         xarr = np.array([float(as_range)])
     return xarr
+
+def truncate_to_zero(v, r, rc):
+    '''Utility function to truncate a potential'''
+    v[r>rc] = 0.0
+    return v
 
 def grid_spacing(x):
     '''Utility to return the grid space assuming the array is evenly spaced'''
