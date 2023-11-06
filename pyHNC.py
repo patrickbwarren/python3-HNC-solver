@@ -52,7 +52,8 @@ class Grid:
         self.fftwy = pyfftw.empty_aligned(self.ng-1)
         self.fftw = pyfftw.FFTW(self.fftwx, self.fftwy, direction='FFTW_RODFT00', flags=('FFTW_ESTIMATE',))
         r = round(0.5+np.log(self.ng)/np.log(2.0)) # the exponent if ng = 2^r
-        self.details = f'Grid: ng = {self.ng} = 2^{r}, Δr = {self.deltar}, Δq = %0.3g, |FFTW arrays| = {self.ng-1}' % self.deltaq
+        self.details = f'Grid: ng = {self.ng} = 2^{r}, Δr = {self.deltar}, ' \
+            f'Δq = {self.deltaq:0.3g}, |FFTW arrays| = {self.ng-1}'
 
     # These functions assume the FFTW has been initialised as above, the
     # arrays r and q exist, as do the parameters Δr and Δq.
@@ -80,20 +81,20 @@ class Grid:
 
 class PicardHNC:
 
-    def __init__(self, grid, alpha=0.2, tol=1e-12, max_iter=500):
+    def __init__(self, grid, alpha=0.2, tol=1e-12, npicard=500):
         '''Initialise basic data structure'''
         self.grid = grid
         self.alpha = alpha
         self.tol = tol
-        self.max_iter = max_iter
+        self.npicard = npicard
         self.converged = False
         self.warmed_up = False
-        self.details = 'HNC: α = %g, tol = %0.1e, max_picard = %i' % (self.alpha, self.tol, self.max_iter)
+        self.details = f'HNC: α = {self.alpha}, tol = {self.tol:0.1e}, npicard = {self.npicard}'
 
     def solve(self, vr, rho, cr_init=None, monitor=False):
         '''Solve HNC for a given potential, with an optional initial guess at cr'''
-        cr = cr_init if cr_init else self.cr if self.warmed_up else -vr
-        for i in range(self.max_iter):
+        cr = np.copy(cr_init) if cr_init is not None else np.copy(self.cr) if self.warmed_up else -np.copy(vr)
+        for i in range(self.npicard):
             cq = self.grid.fourier_bessel_forward(cr) # forward transform c(r) to c(q)
             eq = cq / (1 - rho*cq) - cq # solve the OZ equation for e(q)
             er = self.grid.fourier_bessel_backward(eq) # back transform e(q) to e(r)
@@ -102,7 +103,7 @@ class PicardHNC:
             self.error = np.sqrt(np.trapz((cr_new - cr)**2, dx=self.grid.deltar)) # convergence test
             self.converged = self.error < self.tol
             if monitor and (i % 50 == 0 or self.converged):
-                print('Picard: iteration %3i, error = %0.3e' % (i, self.error))
+                print(f'Picard: iteration {i:3d}, error = {self.error:0.3e}')
             if self.converged:
                 break
         if self.converged: 
@@ -117,7 +118,7 @@ class PicardHNC:
             if self.converged:
                 print('Picard: converged')
             else:
-                print('Picard: iteration %3i, error = %0.3e' % (i, self.error))
+                print(f'Picard: iteration {i:3d}, error = {self.error:0.3e}')
                 print('Picard: failed to converge')
         return self # the user can name this 'soln' or something
 
@@ -125,9 +126,9 @@ class PicardHNC:
 
 def add_grid_args(parser):
     '''Add generic grid arguments to a parser'''
-    parser.add_argument('--grid', action='store', default=None, help='grid using deltar or deltar/ng, eg 0.02 or 0.02/8192')
-    parser.add_argument('--ngrid', action='store', default='2^13', help='number of grid points, default 2^13 = 8192')
-    parser.add_argument('--deltar', action='store', default=0.02, type=float, help='grid spacing, default 0.02')
+    parser.add_argument('--grid', default=None, help='grid using deltar or deltar/ng, eg 0.02 or 0.02/8192')
+    parser.add_argument('--ngrid', default='2^13', help='number of grid points, default 2^13 = 8192')
+    parser.add_argument('--deltar', default=0.02, type=float, help='grid spacing, default 0.02')
 
 def grid_args(args):
     '''Return a dict of grid args, that can be used as **grid_args()'''
@@ -142,15 +143,15 @@ def grid_args(args):
     ng = eval(args.ngrid.replace('^', '**')) # catch 2^10 etc
     return {'ng':ng, 'deltar': args.deltar}
 
-def add_solver_args(parser):
+def add_solver_args(parser, alpha=0.2, npicard=500, tol=1e-12):
     '''Add generic solver args to parser'''
-    parser.add_argument('--alpha', action='store', default=0.2, type=float, help='Picard mixing fraction, default 0.2')
-    parser.add_argument('--picard', action='store', default=500, type=int, help='max number of Picard steps, default 500')
-    parser.add_argument('--tol', action='store', default=1e-12, type=float, help='tolerance for convergence, default 1e-12')
+    parser.add_argument('--alpha', default=alpha, type=float, help=f'Picard mixing fraction, default {alpha}')
+    parser.add_argument('--npicard', default=npicard, type=int, help=f'max number of Picard steps, default {npicard}')
+    parser.add_argument('--tol', default=tol, type=float, help=f'tolerance for convergence, default {tol}')
 
 def solver_args(args):
     '''Return a dict of generic solver args that can be used as **solver_args()'''
-    return {'alpha': args.alpha, 'tol': args.tol, 'max_iter': args.picard}
+    return {'alpha': args.alpha, 'tol': args.tol, 'npicard': args.npicard}
 
 # Make the data output suitable for plotting in xmgrace if captured by redirection
 # stackoverflow.com/questions/30833409/python-deleting-the-first-2-lines-of-a-string
@@ -161,18 +162,24 @@ def df_to_agr(df):
     data_rows = df.to_string(index=False).split('\n')[2:]
     return '\n'.join([header_row] + data_rows)
 
-# Convert a variety of formats and return the corresponding numpy linspace object.
+# Convert a variety of formats and return the corresponding NumPy array.
 # Options can be Abramowitz and Stegun style 'start:step:end' or 'start(step)end',
-# or Numpy style 'start,end,npt'
+# NumPy style 'start,end,npt'.  A single value is returned as a 1-element array.
 
 def as_linspace(as_range):
     '''Convert a range expressed as a string to an np.linspace array'''
     if ',' in as_range:
-        start, end, npt = [float(eval(x)) for x in as_range.split(',')]
+        vals = as_range.split(',')
+        start, end, npt = float(vals[0]), float(vals[1]), int(vals[2])
+        xarr = np.linspace(start, end, npt)
     elif ':' in as_range or '(' in as_range:
-        start, step, end = [float(eval(x)) for x in as_range.replace('(', ':').replace(')', ':').split(':')]
-        npt = (end-start)/step + 1.5 # as a float
-    return np.linspace(start, end, int(npt))
+        vals = as_range.replace('(', ':').replace(')', ':').split(':')
+        start, step, end = float(vals[0]), float(vals[1]), float(vals[2])
+        npt = int((end-start)/step + 1.5)
+        xarr = np.linspace(start, end, npt)
+    else:
+        xarr = np.array([float(as_range)])
+    return xarr
 
 def grid_spacing(x):
     '''Utility to return the grid space assuming the array is evenly spaced'''

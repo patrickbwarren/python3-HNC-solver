@@ -114,7 +114,7 @@ def excess(λ):
     h = 0 if λ == 0 else solver.solve(λ*φ, ρ).hr # presumed will converge !
     e_xc = 2*π*ρ**2 * np.trapz(r**2*φ*h, dx=Δr) # the integral above
     if args.verbose and args.verbose > 1:
-        print('excess: λ = %0.3f, e_xc = %f' % (λ, e_xc))
+        print(f'excess: λ = {λ:0.3f}, e_xc = {e_xc:f}')
     return e_xc
 
 λ_arr = np.linspace(0, 1, 1+round(1/args.dlambda))
@@ -123,9 +123,9 @@ e_xc_arr = np.array([excess(λ) for λ in np.flip(λ_arr)]) # descend, to assure
 f_xc = np.trapz(e_xc_arr, dx=dλ) # the coupling constant integral
 f_ex = e_mf + f_xc # f_mf = e_mf in this case
 
-print('Model: standard DPD with A = %f, ρ = %f' % (A, ρ))
+print(f'Model: standard DPD with A = {A:g}, ρ = {ρ:g}')
 
-print('Monte-Carlo (A, ρ =25, 3):      energy, virial pressure =\t13.63±0.02\t\t\t23.65±0.02')
+print('Monte-Carlo (A, ρ=25, 3):      energy, virial pressure =\t13.63±0.02\t\t\t23.65±0.02')
 print('pyHNC v%s:        energy, free energy, virial pressure =\t%0.5f\t%0.5f\t%0.5f' % (grid.version, e_ex, f_ex, p))
 
 if args.sunlight:
