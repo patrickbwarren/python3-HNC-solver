@@ -44,7 +44,6 @@ parser.add_argument('-R', '--R', default=0.75, type=float, help='repulsion r_c')
 parser.add_argument('--rho', default='6.5', help='density or density range, default 6.5')
 parser.add_argument('--rhobar', default=5.0, type=float, help='initial mean local density, default 5.0')
 parser.add_argument('--drhobar', default=0.05, type=float, help='decrement looking for self consistency, default 0.05')
-parser.add_argument('--lmbda', default='1.0', help='coupling parameter or range (NOT IMPLEMENTED), default 1.0')
 parser.add_bool_arg('--uprime', default=False, help='use du/dρ rather than u/ρ for MB potential')
 parser.add_bool_arg('--rhoav', default=False, help='use ρ(r) rather than <ρ> in the MB potential')
 parser.add_argument('--nrhoav', default=20, type=int, help='number of steps to converge, default 20')
@@ -61,8 +60,12 @@ args = parser.parse_args()
 args.script = os.path.basename(__file__)
 args.executable = sys.executable
 
+A, B, R = args.A, args.B, args.R
+
+ρ_vals = pyHNC.as_linspace(args.rho)
+
 opts = [f'--A={args.A}', f'--B={args.B}', f'--R={args.R}',
-        f'--rho={args.rho}', f'--lmbda={args.lmbda}',
+        f'--rho={args.rho}', 
         f'--rhobar={args.rhobar}', f'--drhobar={args.drhobar}',
         '--uprime ' if args.uprime else '--no-uprime ',
         '--refine ' if args.refine else '--no-refine ',
@@ -70,7 +73,7 @@ opts = [f'--A={args.A}', f'--B={args.B}', f'--R={args.R}',
 
 if args.condor: # create scripts to run jobs then exit
 
-    njobs = n*m
+    njobs = len(ρ_vals)
 
     condor_job = f'{args.header}__condor.job'
     lines = ['should_transfer_files = YES',
@@ -114,21 +117,14 @@ if args.condor: # create scripts to run jobs then exit
 
 # *** Main computation starts ***
 
-A, B, R = args.A, args.B, args.R
-
-ρ_vals = pyHNC.as_linspace(args.rho)
-λ_vals = pyHNC.as_linspace(args.lmbda)
-n, m = len(ρ_vals), len(λ_vals)
-
 # In map/reduce mode, fish out the required density and coupling
 # parameter using the value of process.
 
 k = args.process if args.process is not None else 0
 
-ρ, λ = ρ_vals[k // m], λ_vals[k % m]
+ρ = ρ_vals[k]
 
-print(f'{args.script}: solving for A, B, R = {A}, {B}, {R}',
-      f'; k = {k//n} × {n} + {k%n} ; ρ, λ = {ρ}, {λ}')
+print(f'{args.script}: solving for A, B, R, ρ = {A}, {B}, {R}, {ρ}')
 
 grid = pyHNC.Grid(**pyHNC.grid_args(args)) # make the initial working grid
 r, Δr, q, Δq = grid.r, grid.deltar, grid.q, grid.deltaq # extract for use below
@@ -165,8 +161,8 @@ while not bracketed or (args.refine and i < args.nrefine):
     if soln.converged:
         hr = soln.hr
         f = φf + B * 2*ρbar_in * wf # MB DPD force law
-        p = ρ + π*ρ**2/30*(A + 2*B*ρbar_in*R**4) + 2/3*π*ρ**2*np.trapz(r**3*f*hr, dx=Δr)
-        ρbar_out = ρ*(1 +  4*π*np.trapz(r**2*wr*hr, dx=Δr))
+        p = ρ + (A + 2*B*ρbar_in*R**4)*π*ρ**2/30 + 2/3*π*ρ**2*np.trapz(r**3*f*hr, dx=Δr)
+        ρbar_out = ρ*(1 + 4*π*np.trapz(r**2*wr*hr, dx=Δr))
         if bracketed:
             print(f'{args.script}: bracketed {i:3d}:',
                   'ρ (ρ1, ρ2), ρbar_in, ρbar_out-ρbar_in, p = %f (%f, %f) %f %f %f' %
@@ -214,7 +210,7 @@ if args.rhoav: # attempt to improve the model by replacing ρbar with ρav(r)
         ρav = ρbar + ρ*wgXh # the corrected estimate
         wρav = 4*π*np.trapz(r**2*wr*ρav, dx=Δr) # weighted average, for tracking
         f = φf + B * 2*ρav * wf # generalised MB DPD force law
-        p = ρ + 2/3*π*ρ**2 * np.trapz(r**3*f*gr, dx=Δr) # can't separate out mean-field, ρbar is not constant
+        p = ρ + 2/3*π*ρ**2 * np.trapz(r**3*f*gr, dx=Δr) # can't separate out mean-field: ρbar is not constant
         print(f'{args.script}: (w + wh)*h {i:3d}:',
               'ρbar_in, ρbar, wρav, wρav/ρbar, p = %f\t%f\t%f\t%f\t%f' %
               (ρbar_in, ρbar, wρav, wρav/ρbar, p))
@@ -222,16 +218,19 @@ if args.rhoav: # attempt to improve the model by replacing ρbar with ρav(r)
 else: # if not args.rhoav
 
         ρav = ρbar_out # constant value here
-        v = φ + π*B*R**4/30 * 2*ρav * wr # generalised MB DPD potential
+        if args.uprime:
+            v = φ + π*B*R**4/15 * 2*ρav * wr
+        else:
+            v = φ + π*B*R**4/30 * 2*ρav * wr
         soln = solver.solve(v, ρ)
         if not soln.converged:
             print(f'{args.script}: failed to converge at end')
         hr = soln.hr
         gr = 1.0 + hr # the pair function
         ρbar = ρ*(1 + 4*π*np.trapz(r**2*wr*hr, dx=Δr))
-        f = φf + B * 2*ρav * wf # generalised MB DPD force law
-        p = ρ + π*ρ**2/30*(A + 2*B*ρbar_out*R**4) + 2/3*π*ρ**2*np.trapz(r**3*f*hr, dx=Δr)
-        ρav = ρbar_out * np.ones_like(r) # for plotting
+        f = φf + B * 2*ρbar * wf # generalised MB DPD force law
+        p = ρ + (A + 2*B*ρbar*R**4)*π*ρ**2/30 + 2/3*π*ρ**2*np.trapz(r**3*f*hr, dx=Δr)
+        ρav = ρbar * np.ones_like(r) # for plotting
         wρav = 4*π*np.trapz(r**2*wr*ρav, dx=Δr) # weighted average, ( = ρbar here one hopes)
 
 print(f'{args.script}: FINAL: A, B, R, ρ = {A}, {B}, {R}, {ρ}',
@@ -240,12 +239,13 @@ print(f'{args.script}: FINAL: A, B, R, ρ = {A}, {B}, {R}, {ρ}',
 
 if args.header:
 
-    data = {'rho':ρ, 'rhobar_out':ρbar_out, 'rhobar_in': ρbar_in, 'pressure': p}
+    data = {'A': A, 'B': B, 'R': R, 'rho': ρ, 'rhobar_in': ρbar_in, 'rhobar_out':ρbar_out,
+            'rhobar':ρbar, 'wrhoav': wρav, 'wrhoavbyrhobar': wρav/ρbar, 'pressure': p}
     sub = '' if args.process is None else '__%d' % args.process # double underscore here
     data_file = f'{args.header}{sub}.dat' # only one data file
     with open(data_file, 'w') as f:
-        if args.process == 0: # write for first file
-            f.write(f'# {args.executable} {args.script} ' + ' '.join(opts) + '\n')
+        if args.process is None or args.process == 0: # write for first file
+            f.write(f'## {args.executable} {args.script} ' + ' '.join(opts) + '\n')
             f.write('# ' + '\t'.join([f'{key}({i+1})' for i, key in enumerate(data.keys())]) + '\n')
         f.write('\t'.join([('%f' % data[key]) for key in data]) + '\n')
     print(f'data in {data_file}')
