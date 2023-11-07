@@ -121,7 +121,9 @@ factor can be found from:
   <em>h</em>(<em>q</em>) = <em>e</em>(<em>q</em>) +
   <em>c</em>(<em>q</em>) .
 
-#### Thermodynamics
+### Thermodynamics
+
+#### Energy density and virial pressure
 
 Thermodynamic quantities can also now be computed, for example the excess
 energy density and virial pressure follow from Eqs. (2.5.20) and (2.5.22) in
@@ -148,7 +150,28 @@ value of the potential at the origin in reciprocal space: 2πρ²/3
 The ideal contributions, in units of <em>k</em><sub>B</sub><em>T</em>,
 are respectively 3ρ/2 and ρ.
 
-#### Coupling constant integration
+#### Compressibility
+
+Eq. (2.6.12) in Hansen and McDonald shows that in units of
+<em>k</em><sub>B</sub><em>T</em> the isothermal compressibility
+satisfies ρ χ<sub>T</sub> = 1 + 4πρ ∫<sub>0</sub><sup>∞</sup>
+d<em>r</em> <em>r</em>² <em>h</em>(<em>r</em>) where χ<sub>T</sub> = −
+(1/<em>V</em>) ∂<em>V</em>/∂<em>p</em>.  In terms of the equation of
+state <em>p</em>(ρ), this last expression can be written as
+χ<sub>T</sub><sup>−1</sup> = ρ <em>p</em>'(ρ).  Further, in reciprocal
+space the OZ equation (above) can be written in the form [1 + ρ
+<em>h</em>(<em>q</em>)] [1 − ρ <em>c</em>(<em>q</em>)] = 1.  Employing
+this at <em>q</em> = 0, one therefore obtains
+
+* <em>p</em>'(ρ) = 1 − ρ <em>c</em>(<em>q=0</em>) = 1 − 4πρ
+  ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
+  <em>c</em>(<em>r</em>) .
+
+Given <em>c</em>(<em>r</em>) as a function of density, this can be
+integrated to find <em>p</em>(ρ).  This is known as the
+compressibility route to the equation of state.
+
+#### Free energy and coupling constant integration
 
 It follows from the basic definition of the free energy <em>F</em> = − ln ∫
 d<sup><em>N</em></sup>{<b>r</b>} e<sup>−<em>U</em></sup> that
