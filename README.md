@@ -193,7 +193,8 @@ is the basis for the so-called energy route to the pressure.  For
 example, if the free energy density is available as a function of
 density, <em>f</em>(ρ), the pressure follows from p =
 −∂<em>F</em>/∂<em>V</em> as <em>p</em> = ρ² d(<em>f</em>/ρ)/dρ where
-<em>f</em>/ρ is the free energy per particle.
+<em>f</em>/ρ is the free energy per particle.  It also follows that
+the compressibility χ<sub>T</sub><sup>−1</sup> = ρ² d²<em>f</em>/dρ².
 
 The mean-field contribution to this can be calculated immediately
 since the contribution to the energy density 2πρ²
