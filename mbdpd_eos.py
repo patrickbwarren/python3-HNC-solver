@@ -67,8 +67,10 @@ A, B, R = args.A, args.B, args.R
 opts = [f'--A={args.A}', f'--B={args.B}', f'--R={args.R}',
         f'--rho={args.rho}', 
         f'--rhobar={args.rhobar}', f'--drhobar={args.drhobar}',
-        '--uprime ' if args.uprime else '--no-uprime ',
-        '--refine ' if args.refine else '--no-refine ',
+        '--uprime' if args.uprime else '--no-uprime',
+        '--rhoav' if args.rhoav else '--no-rhoav',
+        f'--nrhoav={args.nrhoav}',
+        '--refine' if args.refine else '--no-refine',
         f'--nrefine={args.nrefine}']
 
 if args.condor: # create scripts to run jobs then exit
@@ -237,7 +239,7 @@ print(f'{args.script}: FINAL: A, B, R, ρ = {A}, {B}, {R}, {ρ}',
       'ρbar_in, ρbar_out, ρbar, wρav, wρav/ρbar, p = %f\t%f\t%f\t%f\t%f\t%f' %
       (ρbar_in, ρbar_out, ρbar, wρav, wρav/ρbar, p))
 
-if args.header:
+if args.header: ### SORT THIS OUT SO THE LINE ORDER IS RIGHT AND A,B,R,rho printed with right # places
 
     data = {'A': A, 'B': B, 'R': R, 'rho': ρ, 'rhobar_in': ρbar_in, 'rhobar_out':ρbar_out,
             'rhobar':ρbar, 'wrhoav': wρav, 'wrhoavbyrhobar': wρav/ρbar, 'pressure': p}
@@ -245,9 +247,9 @@ if args.header:
     data_file = f'{args.header}{sub}.dat' # only one data file
     with open(data_file, 'w') as f:
         if args.process is None or args.process == 0: # write for first file
-            f.write(f'## {args.executable} {args.script} ' + ' '.join(opts) + '\n')
-            f.write('# ' + '\t'.join([f'{key}({i+1})' for i, key in enumerate(data.keys())]) + '\n')
-        f.write('\t'.join([('%f' % data[key]) for key in data]) + '\n')
+            f.write(f'# {args.executable} {args.script} ' + ' '.join(opts) + '\n')
+            f.write('## ' + '\t'.join([f'{key}({i+1})' for i, key in enumerate(data.keys())]) + '\n')
+        f.write('\t'.join([('%g' % data[key]) for key in data]) + '\n')
     print(f'data in {data_file}')
 
 if args.show:
