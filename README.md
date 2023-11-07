@@ -158,14 +158,13 @@ satisfies ρ χ<sub>T</sub> = 1 + 4πρ ∫<sub>0</sub><sup>∞</sup>
 d<em>r</em> <em>r</em>² <em>h</em>(<em>r</em>) where χ<sub>T</sub> = −
 (1/<em>V</em>) ∂<em>V</em>/∂<em>p</em>.  In terms of the equation of
 state <em>p</em>(ρ), this last expression can be written as
-χ<sub>T</sub><sup>−1</sup> = ρ <em>p</em>'(ρ).  Further, in reciprocal
-space the OZ equation (above) can be written in the form [1 + ρ
+χ<sub>T</sub><sup>−1</sup> = ρ d<em>p</em>/dρ.  Further, in reciprocal
+space the OZ equation (above) can be written as [1 + ρ
 <em>h</em>(<em>q</em>)] [1 − ρ <em>c</em>(<em>q</em>)] = 1.  Employing
 this at <em>q</em> = 0, one therefore obtains
 
-* <em>p</em>'(ρ) = 1 − ρ <em>c</em>(<em>q=0</em>) = 1 − 4πρ
-  ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
-  <em>c</em>(<em>r</em>) .
+* d<em>p</em>/dρ = 1 − 4πρ ∫<sub>0</sub><sup>∞</sup> d<em>r</em>
+  <em>r</em>² <em>c</em>(<em>r</em>) .
 
 Given <em>c</em>(<em>r</em>) as a function of density, this can be
 integrated to find <em>p</em>(ρ).  This is known as the
