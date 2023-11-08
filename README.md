@@ -194,7 +194,7 @@ example, if the free energy density is available as a function of
 density, <em>f</em>(ρ), the pressure follows from p =
 −∂<em>F</em>/∂<em>V</em> as <em>p</em> = ρ² d(<em>f</em>/ρ)/dρ where
 <em>f</em>/ρ is the free energy per particle.  It also follows that
-the compressibility χ<sub>T</sub><sup>−1</sup> = ρ² d²<em>f</em>/dρ².
+the compressibility [ρχ<sub>T</sub>]<sup>−1</sup> = ρ d²<em>f</em>/dρ².
 
 The mean-field contribution to this can be calculated immediately
 since the contribution to the energy density 2πρ²
@@ -204,7 +204,7 @@ since the contribution to the energy density 2πρ²
 to the same.  Furthermore, since this term is ∝ ρ², following the
 indicated route to the pressure shows that this exact same term
 appears there too.  So the mean-field contribution to the pressure
-here is the same as the virial route.
+here is the same as the virial route mean-field pressure.
 
 For the non-mean-field correlation contribution we sketch the algorithm:
 
