@@ -27,7 +27,7 @@ involved in undertaking this kind of calculation. It currently comprises:
 
 The next codes are all experimental, and under development:
 
-* `ndpd_eos.py` : nDPD, as in Sokhan <em>et al.</em>, Soft Matter <b19</b>, 5824 (2023);
+* `ndpd_eos.py` : <em>n</em>DPD, as in Sokhan <em>et al.</em>, Soft Matter <b>19</b>, 5824 (2023);
 * `mbdpd_eos.py` : various HNC variants for MB DPD, condor-enabled;
 * `mbdpd_dft.py` : 'vanilla' DFT for MB DPD;
 * `timing.py` : for measuring performance of condor DAG jobs.
