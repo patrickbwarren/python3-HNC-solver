@@ -23,8 +23,8 @@ involved in undertaking this kind of calculation. It currently comprises:
 * `fftw_test.py` : test FFTW for Fourier-Bessel transforms;
 * `dpd_demo.py` : demonstrate the capabilities for standard DPD;
 * `dpd_eos.py` : calculate data for standard DPD equation of state;
-* `dpd_gw_compare.py` : compare to [Groot and Warren,
-   J. Chem. Phys. <b>107</b>, 4423 (1997)](https://doi.org/10.1063/1.474784).
+* `dpd_gw_compare.py` : compare to [Groot and Warren, J. Chem. Phys.
+   <b>107</b>, 4423 (1997)](https://doi.org/10.1063/1.474784).
 
 For more details see extensive comments in the codes, and also the
 documentation for the parallel
@@ -57,7 +57,8 @@ copying `oz.pyf` and `oz.*.so` from
 
 The other codes are all experimental, and under development:
 
-* `ndpd_demo.py` : <em>n</em>DPD, as in Sokhan <em>et al.</em>, Soft Matter <b>19</b>, 5824 (2023);
+* `ndpd_demo.py` : <em>n</em>DPD, as in [Sokhan <em>et al.</em>,
+   Soft Matter <b>19</b>, 5824 (2023)](https://doi.org/10.1039/D3SM00835E);
 * `mbdpd_dft.py` : 'vanilla' DFT for MB DPD;
 * `mbdpd_eos.py` : various HNC variants for MB DPD, condor-enabled;
 * `timing.py` : for measuring performance of condor DAG jobs.
