@@ -118,7 +118,7 @@ class PicardHNC:
             self.error = np.sqrt(np.trapz((cr_new - cr)**2, dx=self.grid.deltar)) # convergence test
             self.converged = self.error < self.tol
             if monitor and (i % 50 == 0 or self.converged):
-                print(f'pyHNC.solve: Picard iteration {i:3d}, error = {self.error:0.3e}')
+                print(f'pyHNC.solve: Picard iteration {i:4d}, error = {self.error:0.3e}')
             if self.converged:
                 break
         if self.converged: 
@@ -139,11 +139,15 @@ class PicardHNC:
 
 # Utility functions below here for setting arguments, pretty printing dataframes, etc
 
-def add_grid_args(parser):
+def power_eval(ng):
+    '''Evalue ng as a string, eg 2^10 -> 1024'''
+    return eval(ng.replace('^', '**')) # catch 2^10 etc
+
+def add_grid_args(parser, ngrid='2^13', deltar=0.02):
     '''Add generic grid arguments to a parser'''
     parser.add_argument('--grid', default=None, help='grid using deltar or deltar/ng, eg 0.02 or 0.02/8192')
-    parser.add_argument('--ngrid', default='2^13', help='number of grid points, default 2^13 = 8192')
-    parser.add_argument('--deltar', default=0.02, type=float, help='grid spacing, default 0.02')
+    parser.add_argument('--ngrid', default=ngrid, help=f'number of grid points, default {ngrid} = {power_eval(ngrid)}')
+    parser.add_argument('--deltar', default=deltar, type=float, help='grid spacing, default 0.02')
 
 def grid_args(args):
     '''Return a dict of grid args, that can be used as **grid_args()'''
@@ -155,7 +159,7 @@ def grid_args(args):
             args.deltar = float(args.grid)
             r = 1 + round(np.log(np.pi/(args.deltar**2))/np.log(2))
             args.ngrid = str(2**r)
-    ng = eval(args.ngrid.replace('^', '**')) # catch 2^10 etc
+    ng = power_eval(args.ngrid)
     return {'ng':ng, 'deltar': args.deltar}
 
 def add_solver_args(parser, alpha=0.2, npicard=500, tol=1e-12):

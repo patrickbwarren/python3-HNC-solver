@@ -24,7 +24,8 @@ involved in undertaking this kind of calculation. It currently comprises:
 * `dpd_eos.py` : calculate data for standard DPD equation of state;
 * `dpd_gw_compare.py` : compare DPD equation of state to literature;
 * `fftw_test.py` : test FFTW for Fourier-Bessel transforms;
-* `mpdpd_eos.py` : _experimental_ MB DPD EOS code.
+* `ndpd_eos.py` : _experimental_ code for nDPD;
+* `mbdpd_eos.py` : _experimental_ code for MB DPD.
 
 For more details see extensive comments in the codes, and also the
 documentation for the parallel

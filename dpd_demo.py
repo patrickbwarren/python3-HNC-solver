@@ -85,18 +85,17 @@ if args.verbose:
 soln = solver.solve(φ, ρ, monitor=args.verbose) # solve for the DPD potential
 hr, hq = soln.hr, soln.hq # extract for use in a moment
 
-# For the integrals here, see Eqs. (2.5.20) and (2.5.22) in
-# Hansen & McDonald, "Theory of Simple Liquids" (3rd edition):
-# for the (excess) energy density, e = 2πρ² ∫_0^∞ dr r² φ(r) g(r) 
-# and virial pressure, p = ρ + 2πρ²/3 ∫_0^∞ dr r³ f(r) g(r)
-# where f(r) = −dφ/dr is the force.
+# For the integrals here, see Eqs. (2.5.20) and (2.5.22) in Hansen &
+# McDonald, "Theory of Simple Liquids" (3rd edition): for the (excess)
+# energy density, e = 2πρ² ∫_0^∞ dr r² φ(r) g(r) and virial pressure,
+# p = ρ + 2πρ²/3 ∫_0^∞ dr r³ f(r) g(r) where f(r) = −dφ/dr is the
+# force.  An integration by parts shows that the mean-field
+# contributions, being these with g(r) = 1, are the same.
 
-# The constant terms here capture the mean field contributions, that
-# is the integrals evaluated with g(r) = 1.  Specifically:
-# e_mf = 2πρ² ∫_0^∞ dr r² φ(r) = πAρ² ∫_0^1 dr r² (1−r)² = πAρ²/30 ;
-# p_mf = 2πρ²/3 ∫_0^∞ dr r³ f(r) = A ∫_0^1 dr r³ (1−r) = πAρ²/30 .
+# Here specifically the mean-field contributions are 
+# 2πρ²/3 ∫_0^∞ dr r³ f(r) = A ∫_0^1 dr r³ (1−r) = πAρ²/30 .
 
-e_mf = p_mf = π*A*ρ**2/30 # all the same for these
+e_mf = p_mf = π*A*ρ**2/30
 
 e_xc = 2*π*ρ**2 * np.trapz(r**2*φ*hr, dx=Δr)
 e_ex = e_mf + e_xc
