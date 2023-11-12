@@ -18,7 +18,10 @@
 # along with this program.  If not, see
 # <http://www.gnu.org/licenses/>.
 
-# Generate EoS data for many-body DPD defined in PRE 68, 066702 (2003)
+# Generate EoS data for many-body DPD defined in PRE 68, 066702 (2003).
+# In this model φ(r) = A(1−r)²/2 for r < 1 ; u(ρ) = πB(R²)²ρ²/30 ,
+# and the weight function w(r) = 15/(2πR³) (1−r/R)² for r < R.
+
 # This version is suitable for the map/reduce wrapper paradigm.
 
 import os
