@@ -23,7 +23,7 @@ involved in undertaking this kind of calculation. It currently comprises:
 * `fftw_test.py` : test FFTW for Fourier-Bessel transforms;
 * `dpd_demo.py` : demonstrate the capabilities for standard DPD;
 * `dpd_eos.py` : calculate data for standard DPD equation of state;
-* `dpd_gw_compare.py` : compare equation of state to Groot and Warren,
+* `dpd_gw_compare.py` : compare to Groot and Warren,
    J. Chem. Phys. <b>107</b>, 4423 (1997).
 
 For more details see extensive comments in the codes, and also the
