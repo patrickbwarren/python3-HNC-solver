@@ -22,15 +22,9 @@ involved in undertaking this kind of calculation. It currently comprises:
 * `pyHNC.py` : python module implementing the functionality;
 * `dpd_demo.py` : demonstrate the capabilities for standard DPD;
 * `dpd_eos.py` : calculate data for standard DPD equation of state;
-* `dpd_gw_compare.py` : compare equation of state to J. Chem. Phys. <b>107</b>, 4423 (1997);
+* `dpd_gw_compare.py` : compare equation of state to Groot and Warren,
+   J. Chem. Phys. <b>107</b>, 4423 (1997);
 * `fftw_test.py` : test FFTW for Fourier-Bessel transforms.
-
-The next codes are all experimental, and under development:
-
-* `ndpd_demo.py` : <em>n</em>DPD, as in Sokhan <em>et al.</em>, Soft Matter <b>19</b>, 5824 (2023);
-* `mbdpd_eos.py` : various HNC variants for MB DPD, condor-enabled;
-* `mbdpd_dft.py` : 'vanilla' DFT for MB DPD;
-* `timing.py` : for measuring performance of condor DAG jobs.
 
 For more details see extensive comments in the codes, and also the
 documentation for the parallel
@@ -60,6 +54,13 @@ copying `oz.pyf` and `oz.*.so` from
 [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC)
 (avaliable after running `make`) to the directory containing
 `dpd_demo.py`.
+
+The other codes are all experimental, and under development:
+
+* `ndpd_demo.py` : <em>n</em>DPD, as in Sokhan <em>et al.</em>, Soft Matter <b>19</b>, 5824 (2023);
+* `mbdpd_eos.py` : various HNC variants for MB DPD, condor-enabled;
+* `mbdpd_dft.py` : 'vanilla' DFT for MB DPD;
+* `timing.py` : for measuring performance of condor DAG jobs.
 
 ### What's being solved here?
 
