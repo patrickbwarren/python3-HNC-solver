@@ -58,8 +58,8 @@ copying `oz.pyf` and `oz.*.so` from
 The other codes are all experimental, and under development:
 
 * `ndpd_demo.py` : <em>n</em>DPD, as in Sokhan <em>et al.</em>, Soft Matter <b>19</b>, 5824 (2023);
-* `mbdpd_eos.py` : various HNC variants for MB DPD, condor-enabled;
 * `mbdpd_dft.py` : 'vanilla' DFT for MB DPD;
+* `mbdpd_eos.py` : various HNC variants for MB DPD, condor-enabled;
 * `timing.py` : for measuring performance of condor DAG jobs.
 
 ### What's being solved here?
