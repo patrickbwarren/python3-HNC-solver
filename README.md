@@ -25,7 +25,9 @@ involved in undertaking this kind of calculation. It currently comprises:
 * `dpd_gw_compare.py` : compare DPD equation of state to literature;
 * `fftw_test.py` : test FFTW for Fourier-Bessel transforms;
 * `ndpd_eos.py` : _experimental_ code for nDPD;
-* `mbdpd_eos.py` : _experimental_ code for MB DPD.
+* `mbdpd_eos.py` : _experimental_ code using HNC for MB DPD;
+* `mbdpd_dft.py` : _experimental_ code using 'vanilla' DFT for MB DPD;
+* `timing.py` : for measuring performance of condor DAG jobs.
 
 For more details see extensive comments in the codes, and also the
 documentation for the parallel
