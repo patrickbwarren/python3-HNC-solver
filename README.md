@@ -379,6 +379,8 @@ in real space and reciprocal space to be comparable, Δ<em>r</em> ≈
 --deltar=0.05 --ng=2^11 (ng=2048 ⇒ Δq ≈ 0.031  )
 --deltar=0.02 --ng=2^13 (ng=8192 ⇒ Δq ≈ 0.019  )
 --deltar=0.01 --ng=2^15 (ng=32768 ⇒ Δq ≈ 0.0096 )
+--deltar=5e-3 --ng=2^17 (ng=131072 ⇒ Δq ≈ 4.79e-3)
+--deltar=2e-3 --ng=2^20 (ng=1048576 ⇒ Δq ≈ 1.50e-3)
 --deltar=1e-3 --ng=2^22 (ng=4194304 ⇒ Δq ≈ 0.749e-3)
 ```
 
