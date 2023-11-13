@@ -44,7 +44,6 @@ import pyHNC
 import argparse
 import numpy as np
 from numpy import pi as π
-from scipy.integrate import quadrature as integrate
 from pyHNC import Grid, PicardHNC, truncate_to_zero
 
 parser = argparse.ArgumentParser(description='DPD HNC calculator')
