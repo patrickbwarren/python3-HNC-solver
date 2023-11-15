@@ -97,10 +97,10 @@ for i in range(args.npicard):
 
     hq = grid.fourier_bessel_forward(h) # to reciprocal space
     ħ = grid.fourier_bessel_backward(hq*wq) # convolution ρbar = ρ(1+h) ⊗ w = ρ(1+ħ)
-    φ_term = ρ * grid.fourier_bessel_backward(φq*hq) # the φ term in the DFT, being φ ⊗ ρ
-    u_term = Bfac * ρ**2 * ħ*(ħ + 2) # the u term in the DFT
+    ΔU_φ = ρ * grid.fourier_bessel_backward(φq*hq) # the φ term in the DFT, being φ ⊗ ρ
+    ΔU_u = Bfac * ρ**2 * ħ*(ħ + 2) # the u term in the DFT
     hħq = hq + hq*wq + grid.fourier_bessel_forward(h*ħ) # contributing factor [ρ(r) u'(ρbar(r))] / ρ², in reciprocal space
-    du_term = 2 * Bfac * ρ**2 * grid.fourier_bessel_backward(hħq*wq) # convolution, [ρ u'(ρbar)] ⊗ w
+    ΔU_du = 2 * Bfac * ρ**2 * grid.fourier_bessel_backward(hħq*wq) # convolution, [ρ u'(ρbar)] ⊗ w
     if args.symmetric: # two choices to compute the density dependence in U(r)
         whq_zero = 4*π*np.trapz(r**2*w*h, dx=Δr) # in reciprocal space q --> 0 value 
         whq = grid.fourier_bessel_forward(w*h) # the factor [wh] in reciprocal space
@@ -109,9 +109,9 @@ for i in range(args.npicard):
     else:
         ħ_zero = 1/(2*π**2) * np.trapz(q**2*hq*wq, dx=Δq) # ħ(r=0) from backward transform
         ζ = (ħ_zero + ħ)/2 # the density factor is again ρ(1+ζ)
-    U = φ + Bfac * 2*ρ*(1+ζ) * w # external potential in Percus DFT
-    ΔV_eff = φ_term + u_term + du_term + U
-    h_new = exp(-ΔV_eff) - 1 # the new estimate
+    U = φ + 2*Bfac*ρ*(1+ζ)*w # external potential in Percus DFT, cf force law in virial
+    ΔU = ΔU_φ + ΔU_u + ΔU_du # apparent correction to the external potential
+    h_new = exp(-U-ΔU) - 1 # the new estimate
     h = α * h_new + (1-α) * h # Picard-like mixing rule
     error = np.sqrt(np.trapz((h_new - h)**2, dx=Δr))
     converged = error < args.tol
@@ -135,9 +135,9 @@ if args.show:
     cut = r < args.rmax
     plt.plot(r[cut], g[cut], 'k--')
     plt.plot(r[cut], ħ[cut], 'k-.')
-    plt.plot(r[cut], φ_term[cut], 'r')
-    plt.plot(r[cut], u_term[cut], 'g-.')
-    plt.plot(r[cut], du_term[cut], 'g--')
+    plt.plot(r[cut], ΔU_φ[cut], 'r')
+    plt.plot(r[cut], ΔU_u[cut], 'g-.')
+    plt.plot(r[cut], ΔU_du[cut], 'g--')
     #plt.plot(r[cut], ΔV_eff[cut], 'b--')
     plt.plot(r[cut], U[cut]/10, 'b')
     #plt.plot(r[cut], h_new[cut], 'k:')

@@ -208,13 +208,15 @@ if args.rhoav: # attempt to improve the model by replacing ρbar with ρav(r)
         # wρav = 4*π*np.trapz(r**2*wr*ρav, dx=Δr)
 
         hr, hq = soln.hr, soln.hq
-        gr = 1.0 + hr # the pair function
-        ρbar = ρ*(1 + 4*π*np.trapz(r**2*wr*hr, dx=Δr))
+        gr = 1.0 + hr # the pair function -- shouldn't be needed, with care!
+        ρbar = ρ*(1 + 4*π*np.trapz(r**2*wr*hr, dx=Δr)) # <<< write as whq_zero = 4*π*np.trapz(r**2*w*h, dx=Δr)
         whq = grid.fourier_bessel_forward(wr*hr) # convolution
         wgXh = grid.fourier_bessel_backward((wq+whq)*hq) # convolution
-        ρav = ρbar + ρ*wgXh # the corrected estimate
-        wρav = 4*π*np.trapz(r**2*wr*ρav, dx=Δr) # weighted average, for tracking
+        ρav = ρbar + ρ*wgXh # the corrected estimate # <<< rewrite first as  ρ*(1 + whq_zero ...)
+        # in the next bit we should be able to separate out the '1' in the above
+        wρav = 4*π*np.trapz(r**2*wr*ρav, dx=Δr) # weighted average, for tracking << check against above
         f = φf + B * 2*ρav * wf # generalised MB DPD force law
+        # SHOULD BE ABLE TO SEPARATE THE MEAN-FIELD CONTRIBUTION HERE
         p = ρ + 2/3*π*ρ**2 * np.trapz(r**3*f*gr, dx=Δr) # can't separate out mean-field: ρbar is not constant
         print(f'{args.script}: (w + wh)*h {i:3d}:',
               'ρbar_in, ρbar, wρav, wρav/ρbar, p = %f\t%f\t%f\t%f\t%f' %
