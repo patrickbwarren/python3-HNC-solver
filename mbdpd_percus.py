@@ -53,6 +53,7 @@ parser.add_argument('-B', '--B', default=5.0, type=float, help='repulsion amplit
 parser.add_argument('-R', '--R', default=0.75, type=float, help='repulsion r_c')
 parser.add_argument('--rho', default='3.0', help='density or density range, default 3.0')
 parser.add_bool_arg('--hzero', default=False, help='set initial h = 0')
+parser.add_bool_arg('--symmetric', default=True, help='choice for calculating rhobar(r)')
 parser.add_argument('--rmax', default=3.0, type=float, help='maximum in r for plotting, default 3.0')
 parser.add_bool_arg('--show', default=False, help='show plots of things')
 args = parser.parse_args()
@@ -95,32 +96,37 @@ h = np.zeros_like(r) if args.hzero else (exp(-v) - 1) # initial guess
 for i in range(args.npicard):
 
     hq = grid.fourier_bessel_forward(h) # to reciprocal space
-    ħ = grid.fourier_bessel_backward(hq*wq) # convolution Δρbar = Δρ ⊗ w = ρ_∞ h ⊗ w 
+    ħ = grid.fourier_bessel_backward(hq*wq) # convolution ρbar = ρ(1+h) ⊗ w = ρ(1+ħ)
     φ_term = ρ * grid.fourier_bessel_backward(φq*hq) # the φ term in the DFT, being φ ⊗ ρ
     u_term = Bfac * ρ**2 * ħ*(ħ + 2) # the u term in the DFT
-    ρduρbar = 2 * Bfac * ρ**2 * (h + ħ + h*ħ) # contributing factor [ρ u'(ρbar)]
-    ρduρbarq = grid.fourier_bessel_forward(ρduρbar) # to reciprocal space
-    du_term = grid.fourier_bessel_backward(ρduρbarq*wq) # convolution, [ρ u'(ρbar)] ⊗ w
-    ħ_zero = 1/(2*π**2) * np.trapz(q**2*hq*wq, dx=Δq) # ħ(r=0) from backward transform
-    ρbar = ρ * (1 + 0.5*(ħ_zero + ħ)) # features in U(r) and the force law
-    U = φ + Bfac * 2*ρbar * w # external potential in Percus DFT
-    all_terms = φ_term + u_term + du_term + U
-    h_new = exp(-all_terms) - 1 # the new estimate
+    hħq = hq + hq*wq + grid.fourier_bessel_forward(h*ħ) # contributing factor [ρ(r) u'(ρbar(r))] / ρ², in reciprocal space
+    du_term = 2 * Bfac * ρ**2 * grid.fourier_bessel_backward(hħq*wq) # convolution, [ρ u'(ρbar)] ⊗ w
+    if args.symmetric: # two choices to compute the density dependence in U(r)
+        whq_zero = 4*π*np.trapz(r**2*w*h, dx=Δr) # in reciprocal space q --> 0 value 
+        whq = grid.fourier_bessel_forward(w*h) # the factor [wh] in reciprocal space
+        whXh = grid.fourier_bessel_backward(whq*hq) # convolution, [wh] ⊗ h
+        ζ = whq_zero + ħ + whXh # the density is ρ(1+ζ)
+    else:
+        ħ_zero = 1/(2*π**2) * np.trapz(q**2*hq*wq, dx=Δq) # ħ(r=0) from backward transform
+        ζ = (ħ_zero + ħ)/2 # the density factor is again ρ(1+ζ)
+    U = φ + Bfac * 2*ρ*(1+ζ) * w # external potential in Percus DFT
+    ΔV_eff = φ_term + u_term + du_term + U
+    h_new = exp(-ΔV_eff) - 1 # the new estimate
     h = α * h_new + (1-α) * h # Picard-like mixing rule
     error = np.sqrt(np.trapz((h_new - h)**2, dx=Δr))
     converged = error < args.tol
-    if i % 100 == 0 or converged:
+    if args.verbose and (i % 100 == 0 or converged):
         print(f'{args.script}: iteration {i:4d}, error = {error:0.3e}')
     if converged:
         break
 
 g = 1 + h
-
-# INJECT THE MEAN FIELD PRESSURE IN HERE WITH ρbar = ρ AND g(r) = 1
-
-f = φf + B * 2*ρbar * wf # generalised MB DPD force law with ρbar = ρ (1 + [ħ(r=0) + ħ]/2) from above
+ζav = 1 + 4*π*np.trapz(r**2*w*ζ, dx=Δr) # weighted average, for tracking
+pMF = ρ + π*A*ρ**2/30 + π*B*R**4*ρ**3/15 # mean field pressure
+f = φf + B * 2*ρ*(1+ζ) * wf # generalised MB DPD force law with ρbar from above
+# CAN FORMALLY SEPARATE OUT THE MEAN-FIELD-Y BITS BELOW
 p = ρ + 2/3*π*ρ**2 * np.trapz(r**3*f*g, dx=Δr) # can't separate out mean-field: ρbar is not constant
-print(f'{args.script}: A, B, R, ρ = {A}, {B}, {R}, {ρ}', 'pMF, p = %f\t%f' % (pMF, p))
+print(f'{args.script}: A, B, R, ρ = {A}, {B}, {R}, {ρ}', 'ζav, pMF, p, error = %f\t%f\t%f\t%g' % (ζav, pMF, p, error))
 
 if args.show:
     
@@ -132,7 +138,7 @@ if args.show:
     plt.plot(r[cut], φ_term[cut], 'r')
     plt.plot(r[cut], u_term[cut], 'g-.')
     plt.plot(r[cut], du_term[cut], 'g--')
-    #plt.plot(r[cut], all_terms[cut], 'b--')
+    #plt.plot(r[cut], ΔV_eff[cut], 'b--')
     plt.plot(r[cut], U[cut]/10, 'b')
     #plt.plot(r[cut], h_new[cut], 'k:')
     plt.plot(r[cut], v[cut]/10, 'b:')
