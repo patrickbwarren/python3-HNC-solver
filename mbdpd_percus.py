@@ -52,6 +52,7 @@ parser.add_argument('-A', '--A', default=5.0, type=float, help='repulsion amplit
 parser.add_argument('-B', '--B', default=5.0, type=float, help='repulsion amplitude')
 parser.add_argument('-R', '--R', default=0.75, type=float, help='repulsion r_c')
 parser.add_argument('--rho', default='3.0', help='density or density range, default 3.0')
+parser.add_bool_arg('--hzero', default=False, help='set initial h = 0')
 parser.add_argument('--rmax', default=3.0, type=float, help='maximum in r for plotting, default 3.0')
 parser.add_bool_arg('--show', default=False, help='show plots of things')
 args = parser.parse_args()
@@ -83,62 +84,59 @@ Bfac = π*B*R**4/30 # used in many expressions below
 
 # for ρ in pyHNC.as_linspace(args.rho):
 
-ρ = pyHNC.as_linspace(args.rho)[0]
+ρ = pyHNC.as_linspace(args.rho)[0] # stands for ρ_∞ here.
 
-h = np.zeros_like(r) # ... zero initially
+v = φ + Bfac * 2*ρ * w # the bare potential with ρ
 
-v = φ + Bfac * 2*ρ * w
-
-h = exp(-v) - 1 # initially
+h = np.zeros_like(r) if args.hzero else (exp(-v) - 1) # initial guess
 
 # Iterate from here ..
-
-α, niter, tol = 0.02, 5000, 1e-12
 
 for i in range(args.npicard):
 
     hq = grid.fourier_bessel_forward(h) # to reciprocal space
-    ħq = hq * wq # convolution Δρbar = Δρ ⊗ w = ρ∞ h ⊗ w = 
-    ħ = grid.fourier_bessel_backward(ħq)
-
+    ħ = grid.fourier_bessel_backward(hq*wq) # convolution Δρbar = Δρ ⊗ w = ρ_∞ h ⊗ w 
     φ_term = ρ * grid.fourier_bessel_backward(φq*hq) # the φ term in the DFT, being φ ⊗ ρ
-
     u_term = Bfac * ρ**2 * ħ*(ħ + 2) # the u term in the DFT
-
-    ρduρbar = 2 * Bfac * ρ**2 * (h + ħ + h*ħ) # contributing factor ρ u'(ρbar)
-    ρduρbarq = grid.fourier_bessel_forward(ρduρbar) # in reciprocal space
-    du_term = grid.fourier_bessel_backward(ρduρbarq*wq) # and back, as [ρ u'(ρbar)] ⊗ w
-
-    ħ_zero = 1/(2*π**2) * np.trapz(q**2*ħq, dx=Δq) # ħ(r=0) from backward transform
-    U = φ + Bfac * ρ * (2 + ħ_zero + ħ) * w # external potential in Percus DFT
-
+    ρduρbar = 2 * Bfac * ρ**2 * (h + ħ + h*ħ) # contributing factor [ρ u'(ρbar)]
+    ρduρbarq = grid.fourier_bessel_forward(ρduρbar) # to reciprocal space
+    du_term = grid.fourier_bessel_backward(ρduρbarq*wq) # convolution, [ρ u'(ρbar)] ⊗ w
+    ħ_zero = 1/(2*π**2) * np.trapz(q**2*hq*wq, dx=Δq) # ħ(r=0) from backward transform
+    ρbar = ρ * (1 + 0.5*(ħ_zero + ħ)) # features in U(r) and the force law
+    U = φ + Bfac * 2*ρbar * w # external potential in Percus DFT
     all_terms = φ_term + u_term + du_term + U
     h_new = exp(-all_terms) - 1 # the new estimate
-    h = α * h_new + (1-α) * h
+    h = α * h_new + (1-α) * h # Picard-like mixing rule
     error = np.sqrt(np.trapz((h_new - h)**2, dx=Δr))
-    converged = error < tol
+    converged = error < args.tol
     if i % 100 == 0 or converged:
         print(f'{args.script}: iteration {i:4d}, error = {error:0.3e}')
     if converged:
         break
 
-import matplotlib.pyplot as plt
+g = 1 + h
 
-v = φ + Bfac * 2*ρ * w
+# INJECT THE MEAN FIELD PRESSURE IN HERE WITH ρbar = ρ AND g(r) = 1
 
+f = φf + B * 2*ρbar * wf # generalised MB DPD force law with ρbar = ρ (1 + [ħ(r=0) + ħ]/2) from above
+p = ρ + 2/3*π*ρ**2 * np.trapz(r**3*f*g, dx=Δr) # can't separate out mean-field: ρbar is not constant
+print(f'{args.script}: A, B, R, ρ = {A}, {B}, {R}, {ρ}', 'pMF, p = %f\t%f' % (pMF, p))
 
-cut = r < args.rmax
-plt.plot(r[cut], 1+h[cut], 'k--')
-plt.plot(r[cut], ħ[cut], 'k-.')
-plt.plot(r[cut], φ_term[cut], 'r')
-plt.plot(r[cut], u_term[cut], 'g-.')
-plt.plot(r[cut], du_term[cut], 'g--')
-#plt.plot(r[cut], all_terms[cut], 'b--')
-plt.plot(r[cut], U[cut]/10, 'b')
-#plt.plot(r[cut], h_new[cut], 'k:')
-plt.plot(r[cut], v[cut]/10, 'b:')
-
-
-plt.xlabel('$r$')
+if args.show:
     
-plt.show()
+    import matplotlib.pyplot as plt
+
+    cut = r < args.rmax
+    plt.plot(r[cut], g[cut], 'k--')
+    plt.plot(r[cut], ħ[cut], 'k-.')
+    plt.plot(r[cut], φ_term[cut], 'r')
+    plt.plot(r[cut], u_term[cut], 'g-.')
+    plt.plot(r[cut], du_term[cut], 'g--')
+    #plt.plot(r[cut], all_terms[cut], 'b--')
+    plt.plot(r[cut], U[cut]/10, 'b')
+    #plt.plot(r[cut], h_new[cut], 'k:')
+    plt.plot(r[cut], v[cut]/10, 'b:')
+
+    plt.xlabel('$r$')
+    
+    plt.show()
