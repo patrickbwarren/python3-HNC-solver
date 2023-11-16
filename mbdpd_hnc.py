@@ -41,14 +41,14 @@ pyHNC.add_solver_args(parser, npicard=10000) # boost the possible number of Pica
 parser.add_argument('-v', '--verbose', action='count', help='more details (repeat as required)')
 parser.add_argument('--header', default=None, help='set the name of the output files, default None')
 parser.add_argument('--process', default=None, type=int, help='process number, default None')
-parser.add_argument('-A', '--A', default=-40.0, type=float, help='repulsion amplitude')
-parser.add_argument('-B', '--B', default=40.0, type=float, help='repulsion amplitude')
+parser.add_argument('-A', '--A', default=10.0, type=float, help='repulsion amplitude')
+parser.add_argument('-B', '--B', default=5.0, type=float, help='repulsion amplitude')
 parser.add_argument('-R', '--R', default=0.75, type=float, help='repulsion r_c')
-parser.add_argument('--rho', default='6.5', help='density or density range, default 6.5')
+parser.add_argument('--rho', default='3.0', help='density or density range, default 6.5')
 parser.add_argument('--rhobar', default=5.0, type=float, help='initial mean local density, default 5.0')
 parser.add_argument('--drhobar', default=0.05, type=float, help='decrement looking for self consistency, default 0.05')
 parser.add_bool_arg('--uprime', default=False, help='use du/dρ rather than u/ρ for MB potential')
-parser.add_bool_arg('--rhoav', default=False, help='use ρ(r) rather than <ρ> in the MB potential')
+parser.add_bool_arg('--rhoav', default=True, help='use ρ(r) rather than <ρ> in the MB potential')
 parser.add_argument('--nrhoav', default=20, type=int, help='number of steps to converge, default 20')
 parser.add_bool_arg('--refine', default=True, help='refine end point using interval halving')
 parser.add_argument('--nrefine', default=20, type=int, help='number of interval halving steps, default 20')
@@ -141,7 +141,7 @@ solver = pyHNC.PicardHNC(grid, **pyHNC.solver_args(args))
 # The array sizes here are ng-1, same as r[:].
 
 φ = A/2 * truncate_to_zero((1-r)**2, r, 1)
-φf = A * truncate_to_zero((1-r), r, 1)
+φf = truncate_to_zero((1-r), r, 1) # omit the amplitude
 
 # The many-body weight function (normalised) and its Fourier
 # transform, and the derivative (unnormalised).
@@ -149,6 +149,8 @@ solver = pyHNC.PicardHNC(grid, **pyHNC.solver_args(args))
 wr = 15/(2*π*R**3) * truncate_to_zero((1-rbyR)**2, r, R)
 wq = 60*(2*qR + qR*cos(qR) - 3*sin(qR)) / qR**5
 wf = truncate_to_zero((1-rbyR), r, R) # omit the normalisation
+
+Bfac = π*B*R**4/30 # used in many expressions below
 
 # Combine a search descent from initial value of rhobar with
 # refinement using interval halving if requested.
@@ -165,7 +167,7 @@ while not bracketed or (args.refine and i < args.nrefine):
     soln = solver.solve(v, ρ)
     if soln.converged:
         hr = soln.hr
-        f = φf + B * 2*ρbar_in * wf # MB DPD force law
+        f = A*φf + B * 2*ρbar_in * wf # MB DPD force law
         p = ρ + (A + 2*B*ρbar_in*R**4)*π*ρ**2/30 + 2/3*π*ρ**2*np.trapz(r**3*f*hr, dx=Δr)
         ρbar_out = ρ*(1 + 4*π*np.trapz(r**2*wr*hr, dx=Δr))
         if bracketed:
@@ -209,14 +211,23 @@ if args.rhoav: # attempt to improve the model by replacing ρbar with ρav(r)
 
         hr, hq = soln.hr, soln.hq
         gr = 1.0 + hr # the pair function -- shouldn't be needed, with care!
-        ρbar = ρ*(1 + 4*π*np.trapz(r**2*wr*hr, dx=Δr)) # <<< write as whq_zero = 4*π*np.trapz(r**2*w*h, dx=Δr)
+        whq_zero = 4*π*np.trapz(r**2*wr*hr, dx=Δr)
+        ρbar = ρ*(1 + whq_zero)
         whq = grid.fourier_bessel_forward(wr*hr) # convolution
         wgXh = grid.fourier_bessel_backward((wq+whq)*hq) # convolution
-        ρav = ρbar + ρ*wgXh # the corrected estimate # <<< rewrite first as  ρ*(1 + whq_zero ...)
+        ζr = whq_zero + wgXh
+        ρav = ρ*(1 + ζr) # the corrected estimate # <<< rewrite first as  ρ*(1 + whq_zero ...)
         # in the next bit we should be able to separate out the '1' in the above
-        wρav = 4*π*np.trapz(r**2*wr*ρav, dx=Δr) # weighted average, for tracking << check against above
-        f = φf + B * 2*ρav * wf # generalised MB DPD force law
-        # SHOULD BE ABLE TO SEPARATE THE MEAN-FIELD CONTRIBUTION HERE
+        ζav = 4*π*np.trapz(r**2*wr*ζr, dx=Δr) # weighted average, for tracking
+        wρav = ρ*(1 + ζav) # weighted average, for tracking << check against above
+        # wρav = 4*π*np.trapz(r**2*wr*ρav, dx=Δr) # weighted average, for tracking << check against above
+        pMF = ρ + π*A*ρ**2/30 + 2*Bfac*ρ**3 # mean field pressure
+        Δfgr = A*φf*hr + 2*B*ρ*(ζr+hr+ζr*hr)*wf # features in the virial pressure integral
+        p = pMF + 2/3*π*ρ**2*np.trapz(r**3*Δfgr, dx=Δr) # separated off MF contribution here
+        print(f'\n{args.script}: A, B, R, ρ = {A}, {B}, {R}, {ρ}',
+              'ζav, wρav/ρbar, pMF, p, error = %f\t%f\t%f\t%f\t%g' % (ζav, (1+ζav)/(1+whq_zero), pMF, p, soln.error))
+        # HAVE RATIONALISED THE CALCULATION TO THE SAME AS ABOVE -- TIDY UP NOW !!
+        f = A*φf + 2*B*ρ*(1+ζr)*wf # generalised MB DPD force law
         p = ρ + 2/3*π*ρ**2 * np.trapz(r**3*f*gr, dx=Δr) # can't separate out mean-field: ρbar is not constant
         print(f'{args.script}: (w + wh)*h {i:3d}:',
               'ρbar_in, ρbar, wρav, wρav/ρbar, p = %f\t%f\t%f\t%f\t%f' %
@@ -235,7 +246,7 @@ else: # if not args.rhoav
         hr = soln.hr
         gr = 1.0 + hr # the pair function
         ρbar = ρ*(1 + 4*π*np.trapz(r**2*wr*hr, dx=Δr))
-        f = φf + B * 2*ρbar * wf # generalised MB DPD force law
+        f = A*φf + B * 2*ρbar * wf # generalised MB DPD force law
         p = ρ + (A + 2*B*ρbar*R**4)*π*ρ**2/30 + 2/3*π*ρ**2*np.trapz(r**3*f*hr, dx=Δr)
         ρav = ρbar * np.ones_like(r) # for plotting
         wρav = 4*π*np.trapz(r**2*wr*ρav, dx=Δr) # weighted average, ( = ρbar here one hopes)
