@@ -64,11 +64,11 @@ grid = pyHNC.Grid(**pyHNC.grid_args(args)) # make the initial working grid
 r, Δr, q, Δq = grid.r, grid.deltar, grid.q, grid.deltaq # extract for use below
 rbyR, qR = r/R, q*R # some reduced variables
 
-# DPD potential, force law, and Fourier transform.
+# DPD potential, force law without amplitude, and Fourier transform.
 # The array sizes here are ng-1, same as r[:].
 
 φ = A/2 * truncate_to_zero((1-r)**2, r, 1)
-φf = A * truncate_to_zero((1-r), r, 1)
+φf = truncate_to_zero((1-r), r, 1)
 φq = 4*π*A*(2*q + q*cos(q) - 3*sin(q)) / q**5
 
 # The many-body weight function (normalised) and its Fourier
@@ -78,15 +78,17 @@ w = 15/(2*π*R**3) * truncate_to_zero((1-rbyR)**2, r, R)
 wq = 60*(2*qR + qR*cos(qR) - 3*sin(qR)) / qR**5
 wf = truncate_to_zero((1-rbyR), r, R) # omit the normalisation
 
+Bfac = π*B*R**4/30 # used in many expressions below
+
 for ρ in pyHNC.as_linspace(args.rho):
     ρbar = ρ # under this approximation
-    cq = - φq - 2*π*B*R**4*ρbar*wq/15 - ρ*π*B*R**4*wq**2/15 # note ρ in second
-    hq = cq / (1 - ρ*cq) # Ornstein-Zernike relation
+    negcq = φq + 4*Bfac*ρbar*wq + 2*ρ*Bfac*wq**2 # note ρ in second
+    hq = cq / (1 + ρ*negcq) # Ornstein-Zernike relation
     h = grid.fourier_bessel_backward(hq)
     h = (exp(h) - 1) if args.exp else h
-    f = φf + 2*B*ρbar * wf # generalised MB DPD force law
+    Δfg = (A*φf + 2*B*ρbar*wf) * h # features in the virial pressure integral
     pMF = ρ + π*A*ρ**2/30 + π*B*R**4*ρ**2*ρbar/15 # mean field pressure
-    p = pMF + 2/3*π*ρ**2*np.trapz(r**3*f*h, dx=Δr) # correlation correction
+    p = pMF + 2/3*π*ρ**2*np.trapz(r**3*Δfg, dx=Δr) # separated off MF contribution here
     print(f'{args.script}: A, B, R, ρ = {A}, {B}, {R}, {ρ}', 'pMF, p = %f\t%f' % (pMF, p))
 
 if args.show:

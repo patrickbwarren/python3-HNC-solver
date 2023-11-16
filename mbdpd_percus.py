@@ -25,13 +25,15 @@
 # This version uses the Percus-like DFT which results in a complicated
 # route to the pair distribution function.
 
-# This Percus-like DFT solves :
+# This code solves a Percus-like DFT :
 # ρ = ρ∞ exp[consts − φ ⊗ ρ − u(ρbar) − [ρ u(ρbar)] ⊗ w − U ]
-# where U(r) = ( a[ρbar(r=0)] + a[ρbar] ) w(r) is the external
-# potential and the consts cancel the r --> ∞ contribution from the
-# remainder in the exponential.  Here '⊗' denotes a convolution.  We
-# solve it in ρ(r) = ρ∞ (1 + h) where h(r) is the total correlation
-# function.
+
+# where U(r) is the external potential, for which there are several
+# choices, the consts cancel the r --> ∞ contribution from the other
+# terms in the exponential, and ρbar = ρ ⊗ w.  Here '⊗' denotes a
+# convolution.  We solve it in ρ(r) = ρ∞ (1 + h) where h(r) is the
+# total correlation function.  The choices for U(r) include
+# U(r) = ( a[ρbar(r=0)] + a[ρbar] ) w(r) 
 
 import os
 import sys
@@ -53,7 +55,8 @@ parser.add_argument('-B', '--B', default=5.0, type=float, help='repulsion amplit
 parser.add_argument('-R', '--R', default=0.75, type=float, help='repulsion r_c')
 parser.add_argument('--rho', default='3.0', help='density or density range, default 3.0')
 parser.add_bool_arg('--hzero', default=False, help='set initial h = 0')
-parser.add_bool_arg('--symmetric', default=True, help='choice for calculating rhobar(r)')
+parser.add_bool_arg('--screened', default=True, help='choice for calculating U(r)')
+parser.add_bool_arg('--symmetric', default=True, help='choice for calculating U(r)')
 parser.add_argument('--rmax', default=3.0, type=float, help='maximum in r for plotting, default 3.0')
 parser.add_bool_arg('--show', default=False, help='show plots of things')
 args = parser.parse_args()
@@ -67,12 +70,12 @@ grid = pyHNC.Grid(**pyHNC.grid_args(args)) # make the initial working grid
 r, Δr, q, Δq = grid.r, grid.deltar, grid.q, grid.deltaq # extract for use below
 rbyR, qR = r/R, q*R # some reduced variables
 
-# DPD potential, force law, and Fourier transform.
+# DPD potential, force law without ampliude, and Fourier transform.
 # The array sizes here are ng-1, same as r[:].
 
 φ = A/2 * truncate_to_zero((1-r)**2, r, 1)
 φq = 4*π*A*(2*q + q*cos(q) - 3*sin(q)) / q**5
-φf = A * truncate_to_zero((1-r), r, 1)
+φf = truncate_to_zero((1-r), r, 1)
 
 # The many-body weight function (normalised) and its Fourier
 # transform, and the derivative (unnormalised).
@@ -101,13 +104,15 @@ for i in range(args.npicard):
     ΔU_u = Bfac * ρ**2 * ħ*(ħ + 2) # the u term in the DFT
     hħq = hq + hq*wq + grid.fourier_bessel_forward(h*ħ) # contributing factor [ρ(r) u'(ρbar(r))] / ρ², in reciprocal space
     ΔU_du = 2 * Bfac * ρ**2 * grid.fourier_bessel_backward(hħq*wq) # convolution, [ρ u'(ρbar)] ⊗ w
-    if args.symmetric: # two choices to compute the density dependence in U(r)
+    if not args.screened:
+        ζ = np.zeros_like(r) # just use ρ in U(r)
+    elif args.symmetric: # two choices to compute the density dependence in U(r)
         whq_zero = 4*π*np.trapz(r**2*w*h, dx=Δr) # in reciprocal space q --> 0 value 
         whq = grid.fourier_bessel_forward(w*h) # the factor [wh] in reciprocal space
         whXh = grid.fourier_bessel_backward(whq*hq) # convolution, [wh] ⊗ h
         ζ = whq_zero + ħ + whXh # the density is ρ(1+ζ)
     else:
-        ħ_zero = 1/(2*π**2) * np.trapz(q**2*hq*wq, dx=Δq) # ħ(r=0) from backward transform
+        ħ_zero = 1/(2*π**2) * np.trapz(q**2*hq*wq, dx=Δq) # ħ(r=0) from integral in q-space
         ζ = (ħ_zero + ħ)/2 # the density factor is again ρ(1+ζ)
     U = φ + 2*Bfac*ρ*(1+ζ)*w # external potential in Percus DFT, cf force law in virial
     ΔU = ΔU_φ + ΔU_u + ΔU_du # apparent correction to the external potential
@@ -120,18 +125,19 @@ for i in range(args.npicard):
     if converged:
         break
 
-g = 1 + h
-ζav = 1 + 4*π*np.trapz(r**2*w*ζ, dx=Δr) # weighted average, for tracking
-pMF = ρ + π*A*ρ**2/30 + π*B*R**4*ρ**3/15 # mean field pressure
-f = φf + B * 2*ρ*(1+ζ) * wf # generalised MB DPD force law with ρbar from above
-# CAN FORMALLY SEPARATE OUT THE MEAN-FIELD-Y BITS BELOW
-p = ρ + 2/3*π*ρ**2 * np.trapz(r**3*f*g, dx=Δr) # can't separate out mean-field: ρbar is not constant
-print(f'{args.script}: A, B, R, ρ = {A}, {B}, {R}, {ρ}', 'ζav, pMF, p, error = %f\t%f\t%f\t%g' % (ζav, pMF, p, error))
+ζav = 4*π*np.trapz(r**2*w*ζ, dx=Δr) # weighted average, for tracking
+pMF = ρ + π*A*ρ**2/30 + 2*Bfac*ρ**3 # mean field pressure
+Δfg = A*φf*h + 2*B*ρ*(ζ+h+ζ*h)*wf # features in the virial pressure integral
+p = pMF + 2/3*π*ρ**2*np.trapz(r**3*Δfg, dx=Δr) # separated off MF contribution here
+
+print(f'{args.script}: A, B, R, ρ = {A}, {B}, {R}, {ρ}',
+      'ζav, pMF, p, error = %f\t%f\t%f\t%g' % (ζav, pMF, p, error))
 
 if args.show:
     
     import matplotlib.pyplot as plt
 
+    g = 1 + h
     cut = r < args.rmax
     plt.plot(r[cut], g[cut], 'k--')
     plt.plot(r[cut], ħ[cut], 'k-.')
