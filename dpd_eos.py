@@ -59,11 +59,12 @@ for A in pyHNC.as_linspace(args.A):
     solver.warmed_up = False # fresh start with lowest density
     for ρ in pyHNC.as_linspace(args.rho):
         h = solver.solve(A*φbyA, ρ).hr # just keep h(r)
-        pexbyA = π*ρ**2/30 + 2*π*ρ**2/3 * np.trapz(r**3*fbyA*h, dx=Δr)
-        ζav = 4*π * np.trapz(r**2*w*h, dx=Δr) # may notation-clash with mbdpd codes
-        nav = ρ*(1 + ζav) # the mean local density
-        p = ρ + A*pexbyA
-        data.append((A, ρ, ρ**2, p, pexbyA, ζav, nav, solver.error))
+        if solver.converged:
+            pexbyA = π*ρ**2/30 + 2*π*ρ**2/3 * np.trapz(r**3*fbyA*h, dx=Δr)
+            ζav = 4*π * np.trapz(r**2*w*h, dx=Δr) # may notation-clash with mbdpd codes
+            nav = ρ*(1 + ζav) # the mean local density
+            p = ρ + A*pexbyA
+            data.append((A, ρ, ρ**2, p, pexbyA, ζav, nav, solver.error))
 
 df = pd.DataFrame(data, columns=['A', 'rho', 'rhosq', 'p', 'pexbyA', '<xi>', '<n>', 'error'])
 
