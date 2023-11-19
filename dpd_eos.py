@@ -53,13 +53,15 @@ w = 15/π * φbyA # normalised weight function
 # The constant term is the mean field contribution, namely
 # 2πρ²/3 ∫_0^∞ dr r³ f(r) = A ∫_0^1 dr r³ (1−r) = πAρ²/30.
 
+# We calculate also <n> = 4π ∫_0^∞ dr r² w(r) g(r).
+
 data = [] # this will grow as computations proceed
 
 for A in pyHNC.as_linspace(args.A):
     solver.warmed_up = False # fresh start with lowest density
     for ρ in pyHNC.as_linspace(args.rho):
         h = solver.solve(A*φbyA, ρ).hr # just keep h(r)
-        if solver.converged:
+        if solver.converged: # but do test if converged !
             pexbyA = π*ρ**2/30 + 2*π*ρ**2/3 * np.trapz(r**3*fbyA*h, dx=Δr)
             ζav = 4*π * np.trapz(r**2*w*h, dx=Δr) # may notation-clash with mbdpd codes
             nav = ρ*(1 + ζav) # the mean local density
