@@ -53,13 +53,13 @@ from numpy import pi as π
 from numpy import log, sin, cos
 
 parser = argparse.ArgumentParser(description='RPM one off calculator')
-parser.add_argument('--grid', action='store', default=None, help='grid definition as deltar/ng, eg 0.02/8192')
-parser.add_argument('-n', '--ngrid', action='store', default='2^15', help='number of grid points, default 2^15 = 32768')
-parser.add_argument('-i', '--iters', action='store', default=10, type=int, help='number of iterations for timing, default 10')
-parser.add_argument('-d', '--deltar', action='store', default=0.01, type=float, help='grid spacing, default 0.01')
-parser.add_argument('--rmax', action='store', default=3.0, type=float, help='maximum in r for plotting, default 3.0')
-parser.add_argument('--qmax', action='store', default=15.0, type=float, help='maximum in q for plotting, default 15.0')
-parser.add_argument('--show', action='store_true', help='show results')
+parser.add_argument('--grid', default=None, help='grid definition as deltar/ng, eg 0.02/8192')
+parser.add_argument('-n', '--ngrid', default='2^15', help='number of grid points, default 2^15 = 32768')
+parser.add_argument('-i', '--iters', default=10, type=int, help='number of iterations for timing, default 10')
+parser.add_argument('-d', '--deltar', default=0.01, type=float, help='grid spacing, default 0.01')
+parser.add_argument('--rmax', default=3.0, type=float, help='maximum in r for plotting, default 3.0')
+parser.add_argument('--qmax', default=15.0, type=float, help='maximum in q for plotting, default 15.0')
+parser.add_argument('-s', '--show', action='store_true', help='show results')
 args = parser.parse_args()
 
 if args.grid:

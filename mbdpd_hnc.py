@@ -19,7 +19,7 @@
 # <http://www.gnu.org/licenses/>.
 
 # Generate EoS data for many-body DPD defined in PRE 68, 066702 (2003).
-# In this model φ(r) = A(1−r)²/2 for r < 1 ; u(ρ) = πB(R²)²ρ²/30 ,
+# In this model φ(r) = A(1−r)²/2 for r < 1 ; u(ρ) = Kρ² with K = πB(R²)²/30,
 # and the weight function w(r) = 15/(2πR³) (1−r/R)² for r < R.
 
 # This version is suitable for the map/reduce wrapper paradigm.
@@ -44,7 +44,7 @@ parser.add_argument('--process', default=None, type=int, help='process number, d
 parser.add_argument('-A', '--A', default=10.0, type=float, help='repulsion amplitude')
 parser.add_argument('-B', '--B', default=5.0, type=float, help='repulsion amplitude')
 parser.add_argument('-R', '--R', default=0.75, type=float, help='repulsion r_c')
-parser.add_argument('--rho', default='3.0', help='density or density range, default 6.5')
+parser.add_argument('-r', '--rho', default='3.0', help='density or density range, default 6.5')
 parser.add_argument('--rhobar', default=5.0, type=float, help='initial mean local density, default 5.0')
 parser.add_argument('--drhobar', default=0.05, type=float, help='decrement looking for self consistency, default 0.05')
 parser.add_bool_arg('--uprime', default=False, help='use du/dρ rather than u/ρ for MB potential')
@@ -53,11 +53,11 @@ parser.add_argument('--nrhoav', default=20, type=int, help='number of steps to c
 parser.add_bool_arg('--refine', default=True, help='refine end point using interval halving')
 parser.add_argument('--nrefine', default=20, type=int, help='number of interval halving steps, default 20')
 parser.add_bool_arg('--condor', short_opt='-j', default=False, help='create a condor job')
-parser.add_bool_arg('--reduce', short_opt='-r', default=True, help='create a DAGMan job to run the condor job')
+parser.add_bool_arg('--dagman', short_opt='-d', default=True, help='create a DAGMan job to run the condor job')
 parser.add_bool_arg('--clean', short_opt='-c', default=True, help='clean up intermediate files')
 parser.add_bool_arg('--run', short_opt='-x', default=False, help='run the condor or DAGMan job')
 parser.add_argument('--rmax', default=3.0, type=float, help='maximum in r for plotting, default 3.0')
-parser.add_bool_arg('--show', default=False, help='show plots of things')
+parser.add_argument('-s', '--show', action='store_true', help='show results')
 args = parser.parse_args()
 
 args.script = os.path.basename(__file__)
@@ -97,7 +97,7 @@ if args.condor: # create scripts to run jobs then exit
 
     run_command = f'condor_submit {condor_job}'
 
-    if args.reduce:
+    if args.dagman:
 
         post_script = f'{args.header}__script.sh'
         with open(post_script, 'w') as f:
@@ -150,7 +150,7 @@ wr = 15/(2*π*R**3) * truncate_to_zero((1-rbyR)**2, r, R)
 wq = 60*(2*qR + qR*cos(qR) - 3*sin(qR)) / qR**5
 wf = truncate_to_zero((1-rbyR), r, R) # omit the normalisation
 
-Bfac = π*B*R**4/30 # used in many expressions below
+K = π*B*R**4/30 # used in many expressions below
 
 # Combine a search descent from initial value of rhobar with
 # refinement using interval halving if requested.
@@ -221,7 +221,7 @@ if args.rhoav: # attempt to improve the model by replacing ρbar with ρav(r)
         ζav = 4*π*np.trapz(r**2*wr*ζr, dx=Δr) # weighted average, for tracking
         wρav = ρ*(1 + ζav) # weighted average, for tracking << check against above
         # wρav = 4*π*np.trapz(r**2*wr*ρav, dx=Δr) # weighted average, for tracking << check against above
-        pMF = ρ + π*A*ρ**2/30 + 2*Bfac*ρ**3 # mean field pressure
+        pMF = ρ + π*A*ρ**2/30 + 2*K*ρ**3 # mean field pressure
         Δfgr = A*φf*hr + 2*B*ρ*(ζr+hr+ζr*hr)*wf # features in the virial pressure integral
         p = pMF + 2/3*π*ρ**2*np.trapz(r**3*Δfgr, dx=Δr) # separated off MF contribution here
         print(f'\n{args.script}: A, B, R, ρ = {A}, {B}, {R}, {ρ}',

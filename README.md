@@ -20,7 +20,7 @@ pedagogical with the intent of attempting to capture some of the
 involved in undertaking this kind of calculation. It currently comprises:
 
 * `pyHNC.py` : python module implementing the functionality;
-* `fftw_test.py` : test FFTW for Fourier-Bessel transforms;
+* `fftw_demo.py` : test FFTW for Fourier-Bessel transforms;
 * `dpd_demo.py` : demonstrate the capabilities for standard DPD;
 * `dpd_eos.py` : calculate data for standard DPD equation of state;
 * `dpd_gw_compare.py` : compare to [Groot and Warren, J. Chem. Phys.

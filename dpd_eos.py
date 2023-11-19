@@ -18,7 +18,7 @@
 # along with this program.  If not, see
 # <http://www.gnu.org/licenses/>.
 
-# Generate EoS data for standard DPD
+# Generate tables of EoS data for standard DPD.
 
 import pyHNC
 import argparse
@@ -30,8 +30,8 @@ from pyHNC import truncate_to_zero
 parser = argparse.ArgumentParser(description='DPD EoS calculator')
 pyHNC.add_grid_args(parser)
 pyHNC.add_solver_args(parser)
-parser.add_argument('--Arange', default='10(10)50', help='repulsion amplitude range')
-parser.add_argument('--rhorange', default='1(1)10', help='density range')
+parser.add_argument('-A', '--A', default='10(10)50', help='repulsion amplitude range')
+parser.add_argument('-r', '--rho', default='1(1)10', help='density range')
 args = parser.parse_args()
 
 grid = pyHNC.Grid(**pyHNC.grid_args(args)) # make the initial working grid
@@ -44,6 +44,7 @@ solver = pyHNC.PicardHNC(grid, **pyHNC.solver_args(args))
 
 φbyA = truncate_to_zero(1/2*(1-r)**2, r, 1)
 fbyA = truncate_to_zero((1-r), r, 1)
+w = 15/π * φbyA # normalised weight function
 
 # The virial pressure, p = ρ + 2πρ²/3 ∫_0^∞ dr r³ f(r) g(r) where
 # f(r) = −d φ/dr is the force.  See Eq. (2.5.22) in Hansen & McDonald,
@@ -54,14 +55,16 @@ fbyA = truncate_to_zero((1-r), r, 1)
 
 data = [] # this will grow as computations proceed
 
-for A in pyHNC.as_linspace(args.Arange):
+for A in pyHNC.as_linspace(args.A):
     solver.warmed_up = False # fresh start with lowest density
-    for ρ in pyHNC.as_linspace(args.rhorange):
+    for ρ in pyHNC.as_linspace(args.rho):
         h = solver.solve(A*φbyA, ρ).hr # just keep h(r)
         pexbyA = π*ρ**2/30 + 2*π*ρ**2/3 * np.trapz(r**3*fbyA*h, dx=Δr)
+        ζav = 4*π * np.trapz(r**2*w*h, dx=Δr) # may notation-clash with mbdpd codes
+        nav = ρ*(1 + ζav) # the mean local density
         p = ρ + A*pexbyA
-        data.append((A, ρ, ρ**2, p, pexbyA, solver.error))
+        data.append((A, ρ, ρ**2, p, pexbyA, ζav, nav, solver.error))
 
-df = pd.DataFrame(data, columns=['A', 'rho', 'rhosq', 'p', 'pexbyA', 'error'])
+df = pd.DataFrame(data, columns=['A', 'rho', 'rhosq', 'p', 'pexbyA', '<xi>', '<n>', 'error'])
 
 print(pyHNC.df_to_agr(df)) # use a utility here to convert to xmgrace format

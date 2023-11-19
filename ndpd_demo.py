@@ -33,22 +33,23 @@ parser = argparse.ArgumentParser(description='nDPD HNC calculator')
 pyHNC.add_grid_args(parser)
 pyHNC.add_solver_args(parser, alpha=0.01, npicard=9000) # greatly reduce alpha and increase npicard here !!
 parser.add_argument('-v', '--verbose', action='count', help='more details (repeat as required)')
-parser.add_argument('--n', default='2', help='governing exponent, default 2')
-parser.add_argument('--A', default=None, type=float, help='overwrite repulsion amplitude, default none')
-parser.add_argument('--B', default=None, type=float, help='overwrite repulsion amplitude, default none')
-parser.add_argument('--T', default=1.0, type=float, help='temperature, default 1.0')
-parser.add_argument('--rho', default=4.0, type=float, help='density, default 4.0')
-parser.add_argument('--dlambda', default=0.05, type=float, help='for coupling constant integration, default 0.05')
+parser.add_argument('-n', '--n', default='2', help='governing exponent, default 2')
+parser.add_argument('-A', '--A', default=None, type=float, help='overwrite repulsion amplitude, default none')
+parser.add_argument('-B', '--B', default=None, type=float, help='overwrite repulsion amplitude, default none')
+parser.add_argument('-T', '--T', default=1.0, type=float, help='temperature, default 1.0')
+parser.add_argument('-r', '--rho', default=4.0, type=float, help='density, default 4.0')
 parser.add_argument('--rcut', default=3.0, type=float, help='maximum in r for plotting, default 3.0')
 parser.add_argument('--qcut', default=25.0, type=float, help='maximum in q for plotting, default 25.0')
-parser.add_argument('--show', action='store_true', help='show results')
+parser.add_argument('-s', '--show', action='store_true', help='show results')
 args = parser.parse_args()
 
 args.script = os.path.basename(__file__)
 
 # The following is Table 1 from Sokhan et al., Soft Matter 19, 5824 (2023).
 
-Table1 = {'2': (2, 25.0, 3.02), '3': (3, 15.0, 7.2), '4': (4, 10.0, 15.0)}
+Table1 = {'2': (2, 25.0, 3.02),
+          '3': (3, 15.0, 7.2),
+          '4': (4, 10.0, 15.0)}
 
 if args.n in Table1:
     n, A, B = Table1[args.n] # unpack the default values
@@ -69,6 +70,8 @@ if args.verbose:
 # Define the nDPD potential as in Eq. (5) in Sokhan et al., assuming
 # r_c = 1, and the derivative, then solve the HNC problem.  The arrays
 # here are all size ng-1, same as r[:]
+
+# SORT OUT THE TEMPERATURE SCALING HERE !!
 
 βφ = β * truncate_to_zero(A*B/(n+1)*(1-r)**(n+1) - A/2*(1-r)**2, r, 1) # the nDPD potential
 βf = β * truncate_to_zero(A*B*(1-r)**n - A*(1-r), r, 1) # the force f = -dφ/dr
@@ -116,7 +119,7 @@ if args.show:
 
     cut = r < args.rcut
     plt.plot(r[cut], gr[cut])
-    plt.plot(r[cut], φ[cut]/5)
+    plt.plot(r[cut], βφ[cut]/5)
     plt.xlabel('$r$')
     plt.ylabel('$g(r)$')
 

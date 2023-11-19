@@ -26,24 +26,6 @@ import numpy as np
 
 version = '1.0' # for reporting purposes
 
-# The following code snippet is adapted from
-# https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
-
-class ExtendedArgumentParser(argparse.ArgumentParser):
-
-    def add_bool_arg(self, long_opt, short_opt=None, default=False, help=None):
-        '''Add a mutually exclusive --opt, --no-opt group with optional short opt'''
-        opt = long_opt.removeprefix('--')
-        group = self.add_mutually_exclusive_group(required=False)
-        help_string = None if not help else help if not default else f'{help} (default)'
-        if short_opt:    
-            group.add_argument(short_opt, f'--{opt}', dest=opt, action='store_true', help=help_string)
-        else:
-            group.add_argument(f'--{opt}', dest=opt, action='store_true', help=help_string)
-        help_string = None if not help else f"don't {help}" if default else f"don't {help} (default)"        
-        group.add_argument(f'--no-{opt}', dest=opt, action='store_false', help=help_string)
-        self.set_defaults(**{opt:default})
-
 # Provide a grid as a working platform.  This is the pair of arrays
 # r(:) and q(:) initialised to match the desired ng (# grid points)
 # and Δr.  Note that the array lengths are actually ng-1.  A real odd
@@ -136,6 +118,24 @@ class PicardHNC:
                 print(f'pyHNC.solve: Picard iteration {i:3d}, error = {self.error:0.3e}')
                 print('pyHNC.solve: Picard failed to converge')
         return self # the user can name this 'soln' or something
+
+# Extend the ArgumentParser class to be able to add boolean options, adapted from
+# https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
+
+class ExtendedArgumentParser(argparse.ArgumentParser):
+
+    def add_bool_arg(self, long_opt, short_opt=None, default=False, help=None):
+        '''Add a mutually exclusive --opt, --no-opt group with optional short opt'''
+        opt = long_opt.removeprefix('--')
+        group = self.add_mutually_exclusive_group(required=False)
+        help_string = None if not help else help if not default else f'{help} (default)'
+        if short_opt:    
+            group.add_argument(short_opt, f'--{opt}', dest=opt, action='store_true', help=help_string)
+        else:
+            group.add_argument(f'--{opt}', dest=opt, action='store_true', help=help_string)
+        help_string = None if not help else f"don't {help}" if default else f"don't {help} (default)"        
+        group.add_argument(f'--no-{opt}', dest=opt, action='store_false', help=help_string)
+        self.set_defaults(**{opt:default})
 
 # Utility functions below here for setting arguments, pretty printing dataframes, etc
 

@@ -47,13 +47,13 @@ from pyHNC import truncate_to_zero, ExtendedArgumentParser
 parser = ExtendedArgumentParser(description='DPD EoS calculator')
 pyHNC.add_grid_args(parser)
 parser.add_argument('-v', '--verbose', action='count', help='more details (repeat as required)')
-parser.add_argument('-A', '--A', default=-40.0, type=float, help='repulsion amplitude')
-parser.add_argument('-B', '--B', default=40.0, type=float, help='repulsion amplitude')
+parser.add_argument('-A', '--A', default=10.0, type=float, help='repulsion amplitude')
+parser.add_argument('-B', '--B', default=5.0, type=float, help='repulsion amplitude')
 parser.add_argument('-R', '--R', default=0.75, type=float, help='repulsion r_c')
-parser.add_argument('--rho', default='6.5', help='density or density range, default 6.5')
+parser.add_argument('-r', '--rho', default='3.0', help='density or density range, default 3.0')
 parser.add_bool_arg('--exp', default=False, help='use the EXP approximation')
 parser.add_argument('--rmax', default=3.0, type=float, help='maximum in r for plotting, default 3.0')
-parser.add_bool_arg('--show', default=False, help='show plots of things')
+parser.add_argument('-s', '--show', action='store_true', help='show results')
 args = parser.parse_args()
 
 args.script = os.path.basename(__file__)
@@ -78,12 +78,12 @@ w = 15/(2*π*R**3) * truncate_to_zero((1-rbyR)**2, r, R)
 wq = 60*(2*qR + qR*cos(qR) - 3*sin(qR)) / qR**5
 wf = truncate_to_zero((1-rbyR), r, R) # omit the normalisation
 
-Bfac = π*B*R**4/30 # used in many expressions below
+K = π*B*R**4/30 # used in many expressions below
 
 for ρ in pyHNC.as_linspace(args.rho):
     ρbar = ρ # under this approximation
-    negcq = φq + 4*Bfac*ρbar*wq + 2*ρ*Bfac*wq**2 # note ρ in second
-    hq = cq / (1 + ρ*negcq) # Ornstein-Zernike relation
+    negcq = φq + 4*K*ρbar*wq + 2*ρ*K*wq**2 # note ρ in second
+    hq = - negcq / (1 + ρ*negcq) # Ornstein-Zernike relation
     h = grid.fourier_bessel_backward(hq)
     h = (exp(h) - 1) if args.exp else h
     Δfg = (A*φf + 2*B*ρbar*wf) * h # features in the virial pressure integral
