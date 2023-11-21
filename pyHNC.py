@@ -78,12 +78,13 @@ class Grid:
 
 class PicardHNC:
 
-    def __init__(self, grid, alpha=0.2, tol=1e-12, npicard=500):
+    def __init__(self, grid, alpha=0.2, tol=1e-12, npicard=500, nmonitor=50):
         '''Initialise basic data structure'''
         self.grid = grid
         self.alpha = alpha
         self.tol = tol
         self.npicard = npicard
+        self.nmonitor = nmonitor
         self.converged = False
         self.warmed_up = False
         self.details = f'HNC: α = {self.alpha}, tol = {self.tol:0.1e}, npicard = {self.npicard}'
@@ -99,8 +100,9 @@ class PicardHNC:
             cr = self.alpha * cr_new + (1-self.alpha) * cr # apply a Picard mixing rule
             self.error = np.sqrt(np.trapz((cr_new - cr)**2, dx=self.grid.deltar)) # convergence test
             self.converged = self.error < self.tol
-            if monitor and (i % 50 == 0 or self.converged):
-                print(f'pyHNC.solve: Picard iteration {i:4d}, error = {self.error:0.3e}')
+            if monitor and (i % self.nmonitor == 0 or self.converged):
+                iter_s = f'pyHNC.solve: Picard iteration %{len(str(self.npicard))}d,' % i
+                print(f'{iter_s} error = {self.error:0.3e}')
             if self.converged:
                 break
         if self.converged: 
@@ -178,7 +180,7 @@ def solver_args(args):
 def df_to_agr(df):
     '''Convert a pandas DataFrame to a string for an xmgrace data set'''
     header_row = '#  ' + '  '.join([f'{col}({i+1})' for i, col in enumerate(df.columns)])
-    data_rows = df.to_string(index=False).split('\n')[2:]
+    data_rows = df.to_string(index=False).split('\n')[1:]
     return '\n'.join([header_row] + data_rows)
 
 # Convert a variety of formats and return the corresponding NumPy array.

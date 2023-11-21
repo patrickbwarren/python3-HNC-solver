@@ -59,6 +59,7 @@ for ρ in np.linspace(0.0, 10.0, 41)[1:]: # omit rho = 0.0
     hnc_data.append([ρ, p, pexbyArho2, solver.error])
 
 hnc_data_df = pd.DataFrame(hnc_data, columns=['rho', 'p', 'pexbyArho2', 'error'])
+
 print(df_to_agr(hnc_data_df))
 
 plt.plot(gw_data_df.rho, gw_data_df.pexbyArho2, 'ro', label='Groot & Warren (1997)')
