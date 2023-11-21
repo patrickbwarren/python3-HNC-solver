@@ -24,32 +24,28 @@
 
 # Extracted from Fig 5 in this paper, at T* = T / T_c = 0.4 the
 # liquidus points are ρ* = ρ / ρc = 4.15 (n = 3) and 3.56 (n = 4).
-# These state points can be solved with:
-# ./ndpd_demo.py --relative -n 3 -T 0.4 -r 4.15
-# ./ndpd_demo.py --relative -n 4 -T 0.4 -r 3.56
-
+# These state points can be refined with:
+# ./ndpd_liquidus.py -n 3 -T 0.4 -r 4.2,4.3 --> ρ = 4.26955
+# ./ndpd_liquidus.py -n 4 -T 0.4 -r 3.5,3.6 --> ρ = 3.5734
 
 import os
 import pyHNC
 import argparse
 import numpy as np
+import pyHNC
 from numpy import pi as π
-from pyHNC import Grid, PicardHNC, truncate_to_zero, ExtendedArgumentParser
+from pyHNC import truncate_to_zero, ExtendedArgumentParser
 
 parser = ExtendedArgumentParser(description='nDPD HNC calculator')
 pyHNC.add_grid_args(parser)
 pyHNC.add_solver_args(parser, alpha=0.01, npicard=20000) # greatly reduce alpha and increase npicard here !!
 parser.add_argument('-v', '--verbose', action='count', help='more details (repeat as required)')
-parser.add_argument('-n', '--n', default='2', help='governing exponent, default 2')
+parser.add_argument('-n', '--n', default='3', help='governing exponent, default 2')
 parser.add_argument('-A', '--A', default=None, type=float, help='overwrite repulsion amplitude, default none')
 parser.add_argument('-B', '--B', default=None, type=float, help='overwrite repulsion amplitude, default none')
 parser.add_argument('-T', '--T', default=1.0, type=float, help='temperature, default 1.0')
-parser.add_argument('-r', '--rho', default=4.0, type=float, help='density, default 4.0')
-parser.add_argument('--rcut', default=3.0, type=float, help='maximum in r for plotting, default 3.0')
-parser.add_argument('--qcut', default=25.0, type=float, help='maximum in q for plotting, default 25.0')
-parser.add_bool_arg('--relative', default=False, help='ρ, T relative to critical values')
-parser.add_argument('-s', '--show', action='store_true', help='show results')
-parser.add_argument('-o', '--output', help='write pair function to a file')
+parser.add_argument('-r', '--rho', default='4.2,4.3', help='bracketing density, default 4.0')
+#parser.add_bool_arg('--relative', default=True, help='ρ, T relative to critical values')
 args = parser.parse_args()
 
 args.script = os.path.basename(__file__)
@@ -78,13 +74,15 @@ B = args.B if args.B is not None else B # overwrite if necessary
 
 ρc = ρcσ3 / σ**3 # back out the critical value
 
-# density, temperature, relative temperature
+# density, temperature
 
-ρ = (args.rho * ρc) if args.relative else args.rho
-kT = (args.T * Tc) if args.relative else args.T
+ρ = pyHNC.as_linspace(args.rho)
+ρ1, ρ2 = ρ.tolist()
+
+kT = Tc * args.T
 β = 1 / kT
 
-grid = Grid(**pyHNC.grid_args(args)) # make the initial working grid
+grid = pyHNC.Grid(**pyHNC.grid_args(args)) # make the initial working grid
 
 r, Δr = grid.r, grid.deltar # extract the co-ordinate array for use below
 
@@ -98,15 +96,10 @@ if args.verbose:
 φ = truncate_to_zero(A*B/(n+1)*(1-r)**(n+1) - A/2*(1-r)**2, r, 1) # the nDPD potential
 f = truncate_to_zero(A*B*(1-r)**n - A*(1-r), r, 1) # the force f = -dφ/dr
 
-solver = PicardHNC(grid, nmonitor=500, **pyHNC.solver_args(args))
+solver = pyHNC.PicardHNC(grid, nmonitor=500, **pyHNC.solver_args(args))
 
 if args.verbose:
     print(f'{args.script}: {solver.details}')
-
-h = solver.solve(β*φ, ρ, monitor=args.verbose).hr # solve model at β = 1/T
-
-if not solver.converged:
-    exit()
 
 # For the integrals here, see Eqs. (2.5.20) and (2.5.22) in Hansen &
 # McDonald, "Theory of Simple Liquids" (3rd edition): for the (excess)
@@ -114,54 +107,38 @@ if not solver.converged:
 # p = ρ + 2πρ²/3 ∫_0^∞ dr r³ f(r) g(r) where f(r) = −dφ/dr is the
 # force.  An integration by parts shows that the mean-field
 # contributions, being these with g(r) = 1, are the same.
-
 # Here specifically the mean-field contributions are 
 # 2πρ²/3 ∫_0^∞ dr r³ f(r) = ∫_0^1 dr r³ [AB(1-r)^n-A(1−r)]
 # = πAρ²/30 * [120B/((n+1)(n+2)(n+3)(n+4)) - 1].
 
-e_mf = p_mf = π*A*ρ**2/30*(120*B/((n+1)*(n+2)*(n+3)*(n+4)) - 1)
+def pressure(ρbyρc):
+    ρ = ρbyρc * ρc
+    h = solver.solve(β*φ, ρ, monitor=args.verbose).hr # solve model at β = 1/T
+    if not solver.converged:
+        exit()
+    p_mf = π*A*ρ**2/30*(120*B/((n+1)*(n+2)*(n+3)*(n+4)) - 1)
+    p_xc = 2/3*π*ρ**2 * np.trapz(r**3*f*h, dx=Δr)
+    p_ex = p_mf + p_xc
+    p = ρ*kT + p_ex
+    return p
 
-e_xc = 2*π*ρ**2 * np.trapz(r**2*φ*h, dx=Δr)
-e_ex = e_mf + e_xc
-e = 3/2*ρ*kT + e_ex
+p1 = pressure(ρ1)
+p2 = pressure(ρ2)
 
-p_xc = 2/3*π*ρ**2 * np.trapz(r**3*f*h, dx=Δr)
-p_ex = p_mf + p_xc
-p = ρ*kT + p_ex
+print(f'{args.script}: model: nDPD with n = {n:d}, A = {A:g}, B = {B:g}, σ = {σ:g}, β = {β:g}')
+print(f'{args.script}: iteration 000, ρ, p =\t{ρ1:g}\t{p1:g}')
+print(f'{args.script}: iteration  00, ρ, p =\t{ρ2:g}\t{p2:g}')
 
-description = f'nDPD with n = {n:d}, A = {A:g}, B = {B:g}, σ = {σ:g}, ρ = {ρ:g}, β = {β:g}'
-print(f'{args.script}: model: {description}')
-print(f'{args.script}: pyHNC v{pyHNC.version}: e, e_ex, p =\t{e:g}\t{e_ex:g}\t{p:g}')
+if p1*p2 > 0.0:
+    print(f'{args.script}: root not bracketed')
+    exit(0)
 
-if args.show:
+# Proceed to find where the pressure vanishes by brute force interval halving
 
-    import matplotlib.pyplot as plt
+for i in range(15):
+    ρ = 0.5*(ρ1 + ρ2)
+    p = pressure(ρ)
+    print(f'{args.script}: iteration {i:3d}, ρ1, ρ2, ρ, p =\t{ρ1:g}\t{ρ2:g}\t{ρ:g}\t{p:g}')
+    ρ1, ρ2 = (ρ, ρ2) if p*p1 > 0.0 else (ρ1, ρ)
 
-    g = 1.0 + h # the pair function
-
-    cut = r < args.rcut
-    plt.plot(r[cut], g[cut])
-    plt.plot(r[cut], φ[cut]/5)
-    plt.xlabel('$r$')
-    plt.ylabel('$g(r)$')
-
-    plt.show()
-
-if args.output:
-
-    import pandas as pd
-
-    g = 1.0 + h # the pair function
-
-    cut = r < args.rcut
-
-    df = pd.DataFrame({'r': r[cut], 'g': g[cut]})
-    df['r/σ'] = df.r / σ
-    df_agr = pyHNC.df_to_agr(df[['r', 'r/σ', 'g']])
-
-    with open(args.output, 'w') as f:
-        f.write(f'# {description}\n')
-        f.write(df_agr) # use a utility here to convert to xmgrace format
-        f.write('\n')
-
-    print(f'{args.script}: written (r, g) to {args.output}')
+print(f'{args.script}: iteration {i:3d}, ρ, p =\t{ρ:g}\t{p:g}')

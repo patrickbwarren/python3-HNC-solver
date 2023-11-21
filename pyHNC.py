@@ -186,13 +186,17 @@ def df_to_agr(df):
 # Convert a variety of formats and return the corresponding NumPy array.
 # Options can be Abramowitz and Stegun style 'start:step:end' or 'start(step)end',
 # NumPy style 'start,end,npt'.  A single value is returned as a 1-element array.
+# A pair of values separated by a comma is returned as a 2-element array.
 
 def as_linspace(as_range):
     '''Convert a range expressed as a string to an np.linspace array'''
     if ',' in as_range:
         vals = as_range.split(',')
-        start, end, npt = float(vals[0]), float(vals[1]), int(vals[2])
-        xarr = np.linspace(start, end, npt)
+        if len(vals) == 3:
+            start, end, npt = float(vals[0]), float(vals[1]), int(vals[2])
+            xarr = np.linspace(start, end, npt)
+        else:
+            xarr = np.array([float(vals[0]), float(vals[1])])
     elif ':' in as_range or '(' in as_range:
         vals = as_range.replace('(', ':').replace(')', ':').split(':')
         start, step, end = float(vals[0]), float(vals[1]), float(vals[2])
