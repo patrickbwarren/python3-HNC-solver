@@ -78,8 +78,12 @@ B = args.B if args.B is not None else B # overwrite if necessary
 
 # density, temperature
 
-ρ = (ρc * pyHNC.as_linspace(args.rho)) if args.relative else pyHNC.as_linspace(args.rho)
-ρ1, ρ2 = ρ.tolist()
+ρ_vals = (ρc * pyHNC.as_linspace(args.rho)) if args.relative else pyHNC.as_linspace(args.rho)
+
+if len(ρ_vals) == 1:
+    ρ = ρ_vals[0]
+else:
+    ρ1, ρ2 = ρ_vals.tolist()
 
 kT = (args.T * Tc) if args.relative else args.T
 β = 1 / kT
@@ -129,23 +133,32 @@ def pressure(ρ):
     p = ρ*kT + p_ex
     return p
 
-p1 = pressure(ρ1)
-p2 = pressure(ρ2)
+if len(ρ_vals) == 1:
 
-print(f'{args.script}: model: nDPD with n = {n:d}, A = {A:g}, B = {B:g}, σ = {σ:g}, β = {β:g}')
-print(f'{args.script}: iteration 000, ρ/ρc, p =\t\t{ρ1/ρc:g}\t\t{p1:g}')
-print(f'{args.script}: iteration  00, ρ/ρc, p =\t\t{ρ2/ρc:g}\t\t{p2:g}')
-
-if p1*p2 > 0.0:
-    print(f'{args.script}: root not bracketed')
-    exit(0)
-
-# Proceed to find where the pressure vanishes 
-
-for i in range(args.np):
-    ρ = 0.5*(ρ1 + ρ2)
     p = pressure(ρ)
-    print(f'{args.script}: iteration {i:3d}, ρ/ρc, p =\t{ρ1/ρc:g}\t{ρ/ρc:g}\t{ρ2/ρc:g}\t{p:g}')
-    ρ1, ρ2 = (ρ, ρ2) if p*p1 > 0.0 else (ρ1, ρ)
 
-print(f'{args.script}: FINAL, ρ/ρc, p =\t{ρ/ρc:g}\t{p:g}')
+    print(f'{args.script}: model: nDPD with n = {n:d}, A = {A:g}, B = {B:g}, σ = {σ:g}, β = {β:g}')
+    print(f'{args.script}: ρ/ρc, p =\t{ρ/ρc:g}\t{p:g}')
+
+else:
+
+    p1 = pressure(ρ1)
+    p2 = pressure(ρ2)
+
+    print(f'{args.script}: model: nDPD with n = {n:d}, A = {A:g}, B = {B:g}, σ = {σ:g}, β = {β:g}')
+    print(f'{args.script}: iteration 000, ρ/ρc, p =\t\t{ρ1/ρc:g}\t\t{p1:g}')
+    print(f'{args.script}: iteration  00, ρ/ρc, p =\t\t{ρ2/ρc:g}\t\t{p2:g}')
+
+    if p1*p2 > 0.0:
+        print(f'{args.script}: root not bracketed')
+        exit(0)
+
+    # Proceed to find where the pressure vanishes 
+
+    for i in range(args.np):
+        ρ = 0.5*(ρ1 + ρ2)
+        p = pressure(ρ)
+        print(f'{args.script}: iteration {i:3d}, ρ/ρc, p =\t{ρ1/ρc:g}\t{ρ/ρc:g}\t{ρ2/ρc:g}\t{p:g}')
+        ρ1, ρ2 = (ρ, ρ2) if p*p1 > 0.0 else (ρ1, ρ)
+
+    print(f'{args.script}: FINAL, ρ/ρc, p =\t{ρ/ρc:g}\t{p:g}')
