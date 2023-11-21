@@ -47,7 +47,7 @@ parser.add_argument('-T', '--T', default=1.0, type=float, help='temperature, def
 parser.add_argument('-r', '--rho', default=4.0, type=float, help='density, default 4.0')
 parser.add_argument('--rcut', default=3.0, type=float, help='maximum in r for plotting, default 3.0')
 parser.add_argument('--qcut', default=25.0, type=float, help='maximum in q for plotting, default 25.0')
-parser.add_bool_arg('--relative', default=False, help='ρ, T relative to critical values')
+parser.add_bool_arg('--relative', default=True, help='ρ, T relative to critical values')
 parser.add_argument('-s', '--show', action='store_true', help='show results')
 parser.add_argument('-o', '--output', help='write pair function to a file')
 args = parser.parse_args()

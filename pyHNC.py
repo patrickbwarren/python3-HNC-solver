@@ -98,6 +98,8 @@ class PicardHNC:
             er = self.grid.fourier_bessel_backward(eq) # back transform e(q) to e(r)
             cr_new = np.exp(-vr+er) - er - 1 # iterate with the HNC closure
             cr = self.alpha * cr_new + (1-self.alpha) * cr # apply a Picard mixing rule
+            if any(np.isnan(cr)): # break early if something blows up
+                break
             self.error = np.sqrt(np.trapz((cr_new - cr)**2, dx=self.grid.deltar)) # convergence test
             self.converged = self.error < self.tol
             if monitor and (i % self.nmonitor == 0 or self.converged):
@@ -192,16 +194,19 @@ def as_linspace(as_range):
     '''Convert a range expressed as a string to an np.linspace array'''
     if ',' in as_range:
         vals = as_range.split(',')
-        if len(vals) == 3:
+        if len(vals) == 2: # case start,end
+            xarr = np.array([float(vals[0]), float(vals[1])])
+        else:
             start, end, npt = float(vals[0]), float(vals[1]), int(vals[2])
             xarr = np.linspace(start, end, npt)
-        else:
-            xarr = np.array([float(vals[0]), float(vals[1])])
     elif ':' in as_range or '(' in as_range:
         vals = as_range.replace('(', ':').replace(')', ':').split(':')
-        start, step, end = float(vals[0]), float(vals[1]), float(vals[2])
-        npt = int((end-start)/step + 1.5)
-        xarr = np.linspace(start, end, npt)
+        if len(vals) == 2: # case start:end for completeness
+            xarr = np.array([float(vals[0]), float(vals[1])])
+        else:
+            start, step, end = float(vals[0]), float(vals[1]), float(vals[2])
+            npt = int((end-start)/step + 1.5)
+            xarr = np.linspace(start, end, npt)
     else:
         xarr = np.array([float(as_range)])
     return xarr

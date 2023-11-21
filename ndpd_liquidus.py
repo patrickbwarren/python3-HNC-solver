@@ -45,7 +45,9 @@ parser.add_argument('-A', '--A', default=None, type=float, help='overwrite repul
 parser.add_argument('-B', '--B', default=None, type=float, help='overwrite repulsion amplitude, default none')
 parser.add_argument('-T', '--T', default=1.0, type=float, help='temperature, default 1.0')
 parser.add_argument('-r', '--rho', default='4.2,4.3', help='bracketing density, default 4.0')
-#parser.add_bool_arg('--relative', default=True, help='ρ, T relative to critical values')
+parser.add_argument('--ptol', default=1e-4, type=float, help='condition for vanishing pressure')
+parser.add_argument('--np', default=10, type=int, help='max number of iterations')
+parser.add_bool_arg('--relative', default=True, help='ρ, T relative to critical values')
 args = parser.parse_args()
 
 args.script = os.path.basename(__file__)
@@ -76,10 +78,10 @@ B = args.B if args.B is not None else B # overwrite if necessary
 
 # density, temperature
 
-ρ = pyHNC.as_linspace(args.rho)
+ρ = (ρc * pyHNC.as_linspace(args.rho)) if args.relative else pyHNC.as_linspace(args.rho)
 ρ1, ρ2 = ρ.tolist()
 
-kT = Tc * args.T
+kT = (args.T * Tc) if args.relative else args.T
 β = 1 / kT
 
 grid = pyHNC.Grid(**pyHNC.grid_args(args)) # make the initial working grid
@@ -111,11 +113,16 @@ if args.verbose:
 # 2πρ²/3 ∫_0^∞ dr r³ f(r) = ∫_0^1 dr r³ [AB(1-r)^n-A(1−r)]
 # = πAρ²/30 * [120B/((n+1)(n+2)(n+3)(n+4)) - 1].
 
-def pressure(ρbyρc):
-    ρ = ρbyρc * ρc
-    h = solver.solve(β*φ, ρ, monitor=args.verbose).hr # solve model at β = 1/T
-    if not solver.converged:
-        exit()
+def pressure(ρ):
+    for second_attempt in [False, True]:
+        if second_attempt : # try again from cold start
+            solver.warmed_up = False
+        soln = solver.solve(β*φ, ρ, monitor=args.verbose) # solve model at β = 1/T
+        if soln.converged:
+            break
+    else:
+        exit(1) # failed to converge
+    h = soln.hr
     p_mf = π*A*ρ**2/30*(120*B/((n+1)*(n+2)*(n+3)*(n+4)) - 1)
     p_xc = 2/3*π*ρ**2 * np.trapz(r**3*f*h, dx=Δr)
     p_ex = p_mf + p_xc
@@ -126,19 +133,19 @@ p1 = pressure(ρ1)
 p2 = pressure(ρ2)
 
 print(f'{args.script}: model: nDPD with n = {n:d}, A = {A:g}, B = {B:g}, σ = {σ:g}, β = {β:g}')
-print(f'{args.script}: iteration 000, ρ, p =\t{ρ1:g}\t{p1:g}')
-print(f'{args.script}: iteration  00, ρ, p =\t{ρ2:g}\t{p2:g}')
+print(f'{args.script}: iteration 000, ρ/ρc, p =\t\t{ρ1/ρc:g}\t\t{p1:g}')
+print(f'{args.script}: iteration  00, ρ/ρc, p =\t\t{ρ2/ρc:g}\t\t{p2:g}')
 
 if p1*p2 > 0.0:
     print(f'{args.script}: root not bracketed')
     exit(0)
 
-# Proceed to find where the pressure vanishes by brute force interval halving
+# Proceed to find where the pressure vanishes 
 
-for i in range(15):
+for i in range(args.np):
     ρ = 0.5*(ρ1 + ρ2)
     p = pressure(ρ)
-    print(f'{args.script}: iteration {i:3d}, ρ1, ρ2, ρ, p =\t{ρ1:g}\t{ρ2:g}\t{ρ:g}\t{p:g}')
+    print(f'{args.script}: iteration {i:3d}, ρ/ρc, p =\t{ρ1/ρc:g}\t{ρ/ρc:g}\t{ρ2/ρc:g}\t{p:g}')
     ρ1, ρ2 = (ρ, ρ2) if p*p1 > 0.0 else (ρ1, ρ)
 
-print(f'{args.script}: iteration {i:3d}, ρ, p =\t{ρ:g}\t{p:g}')
+print(f'{args.script}: FINAL, ρ/ρc, p =\t{ρ/ρc:g}\t{p:g}')
