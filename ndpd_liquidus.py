@@ -29,28 +29,102 @@
 # ./ndpd_liquidus.py -n 4 -T 0.4 -r 3.5,3.6 --> ρ = 3.5734
 
 import os
+import sys
 import pyHNC
 import argparse
+import subprocess
 import numpy as np
 import pyHNC
+
 from numpy import pi as π
 from pyHNC import truncate_to_zero, ExtendedArgumentParser
+
+def multiply_by(x, iff=True):
+    '''utility: use to conditionally multiply something by x'''
+    return x if iff else 1.0
 
 parser = ExtendedArgumentParser(description='nDPD HNC calculator')
 pyHNC.add_grid_args(parser)
 pyHNC.add_solver_args(parser, alpha=0.01, npicard=20000) # greatly reduce alpha and increase npicard here !!
 parser.add_argument('-v', '--verbose', action='count', help='more details (repeat as required)')
+parser.add_argument('--header', default=None, help='set the name of the output files, default None')
+parser.add_argument('--process', default=None, type=int, help='process number, default None')
 parser.add_argument('-n', '--n', default='3', help='governing exponent, default 2')
 parser.add_argument('-A', '--A', default=None, type=float, help='overwrite repulsion amplitude, default none')
 parser.add_argument('-B', '--B', default=None, type=float, help='overwrite repulsion amplitude, default none')
-parser.add_argument('-T', '--T', default=1.0, type=float, help='temperature, default 1.0')
+parser.add_argument('-T', '--T', default='1.0', help='temperature or temperature range, default 1.0')
 parser.add_argument('-r', '--rho', default='4.2,4.3', help='bracketing density, default 4.0')
 parser.add_argument('--ptol', default=1e-4, type=float, help='condition for vanishing pressure')
 parser.add_argument('--np', default=10, type=int, help='max number of iterations')
+parser.add_argument('--ns', default=20, type=int, help='max number of search steps')
 parser.add_bool_arg('--relative', default=True, help='ρ, T relative to critical values')
+parser.add_bool_arg('--search', default=False, help='search down in density rather than assume bracket')
+parser.add_bool_arg('--condor', short_opt='-j', default=False, help='create a condor job')
+parser.add_bool_arg('--dagman', short_opt='-d', default=True, help='create a DAGMan job to run the condor job')
+parser.add_bool_arg('--clean', short_opt='-c', default=True, help='clean up intermediate files')
+parser.add_bool_arg('--run', short_opt='-x', default=False, help='run the condor or DAGMan job')
+parser.add_argument('--sleep', default=5, type=int, help='wait period before running reduce')
 args = parser.parse_args()
 
 args.script = os.path.basename(__file__)
+args.executable = sys.executable
+
+opts = [f'--n={args.n}', f'--T={args.T}', f'--rho={args.rho}',
+        # f'--A={args.A}', f'--B={args.B}',
+        f'--ptol={args.ptol}', f'--ns={args.ns}', f'--np={args.np}',
+        '--relative' if args.relative else '--no-relative',
+        '--search' if args.search else '--no-search']
+
+T_vals = pyHNC.as_linspace(args.T)
+
+if args.condor: # create scripts to run jobs then exit
+
+    njobs = len(T_vals)
+
+    condor_job = f'{args.header}__condor.job'
+    lines = ['should_transfer_files = YES',
+             'when_to_transfer_output = ON_EXIT',
+             'notification = never',
+             'universe = vanilla',
+             f'opts = ' + ' '.join(opts),
+             f'transfer_input_files = pyHNC.py,{args.script}',
+             f'executable = {args.executable}',
+             f'arguments = {args.script} --header={args.header} $(opts) --process=$(Process)',
+             f'output = {args.header}__$(Process).out',
+             f'error = {args.header}__$(Process).err',
+             f'queue {njobs}']
+    with open(condor_job, 'w') as f:
+        f.write('\n'.join(lines) + '\n')
+    scripts = [condor_job]
+
+    if args.dagman:
+        dag_job = f'{args.header}__dag.job'
+        post_script = f'{args.header}__script.sh'
+        with open(dag_job, 'w') as f:
+            f.write(f'JOB A {condor_job}\n')
+            f.write(f'SCRIPT POST A /usr/bin/bash {post_script}\n')
+        with open(post_script, 'w') as f:
+            # f.write(f'sleep {args.sleep}\n') # try a small delay
+            f.write(f'cat {args.header}__*.dat | sort -g -k1 > {args.header}.dat\n')
+            if args.clean:
+                for ext in ['out', 'err', 'dat']:
+                    f.write(f'rm -f {args.header}__*.{ext}\n')
+            f.write(f'notify-send -u low -i info "{dag_job} complete"\n')
+        scripts = scripts + [dag_job, post_script]
+        run_command = f'condor_submit_dag -notification Never {dag_job}'
+    else:
+        run_command = f'condor_submit {condor_job}'
+
+    print(f'{args.script}: created', ', '.join(scripts))
+
+    if args.run: # run if required, else print out the required command
+        subprocess.call(run_command, shell=True)
+    else:
+        print(run_command)
+
+    exit(0)
+
+# *** Main computation starts ***
 
 # The following are Tables from Sokhan et al., Soft Matter 19, 5824 (2023).
 
@@ -69,24 +143,27 @@ else:
     print(f'{args.script}: currently n is restricted to', ', '.join(Table1.keys()))
     exit(1)
 
+# Fish out the right temperature in units of kB in map/reduce mode,
+# else use the first value.
+
+k = args.process if args.process is not None else 0
+T = T_vals[k] * multiply_by(Tc, iff=args.relative)
+β = 1 / T
+
 A = args.A if args.A is not None else A # overwrite if necessary
 B = args.B if args.B is not None else B # overwrite if necessary
-
 σ = 1 - ((n+1)/(2*B))**(1/(n-1)) # the size is where the potential vanishes
 
 ρc = ρcσ3 / σ**3 # back out the critical value
 
 # density, temperature
 
-ρ_vals = (ρc * pyHNC.as_linspace(args.rho)) if args.relative else pyHNC.as_linspace(args.rho)
+ρ_vals = pyHNC.as_linspace(args.rho) * multiply_by(ρc, iff=args.relative)
 
 if len(ρ_vals) == 1:
     ρ = ρ_vals[0]
 else:
-    ρ1, ρ2 = ρ_vals.tolist()
-
-kT = (args.T * Tc) if args.relative else args.T
-β = 1 / kT
+    ρ1, ρ2 = ρ_vals.tolist()[0:2]
 
 grid = pyHNC.Grid(**pyHNC.grid_args(args)) # make the initial working grid
 
@@ -96,26 +173,23 @@ if args.verbose:
     print(f'{args.script}: {grid.details}')
 
 # Define the nDPD potential as in Eq. (5) in Sokhan et al., assuming
-# r_c = 1, and the derivative, then solve the HNC problem.  The arrays
-# here are all size ng-1, same as r[:]
+# r_c = 1, and the force (negative derivative), then solve the HNC
+# problem.  The arrays here are all size ng-1, same as r[:].
 
-φ = truncate_to_zero(A*B/(n+1)*(1-r)**(n+1) - A/2*(1-r)**2, r, 1) # the nDPD potential
-f = truncate_to_zero(A*B*(1-r)**n - A*(1-r), r, 1) # the force f = -dφ/dr
+φ = truncate_to_zero(A*B/(n+1)*(1-r)**(n+1) - A/2*(1-r)**2, r, 1)
+f = truncate_to_zero(A*B*(1-r)**n - A*(1-r), r, 1)
 
 solver = pyHNC.PicardHNC(grid, nmonitor=500, **pyHNC.solver_args(args))
 
 if args.verbose:
     print(f'{args.script}: {solver.details}')
 
-# For the integrals here, see Eqs. (2.5.20) and (2.5.22) in Hansen &
-# McDonald, "Theory of Simple Liquids" (3rd edition): for the (excess)
-# energy density, e = 2πρ² ∫_0^∞ dr r² φ(r) g(r) and virial pressure,
-# p = ρ + 2πρ²/3 ∫_0^∞ dr r³ f(r) g(r) where f(r) = −dφ/dr is the
-# force.  An integration by parts shows that the mean-field
-# contributions, being these with g(r) = 1, are the same.
-# Here specifically the mean-field contributions are 
-# 2πρ²/3 ∫_0^∞ dr r³ f(r) = ∫_0^1 dr r³ [AB(1-r)^n-A(1−r)]
-# = πAρ²/30 * [120B/((n+1)(n+2)(n+3)(n+4)) - 1].
+# The excess virial pressure p = ρ + 2πρ²/3 ∫_0^∞ dr r³ f(r) h(r),
+# where f(r) = −dφ/dr is the force: see Eq. (2.5.22) in Hansen &
+# McDonald, "Theory of Simple Liquids" (3rd edition).
+
+# The mean-field contribution is 2πρ²/3 ∫_0^∞ dr r³ f(r) = ∫_0^1 dr r³
+# [AB(1−r)^n − A(1−r)] = πAρ²/30 * [120B/((n+1)(n+2)(n+3)(n+4)) − 1].
 
 def pressure(ρ):
     for second_attempt in [False, True]:
@@ -125,40 +199,71 @@ def pressure(ρ):
         if soln.converged:
             break
     else:
+        print(f'{args.script}: failed to converge after two attempts')
         exit(1) # failed to converge
     h = soln.hr
     p_mf = π*A*ρ**2/30*(120*B/((n+1)*(n+2)*(n+3)*(n+4)) - 1)
     p_xc = 2/3*π*ρ**2 * np.trapz(r**3*f*h, dx=Δr)
     p_ex = p_mf + p_xc
-    p = ρ*kT + p_ex
+    p = ρ*T + p_ex
     return p
 
-if len(ρ_vals) == 1:
+print(f'{args.script}:', ' '.join(opts))
+print(f'{args.script}: model: nDPD with n = {n:d}, A = {A:g}, B = {B:g}, σ = {σ:g}, T = {T/Tc:g}')
 
+if len(ρ_vals) == 1: # range finding exercise, not encountered in normal use
     p = pressure(ρ)
-
-    print(f'{args.script}: model: nDPD with n = {n:d}, A = {A:g}, B = {B:g}, σ = {σ:g}, β = {β:g}')
     print(f'{args.script}: ρ/ρc, p =\t{ρ/ρc:g}\t{p:g}')
+    exit(0)
 
-else:
+p1 = pressure(ρ1)
+p2 = pressure(ρ2)
 
-    p1 = pressure(ρ1)
-    p2 = pressure(ρ2)
+if p1*p2 > 0.0:
+    
+    if not args.search:
+        print(f'{args.script}: root not bracketed and no search requested')
+        exit(1)
 
-    print(f'{args.script}: model: nDPD with n = {n:d}, A = {A:g}, B = {B:g}, σ = {σ:g}, β = {β:g}')
+    Δρ = ρ2 - ρ1 # search up and down in density with this step size
+
+    for i in range(args.ns):
+        if p1*p2 < 0:
+            break
+        if p1 > 0:
+            ρ1, ρ2 = ρ1-Δρ, ρ1
+            p1, p2 = pressure(ρ1), p1
+        else:
+            ρ1, ρ2 = ρ2, ρ2+Δρ
+            p1, p2 = p2, pressure(ρ2)
+        print(f'{args.script}: search {i:3d}, ρ/ρc, p =\t{ρ1/ρc:g}\t{ρ2/ρc:g}\t{p1:g}\t{p2:g}')
+    else:
+        print(f'{args.script}: root not bracketed during search phase')
+        exit(1)
+
+# Bracketed root, proceed to find where the pressure vanishes 
+
+if not args.search: # only need this information if not found by searching
+
     print(f'{args.script}: iteration 000, ρ/ρc, p =\t\t{ρ1/ρc:g}\t\t{p1:g}')
     print(f'{args.script}: iteration  00, ρ/ρc, p =\t\t{ρ2/ρc:g}\t\t{p2:g}')
 
-    if p1*p2 > 0.0:
-        print(f'{args.script}: root not bracketed')
-        exit(0)
+for i in range(args.np):
+    ρ = 0.5*(ρ1 + ρ2) # interval halving
+    p = pressure(ρ)
+    print(f'{args.script}: iteration {i:3d}, ρ/ρc, p =\t{ρ1/ρc:g}\t{ρ/ρc:g}\t{ρ2/ρc:g}\t{p:g}')
+    ρ1, ρ2 = (ρ, ρ2) if p*p1 > 0.0 else (ρ1, ρ)
 
-    # Proceed to find where the pressure vanishes 
+print(f'{args.script}: FINAL, T, ρ/ρc, p =\t{T/Tc:g}\t{ρ/ρc:g}\t{p:g}')
+    
+if args.header:
 
-    for i in range(args.np):
-        ρ = 0.5*(ρ1 + ρ2)
-        p = pressure(ρ)
-        print(f'{args.script}: iteration {i:3d}, ρ/ρc, p =\t{ρ1/ρc:g}\t{ρ/ρc:g}\t{ρ2/ρc:g}\t{p:g}')
-        ρ1, ρ2 = (ρ, ρ2) if p*p1 > 0.0 else (ρ1, ρ)
-
-    print(f'{args.script}: FINAL, ρ/ρc, p =\t{ρ/ρc:g}\t{p:g}')
+    data = {'n': n, 'A': A, 'B': B, 'T': T/Tc, 'rho': ρ/ρc, 'pressure': p}
+    sub = '' if args.process is None else '__%d' % args.process # double underscore here
+    data_file = f'{args.header}{sub}.dat' # only one data file
+    with open(data_file, 'w') as f:
+        if args.process is None or args.process == 0: # write for first file
+            f.write(f'# ./{args.script} ' + ' '.join(opts) + '\n')
+            f.write('## ' + '\t'.join([f'{key}({i+1})' for i, key in enumerate(data.keys())]) + '\n')
+        f.write('\t'.join([('%g' % data[key]) for key in data]) + f'\t{data_file}\n')
+    print(f'data in {data_file}')

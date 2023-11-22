@@ -46,7 +46,7 @@ parser.add_argument('-B', '--B', default=5.0, type=float, help='repulsion amplit
 parser.add_argument('-R', '--R', default=0.75, type=float, help='repulsion r_c')
 parser.add_argument('-r', '--rho', default='3.0', help='density or density range, default 6.5')
 parser.add_argument('--rhobar', default=5.0, type=float, help='initial mean local density, default 5.0')
-parser.add_argument('--drhobar', default=0.05, type=float, help='decrement looking for self consistency, default 0.05')
+parser.add_argument('--drhobar', default=0.05, type=float, help='decrement for self consistency, default 0.05')
 parser.add_bool_arg('--uprime', default=False, help='use du/dρ rather than u/ρ for MB potential')
 parser.add_bool_arg('--rhoav', default=True, help='use ρ(r) rather than <ρ> in the MB potential')
 parser.add_argument('--nrhoav', default=20, type=int, help='number of steps to converge, default 20')
@@ -95,23 +95,20 @@ if args.condor: # create scripts to run jobs then exit
     with open(condor_job, 'w') as f:
         f.write('\n'.join(lines) + '\n')
 
-    run_command = f'condor_submit {condor_job}'
-
     if args.dagman:
-
         post_script = f'{args.header}__script.sh'
         with open(post_script, 'w') as f:
             f.write(f'cat {args.header}__*.dat | sort -g -k1 > {args.header}.dat\n')
             if args.clean:
                 for ext in ['out', 'err', 'dat']:
                     f.write(f'rm -f {args.header}__*.{ext}\n')
-
         dag_job = f'{args.header}__dag.job'
         with open(dag_job, 'w') as f:
             f.write(f'JOB A {condor_job}\n')
             f.write(f'SCRIPT POST A /usr/bin/bash {post_script}\n')
-
         run_command = f'condor_submit_dag -notification Never {dag_job}'
+    else:
+        run_command = f'condor_submit {condor_job}'
 
     if args.run: # run if required, else print out the required command
         subprocess.call(run_command, shell=True)
