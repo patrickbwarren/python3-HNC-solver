@@ -49,14 +49,14 @@ parser = ExtendedArgumentParser(description='nDPD HNC calculator')
 pyHNC.add_grid_args(parser)
 pyHNC.add_solver_args(parser, alpha=0.01, npicard=20000) # greatly reduce alpha and increase npicard here !!
 parser.add_argument('-v', '--verbose', action='count', help='more details (repeat as required)')
-parser.add_argument('--header', default=None, help='set the name of the output files, default None')
+parser.add_argument('job_name', nargs='?', default=None, help='set the name of the output files, default None')
 parser.add_argument('--process', default=None, type=int, help='process number, default None')
 parser.add_argument('-n', '--n', default='3', help='governing exponent, default 2')
 parser.add_argument('-A', '--A', default=None, type=float, help='overwrite repulsion amplitude, default none')
 parser.add_argument('-B', '--B', default=None, type=float, help='overwrite repulsion amplitude, default none')
 parser.add_argument('-T', '--T', default='1.0', help='temperature or temperature range, default 1.0')
 parser.add_argument('-r', '--rho', default='4.2,4.3', help='bracketing density, default 4.0')
-parser.add_argument('--ptol', default=1e-4, type=float, help='condition for vanishing pressure')
+parser.add_argument('--ptol', default=1e-5, type=float, help='warn condition for vanishing pressure')
 parser.add_argument('--np', default=10, type=int, help='max number of iterations')
 parser.add_argument('--ns', default=20, type=int, help='max number of search steps')
 parser.add_bool_arg('--relative', default=True, help='ρ, T relative to critical values')
@@ -65,6 +65,7 @@ parser.add_bool_arg('--condor', short_opt='-j', default=False, help='create a co
 parser.add_bool_arg('--dagman', short_opt='-d', default=True, help='create a DAGMan job to run the condor job')
 parser.add_bool_arg('--clean', short_opt='-c', default=True, help='clean up intermediate files')
 parser.add_bool_arg('--run', short_opt='-x', default=False, help='run the condor or DAGMan job')
+parser.add_bool_arg('--notify', default=True, help='notify on completion of DAGMan job')
 args = parser.parse_args()
 
 args.script = os.path.basename(__file__)
@@ -82,7 +83,7 @@ if args.condor: # create scripts to run jobs then exit
 
     njobs = len(T_vals)
 
-    condor_job = f'{args.header}__condor.job'
+    condor_job = f'{args.job_name}.job'
     lines = ['should_transfer_files = YES',
              'when_to_transfer_output = ON_EXIT',
              'notification = never',
@@ -90,29 +91,30 @@ if args.condor: # create scripts to run jobs then exit
              f'opts = ' + ' '.join(opts),
              f'transfer_input_files = pyHNC.py,{args.script}',
              f'executable = {args.executable}',
-             f'arguments = {args.script} --header={args.header} $(opts) --process=$(Process)',
-             f'output = {args.header}__$(Process).out',
-             f'error = {args.header}__$(Process).err',
+             f'arguments = {args.script} {args.job_name} $(opts) --process=$(Process)',
+             f'output = {args.job_name}__$(Process).out',
+             f'error = {args.job_name}__$(Process).err',
              f'queue {njobs}']
     with open(condor_job, 'w') as f:
         f.write('\n'.join(lines) + '\n')
     scripts = [condor_job]
 
     if args.dagman:
-        dag_job = f'{args.header}__dag.job'
-        post_script = f'{args.header}__script.sh'
+        dag_job = f'{args.job_name}__dag.job'
+        post_script = f'{args.job_name}__script.sh'
         with open(dag_job, 'w') as f:
             f.write(f'JOB A {condor_job}\n')
             f.write(f'SCRIPT POST A /usr/bin/bash {post_script}\n')
         with open(post_script, 'w') as f:
             for k in range(njobs):
                 redirect = '> ' if k == 0 else '>>'
-                f.write(f'cat {args.header}__{k:d}.dat {redirect} {args.header}.dat\n')
+                f.write(f'cat {args.job_name}__{k:d}.dat {redirect} {args.job_name}.dat\n')
             if args.clean:
                 for k in range(njobs):
                     for ext in ['out', 'err', 'dat']:
-                        f.write(f'rm -f {args.header}__{k:d}.{ext}\n')
-            f.write(f'notify-send -u low -i info "{dag_job} finished"\n')
+                        f.write(f'rm -f {args.job_name}__{k:d}.{ext}\n')
+            if args.notify:
+                f.write(f'notify-send -u low -i info "{args.job_name} DAGMan job finished"\n')
         scripts = scripts + [dag_job, post_script]
         run_command = f'condor_submit_dag -notification Never {dag_job}'
     else:
@@ -251,24 +253,28 @@ try:
         print(f'{args.script}: iteration  00, ρ/ρc, p =\t\t{ρ2/ρc:g}\t\t{p2:g}')
 
     for i in range(args.np):
-        ρ = 0.5*(ρ1 + ρ2) # interval halving
+        #ρ = 0.5*(ρ1 + ρ2) # interval halving
+        ρ = (p1*ρ2 - p2*ρ1) / (p1 - p2) # secant method
         p = pressure(ρ)
         print(f'{args.script}: iteration {i:3d}, ρ/ρc, p =\t{ρ1/ρc:g}\t{ρ/ρc:g}\t{ρ2/ρc:g}\t{p:g}')
-        ρ1, ρ2 = (ρ, ρ2) if p*p1 > 0.0 else (ρ1, ρ)
+        ρ1, ρ2, p1, p2 = (ρ, ρ2, p, p2) if p*p1 > 0.0 else (ρ1, ρ, p1, p)
 
-except RecursionError as err:
+except (RuntimeError, RecursionError) as err:
     failure = str(err)
+    p = None
+
+success = 'success' if p is not None and abs(p) < args.ptol else 'improperly converged'
 
 if failure:
     print(f'{args.script}: {failure}')
 else:
-    print(f'{args.script}: success: T, ρ/ρc, p =\t{T/Tc:g}\t{ρ/ρc:g}\t{p:g}')
+    print(f'{args.script}: {success}: T, ρ/ρc, p =\t{T/Tc:g}\t{ρ/ρc:g}\t{p:g}')
 
     
-if args.header:
+if args.job_name:
 
-    sub = '' if args.process is None else '__%d' % args.process # double underscore here
-    data_file = f'{args.header}{sub}.dat' # only one data file
+    sub = '' if args.process is None else f'__{args.process:d}' # double underscore here
+    data_file = f'{args.job_name}{sub}.dat' # only one data file
     with open(data_file, 'w') as f:
         data = {'n': n, 'A': A, 'B': B, 'T': T/Tc, 'rho': 0, 'pressure': 0}
         if args.process is None or args.process == 0: # write for first file
@@ -279,6 +285,6 @@ if args.header:
         else:
             data['rho'] = ρ/ρc
             data['pressure'] = p
-            f.write('\t'.join([('%g' % data[key]) for key in data]) + f'\t{data_file}\tsuccess\n')
+            f.write('\t'.join([('%g' % data[key]) for key in data]) + f'\t{data_file}\t{success}\n')
 
     print(f'{args.script}: result saved to {data_file}')
