@@ -59,6 +59,7 @@ parser.add_argument('-r', '--rho', default='4.2,4.3', help='bracketing density, 
 parser.add_argument('--ptol', default=1e-5, type=float, help='warn condition for vanishing pressure')
 parser.add_argument('--np', default=10, type=int, help='max number of iterations')
 parser.add_argument('--ns', default=20, type=int, help='max number of search steps')
+parser.add_bool_arg('--cold', default=False, help='force a cold start every time')
 parser.add_bool_arg('--relative', default=True, help='ρ, T relative to critical values')
 parser.add_bool_arg('--search', default=True, help='search down in density rather than assume bracket')
 parser.add_bool_arg('--condor', short_opt='-j', default=False, help='create a condor job')
@@ -74,6 +75,7 @@ args.executable = sys.executable
 opts = [f'--n={args.n}', f'--T={args.T}', f'--rho={args.rho}',
         # f'--A={args.A}', f'--B={args.B}',
         f'--ptol={args.ptol}', f'--ns={args.ns}', f'--np={args.np}',
+        '--cold' if args.cold else '--no-cold',
         '--relative' if args.relative else '--no-relative',
         '--search' if args.search else '--no-search']
 
@@ -200,7 +202,7 @@ try:
 
     def pressure(ρ):
         for second_attempt in [False, True]:
-            if second_attempt : # try again from cold start
+            if second_attempt or args.cold: # try again from cold start
                 solver.warmed_up = False
             soln = solver.solve(β*φ, ρ, monitor=args.verbose) # solve model at β = 1/T
             if soln.converged:
@@ -247,10 +249,8 @@ try:
 
     # Bracketed root, proceed to find where the pressure vanishes 
 
-    if not args.search: # only need this information if not found by searching
-
-        print(f'{args.script}: iteration 000, ρ/ρc, p =\t\t{ρ1/ρc:g}\t\t{p1:g}')
-        print(f'{args.script}: iteration  00, ρ/ρc, p =\t\t{ρ2/ρc:g}\t\t{p2:g}')
+    print(f'{args.script}: iteration 000, ρ/ρc, p =\t\t{ρ1/ρc:g}\t\t{p1:g}')
+    print(f'{args.script}: iteration  00, ρ/ρc, p =\t\t{ρ2/ρc:g}\t\t{p2:g}')
 
     for i in range(args.np):
         #ρ = 0.5*(ρ1 + ρ2) # interval halving
