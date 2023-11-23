@@ -60,7 +60,7 @@ parser.add_argument('--ptol', default=1e-4, type=float, help='condition for vani
 parser.add_argument('--np', default=10, type=int, help='max number of iterations')
 parser.add_argument('--ns', default=20, type=int, help='max number of search steps')
 parser.add_bool_arg('--relative', default=True, help='ρ, T relative to critical values')
-parser.add_bool_arg('--search', default=False, help='search down in density rather than assume bracket')
+parser.add_bool_arg('--search', default=True, help='search down in density rather than assume bracket')
 parser.add_bool_arg('--condor', short_opt='-j', default=False, help='create a condor job')
 parser.add_bool_arg('--dagman', short_opt='-d', default=True, help='create a DAGMan job to run the condor job')
 parser.add_bool_arg('--clean', short_opt='-c', default=True, help='clean up intermediate files')
@@ -105,10 +105,13 @@ if args.condor: # create scripts to run jobs then exit
             f.write(f'JOB A {condor_job}\n')
             f.write(f'SCRIPT POST A /usr/bin/bash {post_script}\n')
         with open(post_script, 'w') as f:
-            f.write(f'cat {args.header}__*.dat | sort -g -k1 > {args.header}.dat\n')
+            for k in range(njobs):
+                redirect = '> ' if k == 0 else '>>'
+                f.write(f'cat {args.header}__{k:d}.dat {redirect} {args.header}.dat\n')
             if args.clean:
-                for ext in ['out', 'err', 'dat']:
-                    f.write(f'rm -f {args.header}__*.{ext}\n')
+                for k in range(njobs):
+                    for ext in ['out', 'err', 'dat']:
+                        f.write(f'rm -f {args.header}__{k:d}.{ext}\n')
             f.write(f'notify-send -u low -i info "{dag_job} finished"\n')
         scripts = scripts + [dag_job, post_script]
         run_command = f'condor_submit_dag -notification Never {dag_job}'
@@ -270,12 +273,12 @@ if args.header:
         data = {'n': n, 'A': A, 'B': B, 'T': T/Tc, 'rho': 0, 'pressure': 0}
         if args.process is None or args.process == 0: # write for first file
             f.write(f'# ./{args.script} ' + ' '.join(opts) + '\n')
-            f.write('## ' + '\t'.join([f'{key}({i+1})' for i, key in enumerate(data.keys())]) + '\n')
-        if failure:
-            f.write('### ' + '\t'.join([('%g' % data[key]) for key in data]) + f'\t\t\t{data_file} ({failure})\n')
+            f.write('# ' + '\t'.join([f'{key}({i+1})' for i, key in enumerate(data.keys())]) + '\tfile\tstatus\n')
+        if failure: # log an entry anyways
+            f.write('# ' + '\t'.join([('%g' % data[key]) for key in data]) + f'\t\t{data_file}\t{failure})\n')
         else:
             data['rho'] = ρ/ρc
             data['pressure'] = p
-            f.write('\t'.join([('%g' % data[key]) for key in data]) + f'\t{data_file}\n')
+            f.write('\t'.join([('%g' % data[key]) for key in data]) + f'\t{data_file}\tsuccess\n')
 
-    print(f'data in {data_file}')
+    print(f'{args.script}: result saved to {data_file}')
