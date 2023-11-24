@@ -59,8 +59,8 @@ The other codes are all experimental, and under development:
 
 * `ndpd_demo.py` : <em>n</em>DPD, as in [Sokhan <em>et al.</em>,
    Soft Matter <b>19</b>, 5824 (2023)](https://doi.org/10.1039/D3SM00835E);
-* `ndpd_liquidus.py` : estimate the liquidus as the point where <em>p</em> = 0;
-* `mdpd_hnc.py` : various HNC variants for MB DPD, condor-enabled;
+* `ndpd_liquidus.py` : estimate the liquidus as the point where <em>p</em> = 0; condor-enabled;
+* `mdpd_hnc.py` : various HNC variants for MB DPD; condor-enabled;
 * `mdpd_dft.py` : 'vanilla' DFT for MB DPD;
 * `mdpd_percus.py` : Percus-like DFT for MB DPD;
 * `timing.py` : for measuring performance of condor DAG jobs.
