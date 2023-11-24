@@ -63,7 +63,7 @@ The other codes are all experimental, and under development:
 * `mdpd_hnc.py` : various HNC variants for MB DPD; condor-enabled;
 * `mdpd_dft.py` : 'vanilla' DFT for MB DPD;
 * `mdpd_percus.py` : Percus-like DFT for MB DPD;
-* `timing.py` : for measuring performance of condor DAG jobs.
+* `timing.py` : for measuring performance of condor DAGMan jobs.
 
 ### What's being solved here?
 
