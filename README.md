@@ -312,21 +312,21 @@ with an [11th Gen Intel<sup>®</sup> Core™
 i7-1165G7](https://www.intel.com/content/www/us/en/products/sku/205605/intel-nuc-11-pro-kit-nuc11tnhi7/specifications.html)
 processor (up to 4.70GHz) support this.  For example
 ```
-$ time ./fftw_test.py --ng=8192 --deltar=0.02
+$ time ./fftw_demo.py --ng=8192 --deltar=0.02
 ng, Δr, Δq, iters = 8192 0.02 0.019174759848570515 10
 FFTW array sizes = 8191
 real	0m0.321s
 user	0m0.399s
 sys	0m0.580s
 
-$ time ./fftw_test.py --ng=8193 --deltar=0.02
+$ time ./fftw_demo.py --ng=8193 --deltar=0.02
 ng, Δr, Δq, iters = 8193 0.02 0.019172419465335 10
 FFTW array sizes = 8192
 real	0m0.347s
 user	0m0.498s
 sys	0m0.518s
 
-$ time ./fftw_test.py --ng=8191 --deltar=0.02
+$ time ./fftw_demo.py --ng=8191 --deltar=0.02
 ng, Δr, Δq, iters = 8191 0.02 0.019177100803258414 10
 FFTW array sizes = 8190
 real	0m0.337s
@@ -335,21 +335,21 @@ sys	0m0.547s
 ```
 The same, but with 4.2 million grid points
 ```
-$ time ./fftw_test.py --ng=2^22 --deltar=1e-3
+$ time ./fftw_demo.py --ng=2^22 --deltar=1e-3
 ng, Δr, Δq, iters = 4194304 0.001 0.0007490140565847857 10
 FFTW array sizes = 4194303
 real	0m4.087s
 user	0m3.928s
 sys	0m0.822s
 
-$ time ./fftw_test.py --ng=2^22+1 --deltar=1e-3
+$ time ./fftw_demo.py --ng=2^22+1 --deltar=1e-3
 ng, Δr, Δq, iters = 4194305 0.001 0.0007490138780059611 10
 FFTW array sizes = 4194304
 real	0m10.682s
 user	0m9.840s
 sys	0m1.505s
 
-$ time ./fftw_test.py --ng=2^22-1 --deltar=1e-3
+$ time ./fftw_demo.py --ng=2^22-1 --deltar=1e-3
 ng, Δr, Δq, iters = 4194303 0.001 0.0007490142351636954 10
 FFTW array sizes = 4194302
 real	0m14.539s
