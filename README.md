@@ -200,7 +200,7 @@ with the potential energy scaled by a factor λ. In this scheme
 non-interacting particles since λ → 0 switches off the interactions.
 
 Since the free energy can be differentiated to find the pressure, this
-is the basis for the so-called energy route to the pressure.  For
+is the basis for the so-called energy route to the EoS.  For
 example, if the free energy density is available as a function of
 density, <em>f</em>(ρ), the pressure follows from p =
 −∂<em>F</em>/∂<em>V</em> as <em>p</em> = ρ² d(<em>f</em>/ρ)/dρ where
