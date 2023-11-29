@@ -236,9 +236,9 @@ contribution to obtain the excess pressure, and the whole added to the
 ideal contribution to find the total pressure.
 
 In practice the coupling constant integration can be performed by any
-number of numerical quadrature methods, from a basic trapezium rule to
-sophisticated adaptive algorithms.  The derivative with respect to
-density is usually computed numerically too.
+number of numerical quadrature methods but typically (for me!) a basic
+trapezium rule suffices.  The derivative with respect to density would
+usually be computed numerically too.
 
 For the HNC closure, which is free energy based, in fact it should be
 _exactly_ true that the energy route pressure is the same as the
