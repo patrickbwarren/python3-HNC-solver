@@ -22,7 +22,7 @@ involved in undertaking this kind of calculation. It currently comprises:
 * `pyHNC.py` : python module implementing the functionality;
 * `fftw_demo.py` : test FFTW for Fourier-Bessel transforms;
 * `dpd_demo.py` : demonstrate the capabilities for standard DPD;
-* `dpd_eos.py` : calculate data for standard DPD equation of state;
+* `dpd_eos.py` : calculate data for standard DPD equation of state (EoS);
 * `dpd_gw_compare.py` : compare to [Groot and Warren, J. Chem. Phys.
    <b>107</b>, 4423 (1997)](https://doi.org/10.1063/1.474784).
 
@@ -59,6 +59,7 @@ The other codes are all experimental, and under development:
 
 * `ndpd_demo.py` : <em>n</em>DPD, as in [Sokhan <em>et al.</em>,
    Soft Matter <b>19</b>, 5824 (2023)](https://doi.org/10.1039/D3SM00835E);
+* `ndpd_rpa.py` : implement the RPA and EXP approximations for the EoS;
 * `ndpd_liquidus.py` : estimate the liquidus as the point where <em>p</em> = 0; condor-enabled;
 * `mdpd_hnc.py` : various HNC variants for MB DPD; condor-enabled;
 * `mdpd_dft.py` : 'vanilla' DFT for MB DPD;
@@ -178,7 +179,7 @@ this at <em>q</em> = 0, one therefore obtains
 
 Given <em>c</em>(<em>r</em>) as a function of density, this can be
 integrated to find <em>p</em>(ρ).  This is known as the
-compressibility route to the equation of state.
+compressibility route to the equation of state (EoS).
 
 #### Free energy and coupling constant integration
 
@@ -232,7 +233,7 @@ For the non-mean-field correlation contribution we sketch the algorithm:
 * the excess correlation pressure then follows from ∆p = ρ²
 d(<em>∆f</em> / ρ)/dρ .  This should be added to the mean-field
 contribution to obtain the excess pressure, and the whole added to the
-ideal contribution to find the total pressure.
+ideal contribution to find the total pressure (the EoS).
 
 In practice the coupling constant integration can be performed by any
 number of numerical quadrature methods, from a basic trapezium rule to
