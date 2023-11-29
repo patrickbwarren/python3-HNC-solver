@@ -167,12 +167,12 @@ Eq. (2.6.12) in Hansen and McDonald shows that in units of
 <em>k</em><sub>B</sub><em>T</em> the isothermal compressibility
 satisfies ρ χ<sub>T</sub> = 1 + 4πρ ∫<sub>0</sub><sup>∞</sup>
 d<em>r</em> <em>r</em>² <em>h</em>(<em>r</em>) where χ<sub>T</sub> = −
-(1/<em>V</em>) ∂<em>V</em>/∂<em>p</em>.  In terms of the EoS
-<em>p</em>(ρ), this last expression can be written as
-χ<sub>T</sub><sup>−1</sup> = ρ d<em>p</em>/dρ.  Further, in reciprocal
-space the OZ equation (above) can be written as [1 + ρ
-<em>h</em>(<em>q</em>)] [1 − ρ <em>c</em>(<em>q</em>)] = 1.  Employing
-this at <em>q</em> = 0, one therefore obtains
+(1/<em>V</em>) ∂<em>V</em>/∂<em>p</em>.  In terms of the EoS, this
+last expression can be written as χ<sub>T</sub><sup>−1</sup> = ρ
+d<em>p</em>/dρ.  Further, in reciprocal space the OZ equation (above)
+can be written as [1 + ρ <em>h</em>(<em>q</em>)] [1 − ρ
+<em>c</em>(<em>q</em>)] = 1.  Employing this at <em>q</em> = 0, one
+therefore obtains
 
 * d<em>p</em>/dρ = [ρχ<sub>T</sub>]<sup>−1</sup> = 1 − 4πρ ∫<sub>0</sub><sup>∞</sup> d<em>r</em>
   <em>r</em>² <em>c</em>(<em>r</em>) .
