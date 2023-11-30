@@ -223,3 +223,11 @@ def truncate_to_zero(v, r, rc):
 def grid_spacing(x):
     '''Utility to return the grid space assuming the array is evenly spaced'''
     return x[1] - x[0]
+
+def trapz_integrand(y, dx=1):
+    '''Implement trapezium rule and return integrand'''
+    return dx * np.pad((y[1:] + y[:-1]) / 2.0, (1, 0), 'constant') # pad with zero at start
+
+def trapz(y, dx=1):
+    '''Return the trapezium rule integral, drop-in replacement for np.trapz'''
+    return trapz_integrand(y, dx=dx).sum()

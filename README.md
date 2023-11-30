@@ -181,6 +181,17 @@ Given <em>c</em>(<em>r</em>) as a function of density, this can be
 integrated to find <em>p</em>(ρ).  This is known as the
 compressibility route to the EoS.
 
+#### Chemical potential
+
+A result peculiar to the HNC is a closed-form expression for the
+chemical potential in units of <em>k</em><sub>B</sub><em>T</em>,
+
+* μ = 4πρ ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
+[ <em>h</em>(<em>h</em> − <em>c</em>)/2 − <em>c</em> ] .
+
+Since d<em>p</em> = ρ dμ can be integrated to find the pressure, this
+affords another route to the EoS: the chemical potential route.
+
 #### Free energy and coupling constant integration
 
 It follows from the basic definition of the free energy <em>F</em> = − ln ∫

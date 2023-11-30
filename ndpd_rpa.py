@@ -26,7 +26,7 @@ import os
 import pyHNC
 import argparse
 import numpy as np
-from numpy import exp
+from numpy import exp, log
 from numpy import pi as π
 from pyHNC import Grid, PicardHNC, truncate_to_zero, ExtendedArgumentParser
 
@@ -36,7 +36,7 @@ parser.add_argument('-v', '--verbose', action='count', help='more details (repea
 parser.add_argument('-n', '--n', default='2', help='governing exponent, default 2')
 parser.add_argument('-A', '--A', default=None, type=float, help='overwrite repulsion amplitude, default none')
 parser.add_argument('-B', '--B', default=None, type=float, help='overwrite repulsion amplitude, default none')
-parser.add_argument('-T', '--T', default=1.0, type=float, help='temperature, default 1.0')
+parser.add_argument('-T', '--T', default='1.0', help='temperature, default 1.0')
 parser.add_argument('-r', '--rho', default='3.0', help='density or density range, default 3.0')
 parser.add_argument('--rcut', default=3.0, type=float, help='maximum in r for plotting, default 3.0')
 parser.add_bool_arg('--relative', default=True, help='ρ, T relative to critical values')
@@ -76,7 +76,7 @@ description = f'nDPD with n = {n:d}, A = {A:g}, B = {B:g}, σ = {σ:g}'
 # density, temperature, relative temperature
 
 ρ_vals = (pyHNC.as_linspace(args.rho) * ρc) if args.relative else pyHNC.as_linspace(args.rho)
-T = (args.T * Tc) if args.relative else args.T
+T = (eval(args.T.lstrip('0')) * Tc) if args.relative else eval(args.T.lstrip('0')) # allow for math in argument
 β = 1 / T
 
 grid = Grid(**pyHNC.grid_args(args)) # make a working grid
@@ -115,8 +115,9 @@ for ρ in ρ_vals:
 
     p_mf = π*A*ρ**2/30*(120*B/((n+1)*(n+2)*(n+3)*(n+4)) - 1)
     dp_mf_by_rho = π*A/15*(120*B/((n+1)*(n+2)*(n+3)*(n+4)) - 1)
-    p_xc =  2/3*π*ρ**2 * np.trapz(r**3*f*h, dx=Δr)
-    dp_xc_by_rho = 4/3*π * np.trapz(r**3*f*h, dx=Δr) + 2/3*π*ρ * np.trapz(r**3*f*dh, dx=Δr)
+    trap = np.trapz(r**3*f*h, dx=Δr)
+    p_xc =  2/3*π*ρ**2 * trap
+    dp_xc_by_rho = 4/3*π * trap + 2/3*π*ρ * np.trapz(r**3*f*dh, dx=Δr)
     p_ex = p_mf + p_xc
     dp_ex_by_rho = dp_mf_by_rho + dp_xc_by_rho
     p = ρ*T + p_ex
@@ -145,9 +146,12 @@ if args.output:
     df['T/Tc'] = df['T'] / Tc
     df['rho/rhoc'] = df['rho'] / ρc
     df['p'] = df['rho'] * df['T'] + df['p_ex']
-    df['dp'] = df['T'] + df['rho'] * df['dp_ex_by_rho']
+    # df['dp'] = df['T'] + df['rho'] * df['dp_ex_by_rho']
+    Δρ = pyHNC.grid_spacing(df['rho'].to_numpy())
+    old_settings = np.seterr(divide='ignore')
+    df['mu'] = log(df['rho']) + pyHNC.trapz_integrand(df['dp_ex_by_rho'].to_numpy(), dx=Δρ).cumsum()
+    df = df[~np.isinf(df['mu'])] # remove floating point divergences
 
-#    print(df)
     with open(args.output, 'w') as f:
         f.write(f'# {description}\n')
         f.write(pyHNC.df_to_agr(df)) # use a utility here to convert to xmgrace format
