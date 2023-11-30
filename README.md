@@ -191,9 +191,10 @@ thank Andrew Masters for drawing my attention to this),
 = ln ρ + 4πρ ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
 [ ½ <em>h</em> (<em>h</em> − <em>c</em>) − <em>c</em> ] .
 
-Here the reference standard state corresponds to ρ = 1.  Since
-d<em>p</em> = ρ dμ can be integrated to find the pressure, this
-affords another route to the EoS: the chemical potential route.
+Here the reference standard state corresponds to ρ = 1.  Since the
+Gibbs-Duhem relation in the form d<em>p</em> = ρ dμ can be integrated
+to find the pressure, this affords another route to the EoS: the
+chemical potential route.
 
 #### Free energy and coupling constant integration
 
