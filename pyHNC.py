@@ -179,9 +179,13 @@ def solver_args(args):
 # Make the data output suitable for plotting in xmgrace if captured by redirection
 # stackoverflow.com/questions/30833409/python-deleting-the-first-2-lines-of-a-string
 
+def df_header(df):
+    '''Generate a header of column names as a list'''
+    return [f'{col}({i+1})' for i, col in enumerate(df.columns)]
+
 def df_to_agr(df):
     '''Convert a pandas DataFrame to a string for an xmgrace data set'''
-    header_row = '#  ' + '  '.join([f'{col}({i+1})' for i, col in enumerate(df.columns)])
+    header_row = '#  ' + '  '.join(df_header(df))
     data_rows = df.to_string(index=False).split('\n')[1:]
     return '\n'.join([header_row] + data_rows)
 

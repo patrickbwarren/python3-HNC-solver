@@ -110,17 +110,21 @@ for ρ in ρ_vals:
     cq = grid.fourier_bessel_forward(c) # forward transform to reciprocal space
     hq = cq / (1 - ρ*cq) # solve the OZ relation
     h = grid.fourier_bessel_backward(hq) # back transform to real space
+    dh = grid.fourier_bessel_backward(hq**2) # ∂h/∂ρ = h² in reciprocal space
     h = (exp(h) - 1) if args.exp else h # implement EXP if requested
 
     p_mf = π*A*ρ**2/30*(120*B/((n+1)*(n+2)*(n+3)*(n+4)) - 1)
-    p_xc = 2/3*π*ρ**2 * np.trapz(r**3*f*h, dx=Δr)
+    dp_mf_by_rho = π*A/15*(120*B/((n+1)*(n+2)*(n+3)*(n+4)) - 1)
+    p_xc =  2/3*π*ρ**2 * np.trapz(r**3*f*h, dx=Δr)
+    dp_xc_by_rho = 4/3*π * np.trapz(r**3*f*h, dx=Δr) + 2/3*π*ρ * np.trapz(r**3*f*dh, dx=Δr)
     p_ex = p_mf + p_xc
+    dp_ex_by_rho = dp_mf_by_rho + dp_xc_by_rho
     p = ρ*T + p_ex
+    
+    results.append((T, ρ, p_ex, dp_ex_by_rho))
 
-    results.append((T/Tc, ρ/ρc, p))
-
-    if not args.output:
-        print(f'{args.script}: model: {description}: ρ/ρc, T/Tc, p =\t{ρ/ρc:g}\t{T/Tc:g}\t{p:g}')
+    if not args.output or args.verbose:
+        print(f'{args.script}: model: {description}: T, T/Tc, ρ, ρ/ρc, p = {T:g}\t{T/Tc:g}\t{ρ:g}\t{ρ/ρc:g}\t{p:g}')
 
     if args.show:
         g = 1 + h # the pair function
@@ -136,12 +140,17 @@ if args.output:
 
     import pandas as pd
 
-    schema = {'T/Tc': float, 'ρ/ρc': float, 'p': float}
-    df = pd.DataFrame(results, columns=schema.keys()).astype(schema)
+    df = pd.DataFrame(results, columns=['T', 'rho', 'p_ex', 'dp_ex_by_rho']).astype(float)
+    
+    df['T/Tc'] = df['T'] / Tc
+    df['rho/rhoc'] = df['rho'] / ρc
+    df['p'] = df['rho'] * df['T'] + df['p_ex']
+    df['dp'] = df['T'] + df['rho'] * df['dp_ex_by_rho']
 
+#    print(df)
     with open(args.output, 'w') as f:
         f.write(f'# {description}\n')
         f.write(pyHNC.df_to_agr(df)) # use a utility here to convert to xmgrace format
         f.write('\n')
 
-    print(f'{args.script}: written (r, g) to {args.output}')
+    print(f'{args.script}:', ', '.join(pyHNC.df_header(df)), f'> {args.output}')
