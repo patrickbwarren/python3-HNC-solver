@@ -184,7 +184,8 @@ compressibility route to the EoS.
 #### Chemical potential
 
 A result peculiar to the HNC is the closed-form expression for the
-chemical potential given in Eq. (4.3.21) in Hansen and McDonald, 
+chemical potential given in Eq. (4.3.21) in Hansen and McDonald (I
+thank Andrew Masters for drawing my attention to this),
 
 * μ /  <em>k</em><sub>B</sub><em>T</em>
 = ln ρ + 4πρ ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
