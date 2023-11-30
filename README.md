@@ -189,9 +189,9 @@ thank Andrew Masters for drawing my attention to this),
 
 * μ /  <em>k</em><sub>B</sub><em>T</em>
 = ln ρ + 4πρ ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
-[ ½ <em>h</em> (<em>h</em> − <em>c</em>) / 2 − <em>c</em> ] .
+[ ½ <em>h</em> (<em>h</em> − <em>c</em>) − <em>c</em> ] .
 
-Here the reference standard state is such that ρ = 1.  Since
+Here the reference standard state corresponds to ρ = 1.  Since
 d<em>p</em> = ρ dμ can be integrated to find the pressure, this
 affords another route to the EoS: the chemical potential route.
 
