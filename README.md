@@ -183,11 +183,11 @@ compressibility route to the EoS.
 
 #### Chemical potential
 
-A result peculiar to the HNC is a closed-form expression for the
-chemical potential given in Eq. (4.3.21) in Hansen and McDonald.
-In units of <em>k</em><sub>B</sub><em>T</em>, this is
+A result peculiar to the HNC is the closed-form expression for the
+chemical potential given in Eq. (4.3.21) in Hansen and McDonald, 
 
-* μ = ln ρ + 4πρ ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
+* μ /  <em>k</em><sub>B</sub><em>T</em>
+= ln ρ + 4πρ ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
 [ <em>h</em>(<em>h</em> − <em>c</em>)/2 − <em>c</em> ] .
 
 Here the reference standard state is such that ρ = 1.  Since
