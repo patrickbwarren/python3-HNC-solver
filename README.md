@@ -184,12 +184,14 @@ compressibility route to the EoS.
 #### Chemical potential
 
 A result peculiar to the HNC is a closed-form expression for the
-chemical potential in units of <em>k</em><sub>B</sub><em>T</em>,
+chemical potential given in Eq. (4.3.21) in Hansen and McDonald.
+In units of <em>k</em><sub>B</sub><em>T</em>, this is
 
-* μ = 4πρ ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
+* μ = ln ρ + 4πρ ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
 [ <em>h</em>(<em>h</em> − <em>c</em>)/2 − <em>c</em> ] .
 
-Since d<em>p</em> = ρ dμ can be integrated to find the pressure, this
+Here the reference standard state is such that ρ = 1.  Since
+d<em>p</em> = ρ dμ can be integrated to find the pressure, this
 affords another route to the EoS: the chemical potential route.
 
 #### Free energy and coupling constant integration
