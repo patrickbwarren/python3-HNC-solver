@@ -17,7 +17,9 @@ wrapper, together with basic [NumPy](https://numpy.org/) function calls.
 The code is intended for rapid prototyping, but is also partly
 pedagogical with the intent of attempting to capture some of the
 [tacit knowledge](https://en.wikipedia.org/wiki/Tacit_knowledge)
-involved in undertaking this kind of calculation. It currently comprises:
+involved in undertaking this kind of calculation.
+
+Basic codes in the repository include:
 
 * `pyHNC.py` : python module implementing the functionality;
 * `fftw_demo.py` : test FFTW for Fourier-Bessel transforms;
@@ -71,12 +73,19 @@ The other codes are all experimental, and under development:
 #### HNC closure of the OZ equation
 
 What's being solved here is the Ornstein-Zernike (OZ) equation in
-reciprocal space in the form <em>h</em>(<em>q</em>) =
-<em>c</em>(<em>q</em>) + ρ <em>h</em>(<em>q</em>)
-<em>c</em>(<em>q</em>), in combination with the hypernetted-chain
-(HNC) closure in real space as <em>g</em>(<em>r</em>) = exp[ −
+reciprocal space in the form
+
+* <em>h</em>(<em>q</em>) = <em>c</em>(<em>q</em>) +
+ρ <em>h</em>(<em>q</em>) <em>c</em>(<em>q</em>) ,
+
+in combination with the hypernetted-chain
+(HNC) closure in real space as
+
+* <em>g</em>(<em>r</em>) = exp[ −
 <em>v</em>(<em>r</em>) + <em>h</em>(<em>r</em>) −
-<em>c</em>(<em>r</em>)], using Picard iteration.
+<em>c</em>(<em>r</em>)] ,
+
+using Picard iteration.
 
 Here ρ is the number density, <em>v</em>(<em>r</em>) is the potential
 in units of <em>k</em><sub>B</sub><em>T</em>, <em>g</em>(<em>r</em>)
