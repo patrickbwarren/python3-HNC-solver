@@ -179,8 +179,11 @@ d<em>r</em> <em>r</em>² <em>h</em>(<em>r</em>) where χ<sub>T</sub> = −
 (1/<em>V</em>) ∂<em>V</em>/∂<em>p</em>.  In terms of the EoS, this
 last expression can be written as χ<sub>T</sub><sup>−1</sup> = ρ
 d<em>p</em>/dρ.  Further, in reciprocal space the OZ equation (above)
-can be written as [1 + ρ <em>h</em>(<em>q</em>)] [1 − ρ
-<em>c</em>(<em>q</em>)] = 1.  Employing this at <em>q</em> = 0, one
+can be written as
+
+* [1 + ρ <em>h</em>(<em>q</em>)] [1 − ρ <em>c</em>(<em>q</em>)] = 1 .
+
+Employing this at <em>q</em> = 0, one
 therefore obtains
 
 * d<em>p</em>/dρ = [ρχ<sub>T</sub>]<sup>−1</sup> = 1 − 4πρ ∫<sub>0</sub><sup>∞</sup> d<em>r</em>
