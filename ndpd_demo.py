@@ -28,7 +28,6 @@
 # ./ndpd_demo.py --relative -n 3 -T 0.4 -r 4.15
 # ./ndpd_demo.py --relative -n 4 -T 0.4 -r 3.56
 
-
 import os
 import pyHNC
 import argparse
