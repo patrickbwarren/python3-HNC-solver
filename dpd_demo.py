@@ -53,10 +53,13 @@ parser.add_argument('-v', '--verbose', action='count', help='more details (repea
 parser.add_argument('-A', '--A', default=25.0, type=float, help='repulsion amplitude, default 25.0')
 parser.add_argument('-r', '--rho', default=3.0, type=float, help='density, default 3.0')
 parser.add_argument('--dlambda', default=0.05, type=float, help='for coupling constant integration, default 0.05')
-parser.add_argument('--rmax', default=3.0, type=float, help='maximum in r for plotting, default 3.0')
-parser.add_argument('--qmax', default=25.0, type=float, help='maximum in q for plotting, default 25.0')
+parser.add_argument('--rcut', default=3.0, type=float, help='maximum in r for plotting, default 3.0')
+parser.add_argument('--qcut', default=25.0, type=float, help='maximum in q for plotting, default 25.0')
 parser.add_argument('--sunlight', action='store_true', help='compare to SunlightHNC')
+parser.add_argument('--rpa', action='store_true', help='solve RPA instead of HNC')
+parser.add_argument('--exp', action='store_true', help='solve EXP instead of HNC')
 parser.add_argument('-s', '--show', action='store_true', help='show results')
+parser.add_argument('-o', '--output', help='write pair function to a file')
 args = parser.parse_args()
 
 args.script = os.path.basename(__file__)
@@ -82,7 +85,7 @@ if args.verbose:
     print(f'{args.script}: {solver.details}')
 
 soln = solver.solve(φ, ρ, monitor=args.verbose) # solve for the DPD potential
-hr, hq = soln.hr, soln.hq # extract for use in a moment
+h, hq = soln.hr, soln.hq # extract for use in a moment
 
 # For the integrals here, see Eqs. (2.5.20) and (2.5.22) in Hansen &
 # McDonald, "Theory of Simple Liquids" (3rd edition): for the (excess)
@@ -96,11 +99,11 @@ hr, hq = soln.hr, soln.hq # extract for use in a moment
 
 e_mf = p_mf = π*A*ρ**2/30
 
-e_xc = 2*π*ρ**2 * np.trapz(r**2*φ*hr, dx=Δr)
+e_xc = 2*π*ρ**2 * np.trapz(r**2*φ*h, dx=Δr)
 e_ex = e_mf + e_xc
 e = 3*ρ/ + e_ex
 
-p_xc = 2*π*ρ**2/3 * np.trapz(r**3*f*hr, dx=Δr)
+p_xc = 2*π*ρ**2/3 * np.trapz(r**3*f*h, dx=Δr)
 p_ex = p_mf + p_xc
 p = ρ + p_ex
 
@@ -130,6 +133,13 @@ print(f'{args.script}: Monte-Carlo (A,ρ = 25,3):      energy, virial pressure =
 print(f'{args.script}: pyHNC v{pyHNC.version}:        energy, free energy, virial pressure =',
       '\t%0.5f\t%0.5f\t%0.5f' % (e_ex, f_ex, p))
 
+if args.rpa or args.exp:
+    c = -φ # the RPA
+    cq = grid.fourier_bessel_forward(c) # forward transform to reciprocal space
+    hq = cq / (1 - ρ*cq) # solve the OZ relation
+    h = grid.fourier_bessel_backward(hq) # back transform to real space
+    h = (np.exp(h) - 1) if args.exp else h # implement EXP if requested
+
 if args.sunlight:
     
     from oz import wizard as w
@@ -141,7 +151,7 @@ if args.sunlight:
     w.arep[0,0] = A
     w.dpd_potential()
     w.rho[0] = ρ
-    w.hnc_solve()
+    w.rpa_solve() if args.rpa else w.hnc_solve()
     
     sunlight_version = str(w.version, 'utf-8').strip()
     print(f'{args.script}: SunlightHNC v{sunlight_version}: energy, free energy, virial pressure =',
@@ -151,13 +161,13 @@ if args.show:
 
     import matplotlib.pyplot as plt
 
-    gr = 1.0 + hr # the pair function
+    gr = 1.0 + h # the pair function
     sq = 1.0 + ρ*hq # the structure factor
 
     plt.figure(1)
-    cut = r < args.rmax
+    cut = r < args.rcut
     if args.sunlight:
-        imax = int(args.rmax / w.deltar)
+        imax = int(args.rcut / w.deltar)
         plt.plot(w.r[0:imax], 1.0+w.hr[0:imax,0,0], '.')
         plt.plot(r[cut], gr[cut], '--')
     else:
@@ -166,9 +176,9 @@ if args.show:
     plt.ylabel('$g(r)$')
 
     plt.figure(2)
-    cut = q < args.qmax
+    cut = q < args.qcut
     if args.sunlight:
-        jmax = int(args.qmax / w.deltak)
+        jmax = int(args.qcut / w.deltak)
         plt.plot(w.k[0:jmax], w.sk[0:jmax,0,0]/ρ, '.')
         plt.plot(q[cut], sq[cut], '--')
     else:
@@ -177,3 +187,21 @@ if args.show:
     plt.ylabel('$S(k)$')
 
     plt.show()
+
+if args.output:
+
+    import pandas as pd
+
+    g = 1.0 + h # the pair function
+
+    cut = r < args.rcut
+
+    df = pd.DataFrame({'r': r[cut], 'g': g[cut]})
+    df_agr = pyHNC.df_to_agr(df[['r', 'g']])
+
+    with open(args.output, 'w') as f:
+        f.write(f'# DPD with A = {A:g}, ρ = {ρ:g}\n')
+        f.write(df_agr) # use a utility here to convert to xmgrace format
+        f.write('\n')
+
+    print(f'{args.script}: written (r, g) to {args.output}')
