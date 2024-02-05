@@ -85,7 +85,7 @@ if args.verbose:
     print(f'{args.script}: {solver.details}')
 
 soln = solver.solve(φ, ρ, monitor=args.verbose) # solve for the DPD potential
-h, hq = soln.hr, soln.hq # extract for use in a moment
+h, c, hq = soln.hr, soln.cr, soln.hq # extract for use in a moment
 
 # For the integrals here, see Eqs. (2.5.20) and (2.5.22) in Hansen &
 # McDonald, "Theory of Simple Liquids" (3rd edition): for the (excess)
@@ -106,6 +106,9 @@ e = 3*ρ/ + e_ex
 p_xc = 2*π*ρ**2/3 * np.trapz(r**3*f*h, dx=Δr)
 p_ex = p_mf + p_xc
 p = ρ + p_ex
+
+μ_ex = 4*π*ρ * np.trapz(r**2*(h*(h-c)/2 - c), dx=Δr)
+μ = np.log(ρ) + μ_ex
 
 # Coupling constant integration for the free energy
 
@@ -128,10 +131,12 @@ f_xc = np.trapz(e_xc_arr, dx=dλ) # the coupling constant integral
 f_ex = e_mf + f_xc # f_mf = e_mf in this case
 
 print(f'{args.script}: model: standard DPD with A = {A:g}, ρ = {ρ:g}')
-
-print(f'{args.script}: Monte-Carlo (A,ρ = 25,3):      energy, virial pressure =\t13.63±0.02\t\t\t23.65±0.02')
+print(f'{args.script}: Monte-Carlo (A,ρ = 25,3):      energy, virial pressure =',
+      '\t13.63±0.02\t\t\t23.65±0.02')
 print(f'{args.script}: pyHNC v{pyHNC.version}:        energy, free energy, virial pressure =',
       '\t%0.5f\t%0.5f\t%0.5f' % (e_ex, f_ex, p))
+print(f'{args.script}: pyHNC v{pyHNC.version}:        chemical potential =',
+      '%0.5f + %0.5f = %0.5f' % (μ_ex, np.log(ρ), μ))
 
 if args.rpa or args.exp:
     c = -φ # the RPA
@@ -156,6 +161,8 @@ if args.sunlight:
     sunlight_version = str(w.version, 'utf-8').strip()
     print(f'{args.script}: SunlightHNC v{sunlight_version}: energy, free energy, virial pressure =',
           '\t%0.5f\t%0.5f\t%0.5f' % (w.uex, w.aex, w.press))
+    print(f'{args.script}: SunlightHNC v{sunlight_version}: chemical potential =',
+          '%0.5f + %0.5f = %0.5f' % (w.muex[0], np.log(ρ), np.log(ρ)+w.muex[0]))
 
 if args.show:
 
