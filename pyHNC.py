@@ -47,7 +47,8 @@ class Grid:
         self.q = self.deltaq * np.arange(1, self.ng) # ditto
         self.fftwx = pyfftw.empty_aligned(self.ng-1)
         self.fftwy = pyfftw.empty_aligned(self.ng-1)
-        self.fftw = pyfftw.FFTW(self.fftwx, self.fftwy, direction='FFTW_RODFT00', flags=('FFTW_ESTIMATE',))
+        self.fftw = pyfftw.FFTW(self.fftwx, self.fftwy, direction='FFTW_RODFT00',
+                                flags=('FFTW_ESTIMATE',))
         r = round(0.5+np.log(self.ng)/np.log(2.0)) # the exponent if ng = 2^r
         self.details = f'Grid: ng = {self.ng} = 2^{r}, Δr = {self.deltar}, ' \
             f'Δq = {self.deltaq:0.3g}, |FFTW arrays| = {self.ng-1}'

@@ -135,8 +135,8 @@ print(f'{args.script}: Monte-Carlo (A,ρ = 25,3):      energy, virial pressure =
       '\t13.63±0.02\t\t\t23.65±0.02')
 print(f'{args.script}: pyHNC v{pyHNC.version}:        energy, free energy, virial pressure =',
       '\t%0.5f\t%0.5f\t%0.5f' % (e_ex, f_ex, p))
-print(f'{args.script}: pyHNC v{pyHNC.version}:        chemical potential =',
-      '%0.5f + %0.5f = %0.5f' % (μ_ex, np.log(ρ), μ))
+print(f'{args.script}: pyHNC v{pyHNC.version}:        chemical potential, free energy =',
+      '\t%0.5f\t%0.5f' % (μ, ρ*μ_ex - p_ex))
 
 if args.rpa or args.exp:
     c = -φ # the RPA
@@ -162,7 +162,7 @@ if args.sunlight:
     print(f'{args.script}: SunlightHNC v{sunlight_version}: energy, free energy, virial pressure =',
           '\t%0.5f\t%0.5f\t%0.5f' % (w.uex, w.aex, w.press))
     print(f'{args.script}: SunlightHNC v{sunlight_version}: chemical potential =',
-          '%0.5f + %0.5f = %0.5f' % (w.muex[0], np.log(ρ), np.log(ρ)+w.muex[0]))
+          '%0.5f' % (np.log(ρ)+w.muex[0]))
 
 if args.show:
 
