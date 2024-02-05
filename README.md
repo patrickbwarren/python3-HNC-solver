@@ -206,11 +206,8 @@ thank Andrew Masters for drawing my attention to this),
 Here the reference standard state corresponds to ρ = 1.  Since the
 Gibbs-Duhem relation in the form d<em>p</em> = ρ dμ can be integrated
 to find the pressure, this affords another route to the EoS: the
-chemical potential route.  This should verify
-
-* <em>f</em> − ρ μ + <em>p</em> = 0
-
-where <em>f</em> is the free energy density.
+chemical potential route.  This should verify <em>f</em> − ρμ +
+<em>p</em> = 0 where <em>f</em> is the free energy density.
 
 #### Free energy and coupling constant integration
 
