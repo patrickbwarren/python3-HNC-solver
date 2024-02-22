@@ -149,11 +149,14 @@ Thermodynamic quantities can also now be computed, for example the excess
 energy density and virial pressure follow from Eqs. (2.5.20) and (2.5.22) in
 Hansen and McDonald, "Theory of Simple Liquids" (3rd edition) as:
 
-* <em>e</em> = 2πρ² ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
+* <em>e</em> = 3ρ/2 + 2πρ² ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
   <em>v</em>(<em>r</em>) <em>g</em>(<em>r</em>) ;
 * <em>p</em> = ρ + 2πρ²/3 ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>³
   <em>f</em>(<em>r</em>) <em>g</em>(<em>r</em>) where
-  <em>f</em>(<em>r</em>) = − d<em>v</em>/d<em>r</em> .
+  <em>f</em>(<em>r</em>) = − d<em>v</em>/d<em>r</em> ,
+
+where the first terms here are the ideal contributions, in units of
+<em>k</em><sub>B</sub><em>T</em>.
 
 In practice these should usually be calculated with
 <em>h</em>(<em>r</em>) = <em>g</em>(<em>r</em>) − 1, since the
@@ -166,9 +169,6 @@ value of the potential at the origin in reciprocal space: 2πρ²/3
 <em>f</em>(<em>r</em>) = 2πρ² ∫<sub>0</sub><sup>∞</sup> d<em>r</em>
 <em>r</em>² <em>v</em>(<em>r</em>) = ρ²/2 ∫ d³<b>r</b>
 <em>v</em>(<em>r</em>) = ρ²/2 <em>v</em>(<em>q</em>=0).
-
-The ideal contributions, in units of <em>k</em><sub>B</sub><em>T</em>,
-are respectively 3ρ/2 and ρ.
 
 #### Compressibility
 
@@ -207,7 +207,8 @@ Here the reference standard state corresponds to ρ = 1.  Since the
 Gibbs-Duhem relation in the form d<em>p</em> = ρ dμ can be integrated
 to find the pressure, this affords another route to the EoS: the
 chemical potential route.  This should verify <em>f</em> − ρμ +
-<em>p</em> = 0 where <em>f</em> is the free energy density.
+<em>p</em> = 0 where <em>f</em> is the free energy density.  This
+follows from the fact that the grand potential is Ω = − <em>pV</em>.
 
 #### Free energy and coupling constant integration
 
