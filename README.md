@@ -208,7 +208,8 @@ Gibbs-Duhem relation in the form d<em>p</em> = ρ dμ can be integrated
 to find the pressure, this affords another route to the EoS: the
 chemical potential route.  This should verify <em>f</em> − ρμ +
 <em>p</em> = 0 where <em>f</em> is the free energy density.  This
-follows from the fact that the grand potential is Ω = − <em>pV</em>.
+follows from the fact that the grand potential is Ω = <em>F</em> −
+μ<em>N</em> = − <em>pV</em>.
 
 #### Free energy and coupling constant integration
 
