@@ -206,10 +206,12 @@ thank Andrew Masters for drawing my attention to this),
 Here the reference standard state corresponds to ρ = 1.  Since the
 Gibbs-Duhem relation in the form d<em>p</em> = ρ dμ can be integrated
 to find the pressure, this affords another route to the EoS: the
-chemical potential route.  The chemical potential should verify
+chemical potential route.  In HNC the chemical potential should verify
 <em>f</em> − ρμ + <em>p</em> = 0 where <em>f</em> is the free energy
 density.  This follows from the fact that the grand potential Ω =
-<em>F</em> − μ<em>N</em> = −<em>pV</em>.
+<em>F</em> − μ<em>N</em> = −<em>pV</em> and can be used as a direct
+method to access the free energy, rather than the coupling constant
+integration method described next.
 
 #### Free energy and coupling constant integration
 
