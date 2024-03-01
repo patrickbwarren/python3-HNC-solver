@@ -63,7 +63,7 @@ The other codes are all experimental, and under development:
    Soft Matter <b>19</b>, 5824 (2023)](https://doi.org/10.1039/D3SM00835E);
 * `ndpd_rpa.py` : implement the RPA and EXP approximations for the EoS;
 * `ndpd_liquidus.py` : estimate the liquidus as the point where <em>p</em> = 0; condor-enabled;
-* `mdpd_hnc.py` : various HNC variants for MB DPD; condor-enabled;
+* `mdpd_hnc.py` : various HNC variants for many-body (MB) DPD; condor-enabled;
 * `mdpd_dft.py` : 'vanilla' DFT for MB DPD;
 * `mdpd_percus.py` : Percus-like DFT for MB DPD;
 * `timing.py` : for measuring performance of condor DAGMan jobs.
