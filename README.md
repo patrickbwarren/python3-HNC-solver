@@ -127,9 +127,9 @@ following scheme (<em>cf</em> [SunlightHNC](https://github.com/patrickbwarren/Su
 Typically this works for a Picard mixing fraction α = 0.2, and for
 standard DPD for example convergence to an accuracy of
 10<sup>−12</sup> for a grid size <em>N</em><sub>g</sub> =
-2<sup>12</sup> = 8192 (see below!) with a grid spacing Δ<em>r</em> =
-0.02 is achieved with a few hundred iterations (a fraction of a second
-CPU time).
+2<sup>12</sup> = 8192 with a grid spacing Δ<em>r</em> = 0.02 is
+achieved with a few hundred iterations (a fraction of a second CPU
+time).
 
 Once converged, the pair correlation function and static structure
 factor can be found from:
@@ -206,10 +206,10 @@ thank Andrew Masters for drawing my attention to this),
 Here the reference standard state corresponds to ρ = 1.  Since the
 Gibbs-Duhem relation in the form d<em>p</em> = ρ dμ can be integrated
 to find the pressure, this affords another route to the EoS: the
-chemical potential route.  This should verify <em>f</em> − ρμ +
-<em>p</em> = 0 where <em>f</em> is the free energy density.  This
-follows from the fact that the grand potential Ω = <em>F</em> −
-μ<em>N</em> = −<em>pV</em>.
+chemical potential route.  The chemical potential should verify
+<em>f</em> − ρμ + <em>p</em> = 0 where <em>f</em> is the free energy
+density.  This follows from the fact that the grand potential Ω =
+<em>F</em> − μ<em>N</em> = −<em>pV</em>.
 
 #### Free energy and coupling constant integration
 
