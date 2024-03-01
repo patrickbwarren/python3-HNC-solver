@@ -209,9 +209,10 @@ to find the pressure, this affords another route to the EoS: the
 chemical potential route.  In HNC the chemical potential should verify
 <em>f</em> − ρμ + <em>p</em> = 0 where <em>f</em> is the free energy
 density.  This follows from the fact that the grand potential Ω =
-<em>F</em> − μ<em>N</em> = −<em>pV</em> and can be used as a direct
-method to access the free energy, rather than the coupling constant
-integration method described next.
+<em>F</em> − μ<em>N</em> = −<em>pV</em>.  In the form <em>f</em> = ρμ
+− <em>p</em>, where <em>p</em> is the virial pressure, it can be used
+as a direct method to access the free energy, in contrast to the more
+generic the coupling constant integration method described next.
 
 #### Free energy and coupling constant integration
 
