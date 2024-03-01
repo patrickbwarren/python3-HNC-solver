@@ -101,7 +101,7 @@ e_mf = p_mf = π*A*ρ**2/30
 
 e_xc = 2*π*ρ**2 * np.trapz(r**2*φ*h, dx=Δr)
 e_ex = e_mf + e_xc
-e = 3*ρ/ + e_ex
+e = 3*ρ/2 + e_ex
 
 p_xc = 2*π*ρ**2/3 * np.trapz(r**3*f*h, dx=Δr)
 p_ex = p_mf + p_xc
@@ -161,8 +161,8 @@ if args.sunlight:
     sunlight_version = str(w.version, 'utf-8').strip()
     print(f'{args.script}: SunlightHNC v{sunlight_version}: energy, free energy, virial pressure =',
           '\t%0.5f\t%0.5f\t%0.5f' % (w.uex, w.aex, w.press))
-    print(f'{args.script}: SunlightHNC v{sunlight_version}: chemical potential =',
-          '%0.5f' % (np.log(ρ)+w.muex[0]))
+    print(f'{args.script}: SunlightHNC v{sunlight_version}:                   chemical potential =',
+          '\t%0.5f' % (np.log(ρ)+w.muex[0]))
 
 if args.show:
 
