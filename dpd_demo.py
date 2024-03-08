@@ -130,7 +130,9 @@ e_xc_arr = np.array([excess(λ) for λ in np.flip(λ_arr)]) # descend, to assure
 f_xc = np.trapz(e_xc_arr, dx=dλ) # the coupling constant integral
 f_ex = e_mf + f_xc # f_mf = e_mf in this case
 
-print(f'{args.script}: model: standard DPD with A = {A:g}, ρ = {ρ:g}')
+closure = 'EXP' if args.exp else 'RPA' if args.rpa else 'HNC'
+
+print(f'{args.script}: model: standard DPD with A = {A:g}, ρ = {ρ:g}, {closure} closure')
 print(f'{args.script}: Monte-Carlo (A,ρ = 25,3):      energy, virial pressure =',
       '\t13.63±0.02\t\t\t23.65±0.02')
 print(f'{args.script}: pyHNC v{pyHNC.version}:        energy, free energy, virial pressure =',
@@ -143,7 +145,8 @@ if args.rpa or args.exp:
     cq = grid.fourier_bessel_forward(c) # forward transform to reciprocal space
     hq = cq / (1 - ρ*cq) # solve the OZ relation
     h = grid.fourier_bessel_backward(hq) # back transform to real space
-    h = (np.exp(h) - 1) if args.exp else h # implement EXP if requested
+    if args.exp: # implement EXP if requested
+        h = (np.exp(h) - 1)
 
 if args.sunlight:
     
@@ -207,7 +210,7 @@ if args.output:
     df_agr = pyHNC.df_to_agr(df[['r', 'g']])
 
     with open(args.output, 'w') as f:
-        f.write(f'# DPD with A = {A:g}, ρ = {ρ:g}\n')
+        f.write(f'# DPD with A = {A:g}, ρ = {ρ:g}, {closure} closure\n')
         f.write(df_agr) # use a utility here to convert to xmgrace format
         f.write('\n')
 
