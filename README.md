@@ -1,8 +1,6 @@
 ## Hyper-netted chain (HNC) solver for Ornstein-Zernike (OZ) equation
 
-_Current version:_
-
-v1.0 - initial working version
+_Current version:_ v1.0 - initial working version
 
 ### Summary
 
@@ -27,7 +25,7 @@ Basic codes in the repository include:
 * `dpd_demo.py` : demonstrate the capabilities for standard DPD;
 * `dpd_eos.py` : calculate data for standard DPD equation of state (EoS);
 * `dpd_gw_compare.py` : compare to [Groot and Warren, J. Chem. Phys.
-   <b>107**, 4423 (1997)](https://doi.org/10.1063/1.474784).
+   **107**, 4423 (1997)](https://doi.org/10.1063/1.474784).
 
 For more details see extensive comments in the codes, and also the
 documentation for the parallel
