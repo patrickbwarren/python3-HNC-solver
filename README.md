@@ -110,7 +110,7 @@ scheme (*cf*
 * Fourier-Bessel back transform *e*(*q*) → *e*(*r*) ;
 * implement the HNC closure as *c*'(*r*) = exp[ − *v*(*r*) + *e*(*r*)]
   − *e*(*r*) − 1 ;
-* replace *c*(*r*) by α *c*′(*r*) + (1−α) *c*(*r*) (Picard mixing step);
+* replace *c*(*r*) by α *c*'(*r*) + (1−α) *c*(*r*) (Picard mixing step);
 * check for convergence by comparing *c*(*r*) and *c*'(*r*) ;
 * if not converged, repeat.
 
