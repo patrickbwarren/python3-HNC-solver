@@ -12,7 +12,8 @@ single-component systems, with soft potentials (no hard cores) such as
 dissipative particle dynamics (DPD).  It uses the
 [FFTW](https://www.fftw.org/) library to do the Fourier transforms,
 accessed _via_ the [pyFFTW](https://pyfftw.readthedocs.io/en/latest/)
-wrapper, together with basic [NumPy](https://numpy.org/) function calls.
+wrapper, together with basic [NumPy](https://numpy.org/) function
+calls.
 
 The code is intended for rapid prototyping, but is also partly
 pedagogical with the intent of attempting to capture some of the
@@ -26,15 +27,17 @@ Basic codes in the repository include:
 * `dpd_demo.py` : demonstrate the capabilities for standard DPD;
 * `dpd_eos.py` : calculate data for standard DPD equation of state (EoS);
 * `dpd_gw_compare.py` : compare to [Groot and Warren, J. Chem. Phys.
-   <b>107</b>, 4423 (1997)](https://doi.org/10.1063/1.474784).
+   <b>107**, 4423 (1997)](https://doi.org/10.1063/1.474784).
 
 For more details see extensive comments in the codes, and also the
 documentation for the parallel
 [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC) project.
 The book "Theory of Simple Liquids" by Jean-Pierre Hansen and Ian
-R. McDonald is foundational -- either the
-[3rd edition](https://shop.elsevier.com/books/theory-of-simple-liquids/hansen/978-0-12-370535-8) (2006)
-or the [4th edition](https://www.sciencedirect.com/book/9780123870322/theory-of-simple-liquids) (2013).
+R. McDonald is foundational -- either the [3rd
+edition](https://shop.elsevier.com/books/theory-of-simple-liquids/hansen/978-0-12-370535-8)
+(2006) or the [4th
+edition](https://www.sciencedirect.com/book/9780123870322/theory-of-simple-liquids)
+(2013).
 
 Simplifications compared to the (faster)
 [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC) include
@@ -59,10 +62,10 @@ copying `oz.pyf` and `oz.*.so` from
 
 The other codes are all experimental, and under development:
 
-* `ndpd_demo.py` : <em>n</em>DPD, as in [Sokhan <em>et al.</em>,
-   Soft Matter <b>19</b>, 5824 (2023)](https://doi.org/10.1039/D3SM00835E);
+* `ndpd_demo.py` : *n*DPD, as in [Sokhan *et al.*,
+   Soft Matter **19**, 5824 (2023)](https://doi.org/10.1039/D3SM00835E);
 * `ndpd_rpa.py` : implement the RPA and EXP approximations for the EoS;
-* `ndpd_liquidus.py` : estimate the liquidus as the point where <em>p</em> = 0; condor-enabled;
+* `ndpd_liquidus.py` : estimate the liquidus as the point where *p* = 0; condor-enabled;
 * `mdpd_hnc.py` : various HNC variants for many-body (MB) DPD; condor-enabled;
 * `mdpd_dft.py` : 'vanilla' DFT for MB DPD;
 * `mdpd_percus.py` : Percus-like DFT for MB DPD;
@@ -75,71 +78,55 @@ The other codes are all experimental, and under development:
 What's being solved here is the Ornstein-Zernike (OZ) equation in
 reciprocal space in the form
 
-* <em>h</em>(<em>q</em>) = <em>c</em>(<em>q</em>) +
-ρ <em>h</em>(<em>q</em>) <em>c</em>(<em>q</em>) ,
+* *h*(*q*) = *c*(*q*) + ρ *h*(*q*) *c*(*q*) ,
 
-in combination with the hypernetted-chain
-(HNC) closure in real space as
+in combination with the hypernetted-chain (HNC) closure in real space
+as
 
-* <em>g</em>(<em>r</em>) = exp[ −
-<em>v</em>(<em>r</em>) + <em>h</em>(<em>r</em>) −
-<em>c</em>(<em>r</em>)] ,
+* *g*(*r*) = exp[ − *v*(*r*) + *h*(*r*) − *c*(*r*)] ,
 
 using Picard iteration.
 
-Here ρ is the number density, <em>v</em>(<em>r</em>) is the potential
-in units of <em>k</em><sub>B</sub><em>T</em>, <em>g</em>(<em>r</em>)
-is the pair correlation function, <em>h</em>(<em>r</em>) =
-<em>g</em>(<em>r</em>) − 1 is the total correlation function, and
-<em>c</em>(<em>r</em>) is the direct correlation function which is
-defined by the OZ equation.  In practice the OZ equation and the HNC
-closure are written and solved iteratively (see next) in terms of the
-indirect correlation function <em>e</em>(<em>r</em>) =
-<em>h</em>(<em>r</em>) − <em>c</em>(<em>r</em>).
+Here ρ is the number density, *v*(*r*) is the potential in units of
+*k*<sub>B</sub>*T*, *g*(*r*) is the pair correlation function,
+*h*(*r*) = *g*(*r*) − 1 is the total correlation function, and
+*c*(*r*) is the direct correlation function which is defined by the OZ
+equation.  In practice the OZ equation and the HNC closure are written
+and solved iteratively (see next) in terms of the indirect correlation
+function *e*(*r*) = *h*(*r*) − *c*(*r*).
 
-An initial guess if the solver is not warmed up is
-<em>c</em>(<em>r</em>) = − <em>v</em>(<em>r</em>) ; this is the
-random-phase approximation (RPA), which for systems without hard cores
-is equivalent to the mean spherical approximation (MSA).
+An initial guess if the solver is not warmed up is *c*(*r*) = −
+*v*(*r*) ; this is the random-phase approximation (RPA), which for
+systems without hard cores is equivalent to the mean spherical
+approximation (MSA).
 
 #### Algorithm
 
-Given an initial guess <em>c</em>(<em>r</em>), the solver implements the
-following scheme (<em>cf</em> [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC)):
+Given an initial guess *c*(*r*), the solver implements the following
+scheme (*cf*
+[SunlightHNC](https://github.com/patrickbwarren/SunlightHNC)):
 
-* Fourier-Bessel forward transform <em>c</em>(<em>r</em>) →
-  <em>c</em>(<em>q</em>) ;
-* solve the OZ equation for <em>e</em>(<em>q</em>) =
-  <em>c</em>(<em>q</em>) / [1 − ρ <em>c</em>(<em>q</em>)] −
-  <em>c</em>(<em>q</em>) ;
-* Fourier-Bessel back transform <em>e</em>(<em>q</em>) →
-  <em>e</em>(<em>r</em>) ;
-* implement the HNC closure as <em>c</em>'(<em>r</em>) =
-  exp[ − <em>v</em>(<em>r</em>) + <em>e</em>(<em>r</em>)] −
-  <em>e</em>(<em>r</em>) − 1 ;
-* replace <em>c</em>(<em>r</em>) by
-  α <em>c</em>′(<em>r</em>) + (1−α) <em>c</em>(<em>r</em>) (Picard
-  mixing step);
-* check for convergence by comparing <em>c</em>(<em>r</em>) and
-  <em>c'</em>(<em>r</em>) ;
+* Fourier-Bessel forward transform *c*(*r*) → *c*(*q*) ;
+* solve the OZ equation for *e*(*q*) = *c*(*q*) / [1 − ρ *c*(*q*)] −
+  *c*(*q*) ;
+* Fourier-Bessel back transform *e*(*q*) → *e*(*r*) ;
+* implement the HNC closure as *c*'(*r*) = exp[ − *v*(*r*) + *e*(*r*)]
+  − *e*(*r*) − 1 ;
+* replace *c*(*r*) by α *c*′(*r*) + (1−α) *c*(*r*) (Picard mixing step);
+* check for convergence by comparing *c*(*r*) and *c*'(*r*) ;
 * if not converged, repeat.
 
 Typically this works for a Picard mixing fraction α = 0.2, and for
 standard DPD for example convergence to an accuracy of
-10<sup>−12</sup> for a grid size <em>N</em><sub>g</sub> =
-2<sup>12</sup> = 8192 with a grid spacing Δ<em>r</em> = 0.02 is
-achieved with a few hundred iterations (a fraction of a second CPU
-time).
+10<sup>−12</sup> for a grid size *N*<sub>g</sub> = 2<sup>12</sup> =
+8192 with a grid spacing Δ*r* = 0.02 is achieved with a few hundred
+iterations (a fraction of a second CPU time).
 
 Once converged, the pair correlation function and static structure
 factor can be found from:
 
-* <em>g</em>(<em>r</em>) = 1 + <em>h</em>(<em>r</em>) where
-  <em>h</em>(<em>r</em>) = <em>e</em>(<em>r</em>) +
-  <em>c</em>(<em>r</em>) ;
-* <em>S</em>(<em>q</em>) = 1 + ρ <em>h</em>(<em>q</em>) where
-  <em>h</em>(<em>q</em>) = <em>e</em>(<em>q</em>) +
-  <em>c</em>(<em>q</em>) .
+* *g*(*r*) = 1 + *h*(*r*) where *h*(*r*) = *e*(*r*) + *c*(*r*) ;
+* *S*(*q*) = 1 + ρ *h*(*q*) where *h*(*q*) = *e*(*q*) + *c*(*q*) .
 
 ### Thermodynamics
 
@@ -149,49 +136,44 @@ Thermodynamic quantities can also now be computed, for example the excess
 energy density and virial pressure follow from Eqs. (2.5.20) and (2.5.22) in
 Hansen and McDonald, "Theory of Simple Liquids" (3rd edition) as:
 
-* <em>e</em> = 3ρ/2 + 2πρ² ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
-  <em>v</em>(<em>r</em>) <em>g</em>(<em>r</em>) ;
-* <em>p</em> = ρ + 2πρ²/3 ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>³
-  <em>f</em>(<em>r</em>) <em>g</em>(<em>r</em>) where
-  <em>f</em>(<em>r</em>) = − d<em>v</em>/d<em>r</em> ,
+* *e* = 3ρ/2 + 2πρ<sup>2</sup> ∫<sub>0</sub><sup>∞</sup> d*r*
+  *r*<sup>2</sup> *v*(*r*) *g*(*r*) ;
+* *p* = ρ + 2πρ<sup>2</sup>/3 ∫<sub>0</sub><sup>∞</sup> d*r*
+  *r*<sup>3</sup> *f*(*r*) *g*(*r*) where *f*(*r*) = − d*v*/d*r* ,
 
 where the first terms here are the ideal contributions, in units of
-<em>k</em><sub>B</sub><em>T</em>.
+*k*<sub>B</sub>*T*.
 
-In practice these should usually be calculated with
-<em>h</em>(<em>r</em>) = <em>g</em>(<em>r</em>) − 1, since the
-mean-field contributions (<em>i. e.</em> the above with
-<em>g</em>(<em>r</em>) = 1) can usually be calculated analytically.
-Note that in this case an integration by parts shows that the two
-integrals are actually the same, and are essentially equal to the
-value of the potential at the origin in reciprocal space: 2πρ²/3
-∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>³
-<em>f</em>(<em>r</em>) = 2πρ² ∫<sub>0</sub><sup>∞</sup> d<em>r</em>
-<em>r</em>² <em>v</em>(<em>r</em>) = ρ²/2 ∫ d³<b>r</b>
-<em>v</em>(<em>r</em>) = ρ²/2 <em>v</em>(<em>q</em>=0).
+In practice these should usually be calculated with *h*(*r*) =
+*g*(*r*) − 1, since the mean-field contributions (*i. e.* the above
+with *g*(*r*) = 1) can usually be calculated analytically.  Note that
+in this case an integration by parts shows that the two integrals are
+actually the same, and are essentially equal to the value of the
+potential at the origin in reciprocal space: 2πρ<sup>2</sup>/3
+∫<sub>0</sub><sup>∞</sup> d*r* *r*<sup>3</sup> *f*(*r*) =
+2πρ<sup>2</sup> ∫<sub>0</sub><sup>∞</sup> d*r* *r*<sup>2</sup>
+*v*(*r*) = ρ<sup>2</sup>/2 ∫ d<sup>3</sup>**r** *v*(*r*) =
+ρ<sup>2</sup>/2 *v*(*q*=0).
 
 #### Compressibility
 
 Eq. (2.6.12) in Hansen and McDonald shows that in units of
-<em>k</em><sub>B</sub><em>T</em> the isothermal compressibility
-satisfies ρ χ<sub>T</sub> = 1 + 4πρ ∫<sub>0</sub><sup>∞</sup>
-d<em>r</em> <em>r</em>² <em>h</em>(<em>r</em>) where χ<sub>T</sub> = −
-(1/<em>V</em>) ∂<em>V</em>/∂<em>p</em>.  In terms of the EoS, this
-last expression can be written as χ<sub>T</sub><sup>−1</sup> = ρ
-d<em>p</em>/dρ.  Further, in reciprocal space the OZ equation (above)
-can be written as
+*k*<sub>B</sub>*T* the isothermal compressibility satisfies ρ
+χ<sub>T</sub> = 1 + 4πρ ∫<sub>0</sub><sup>∞</sup> d*r* *r*<sup>2</sup>
+*h*(*r*) where χ<sub>T</sub> = − (1/*V*) ∂*V*/∂*p*.  In terms of the
+EoS, this last expression can be written as χ<sub>T</sub><sup>−1</sup>
+= ρ d*p*/dρ.  Further, in reciprocal space the OZ equation (above) can
+be written as
 
-* [1 + ρ <em>h</em>(<em>q</em>)] [1 − ρ <em>c</em>(<em>q</em>)] = 1 .
+* [1 + ρ *h*(*q*)] [1 − ρ *c*(*q*)] = 1 .
 
-Employing this at <em>q</em> = 0, one
-therefore obtains
+Employing this at *q* = 0, one therefore obtains
 
-* d<em>p</em>/dρ = [ρχ<sub>T</sub>]<sup>−1</sup> = 1 − 4πρ ∫<sub>0</sub><sup>∞</sup> d<em>r</em>
-  <em>r</em>² <em>c</em>(<em>r</em>) .
+* d*p*/dρ = [ρχ<sub>T</sub>]<sup>−1</sup> = 1 − 4πρ
+  ∫<sub>0</sub><sup>∞</sup> d*r* *r*<sup>2</sup> *c*(*r*) .
 
-Given <em>c</em>(<em>r</em>) as a function of density, this can be
-integrated to find <em>p</em>(ρ).  This is known as the
-compressibility route to the EoS.
+Given *c*(*r*) as a function of density, this can be integrated to
+find *p*(ρ).  This is known as the compressibility route to the EoS.
 
 #### Chemical potential
 
@@ -199,74 +181,69 @@ A result peculiar to the HNC is the closed-form expression for the
 chemical potential given in Eq. (4.3.21) in Hansen and McDonald (I
 thank Andrew Masters for drawing my attention to this),
 
-* μ /  <em>k</em><sub>B</sub><em>T</em>
-= ln ρ + 4πρ ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
-[ ½ <em>h</em> (<em>h</em> − <em>c</em>) − <em>c</em> ] .
+* μ / *k*<sub>B</sub>*T* = ln ρ + 4πρ ∫<sub>0</sub><sup>∞</sup> d*r*
+  *r*<sup>2</sup> [ ½ *h* (*h* − *c*) − *c* ] .
 
 Here the reference standard state corresponds to ρ = 1.  Since the
-Gibbs-Duhem relation in the form d<em>p</em> = ρ dμ can be integrated
-to find the pressure, this affords another route to the EoS: the
-chemical potential route.  In HNC the chemical potential should verify
-<em>f</em> − ρμ + <em>p</em> = 0 where <em>f</em> is the free energy
-density.  This follows from the fact that the grand potential Ω =
-<em>F</em> − μ<em>N</em> = −<em>pV</em>.  In the form <em>f</em> = ρμ
-− <em>p</em>, where <em>p</em> is the virial pressure, it can be used
-as a direct method to access the free energy, in contrast to the more
+Gibbs-Duhem relation in the form d*p* = ρ dμ can be integrated to find
+the pressure, this affords another route to the EoS: the chemical
+potential route.  In HNC the chemical potential should verify *f* −
+ρμ + *p* = 0 where *f* is the free energy density.  This follows from
+the fact that the grand potential Ω = *F* − μ*N* = −*pV*.  In the form
+*f* = ρ μ − *p*, where *p* is the virial pressure, it can be used as a
+direct method to access the free energy, in contrast to the more
 generic the coupling constant integration method described next.
 
 #### Free energy and coupling constant integration
 
-It follows from the basic definition of the free energy <em>F</em> = − ln ∫
-d<sup><em>N</em></sup>{<b>r</b>} e<sup>−<em>U</em></sup> that
-∂<em>F</em>/∂λ = ⟨∂<em>U</em>/∂λ⟩ where λ is a parameter in the
-potential function <em>U</em>.
+It follows from the basic definition of the free energy *F* = − ln ∫
+d<sup>*N*</sup>{**r**} e<sup>−*U*</sup> that ∂*F*/∂λ = ⟨∂*U*/∂λ⟩ where
+λ is a parameter in the potential function *U*.
 
-We can therefore calculate the free energy from <em>F</em> =
-<em>F</em><sub>0</sub> + ∫<sub>0</sub><sup>1</sup> dλ
-⟨∂<em>U</em>/∂λ⟩<sub>λ</sub>.  If λ is simply a multiplicative
-scaling, <em>U</em> → λ <em>U</em>, then ∂<em>U</em>/∂λ = <em>U</em>
-and we have a _coupling constant integration_ scheme <em>F</em> =
-<em>F</em><sub>0</sub> + ∫<sub>0</sub><sup>1</sup> dλ
-⟨<em>U</em>⟩<sub>λ</sub> where the indicated average should be taken
-with the potential energy scaled by a factor λ. In this scheme
-<em>F</em><sub>0</sub> is just the free energy of an ideal gas of
-non-interacting particles since λ → 0 switches off the interactions.
+We can therefore calculate the free energy from *F* =
+*F*<sub>0</sub> + ∫<sub>0</sub><sup>1</sup> dλ ⟨∂*U*/∂λ⟩<sub>λ</sub>.
+If λ is simply a multiplicative scaling, *U* → λ *U*, then ∂*U*/∂λ =
+*U* and we have a _coupling constant integration_ scheme *F* =
+*F*<sub>0</sub> + ∫<sub>0</sub><sup>1</sup> dλ ⟨*U*⟩<sub>λ</sub> where
+the indicated average should be taken with the potential energy scaled
+by a factor λ. In this scheme *F*<sub>0</sub> is just the free energy
+of an ideal gas of non-interacting particles since λ → 0 switches off
+the interactions.
 
 Since the free energy can be differentiated to find the pressure, this
-is the basis for the so-called energy route to the EoS.  For
-example, if the free energy density is available as a function of
-density, <em>f</em>(ρ), the pressure follows from p =
-−∂<em>F</em>/∂<em>V</em> as <em>p</em> = ρ² d(<em>f</em>/ρ)/dρ where
-<em>f</em>/ρ is the free energy per particle.  It also follows that
-the compressibility [ρχ<sub>T</sub>]<sup>−1</sup> = ρ d²<em>f</em>/dρ².
+is the basis for the so-called energy route to the EoS.  For example,
+if the free energy density is available as a function of density,
+*f*(ρ), the pressure follows from p = −∂*F*/∂*V* as *p* =
+ρ<sup>2</sup> d(*f*/ρ)/dρ where *f*/ρ is the free energy per particle.
+It also follows that the compressibility [ρχ<sub>T</sub>]<sup>−1</sup>
+= ρ d<sup>2</sup>*f*/dρ<sup>2</sup>.
 
 The mean-field contribution to this can be calculated immediately
-since the contribution to the energy density 2πρ²
-∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
-<em>v</em>(<em>r</em>) is independent of λ and therefore
-∫<sub>0</sub><sup>1</sup> dλ applied to this term trivially evaluates
-to the same.  Furthermore, since this term is ∝ ρ², following the
-indicated route to the pressure shows that this exact same term
-appears there too.  So the mean-field contribution to the pressure
-here is the same as the virial route mean-field pressure.
+since the contribution to the energy density 2πρ<sup>2</sup>
+∫<sub>0</sub><sup>∞</sup> d*r* *r*<sup>2</sup> *v*(*r*) is independent
+of λ and therefore ∫<sub>0</sub><sup>1</sup> dλ applied to this term
+trivially evaluates to the same.  Furthermore, since this term is ∝
+ρ<sup>2</sup>, following the indicated route to the pressure shows
+that this exact same term appears there too.  So the mean-field
+contribution to the pressure here is the same as the virial route
+mean-field pressure.
 
 For the non-mean-field correlation contribution we sketch the algorithm:
 
 * solve the HNC closure of OZ equation for the _scaled_ pair potential
-  λ<em>v</em>(<em>r</em>) to get <em>h</em>(<em>r</em>; λ) ;
+  λ*v*(*r*) to get *h*(*r*; λ) ;
 
-* calculate  <em>∆e</em>(λ) = 2πρ²
- ∫<sub>0</sub><sup>∞</sup> d<em>r</em> <em>r</em>²
- <em>v</em>(<em>r</em>) <em>h</em>(<em>r</em>; λ) with the
- _unscaled_ pair potential;
+* calculate ∆*e*(λ) = 2πρ<sup>2</sup> ∫<sub>0</sub><sup>∞</sup> d*r*
+ *r*<sup>2</sup> *v*(*r*) *h*(*r*; λ) with the _unscaled_ pair
+ potential;
 
-* the excess correlation free energy is then the integral
-  <em>∆f</em> = ∫<sub>0</sub><sup>1</sup> dλ <em>∆e</em>(λ) .
+* the excess correlation free energy is then the integral ∆*f* =
+  ∫<sub>0</sub><sup>1</sup> dλ ∆*e*(λ) .
 
-* the excess correlation pressure then follows from ∆p = ρ²
-d(<em>∆f</em> / ρ)/dρ .  This should be added to the mean-field
-contribution to obtain the excess pressure, and the whole added to the
-ideal contribution to find the total pressure.
+* the excess correlation pressure then follows from ∆p = ρ<sup>2</sup>
+d(∆*f* / ρ)/dρ .  This should be added to the mean-field contribution
+to obtain the excess pressure, and the whole added to the ideal
+contribution to find the total pressure.
 
 In practice the coupling constant integration can be performed by any
 number of numerical quadrature methods but typically (for me!) a basic
@@ -283,63 +260,56 @@ approximations.
 
 The code illustrates how to implement three-dimensional Fourier-Bessel
 transforms using FFTW.  The Fourier-Bessel forward transform of a
-function <em>f</em>(<em>r</em>) in three dimensions is (see
+function *f*(*r*) in three dimensions is (see
 [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC)
 documentation):
 
-<em>g</em>(<em>q</em>) = 4π / <em>q</em> ∫<sub>0</sub><sup>∞</sup>
-d<em>r</em> <em>r</em> <em>f</em>(<em>r</em>) sin <em>qr</em> .
+*g*(*q*) = 4π / *q* ∫<sub>0</sub><sup>∞</sup> d*r* *r* *f*(*r*) sin
+*qr* .
 
-From the [FFTW documentation](https://www.fftw.org/fftw3_doc/1d-Real_002dodd-DFTs-_0028DSTs_0029.html),
+From the [FFTW
+documentation](https://www.fftw.org/fftw3_doc/1d-Real_002dodd-DFTs-_0028DSTs_0029.html),
 `RODFT00` implements
 
-<em>Y</em><sub><em>k</em></sub> = 2
-∑<sub><em>j</em>=0</sub><sup><em>n</em>−1</sup>
-<em>X</em><sub><em>j</em></sub> sin[π (<em>j</em>+1) (<em>k</em>+1) /
-(<em>n</em>+1)] ,
+*Y*<sub>*k*</sub> = 2 ∑<sub>*j*=0</sub><sup>*n*−1</sup>
+*X*<sub>*j*</sub> sin[π (*j*+1) (*k*+1) / (*n*+1)] ,
 
-where <em>n</em> is the common length of the arrays
-<em>X</em><sub><em>j</em></sub> and <em>Y</em><sub><em>k</em></sub>.
+where *n* is the common length of the arrays *X*<sub>*j*</sub> and
+*Y*<sub>*k*</sub>.
 
-To cast this into the right form, set Δ<em>r</em> × Δ<em>q</em> = π /
-(<em>n</em>+1) and assign <em>r</em><sub><em>j</em></sub> =
-(<em>j</em>+1) × Δ<em>r</em> for <em>j</em> = 0 to <em>n</em>−1, and
-likewise <em>q</em><sub><em>k</em></sub> = (<em>k</em>+1) ×
-Δ<em>q</em> for <em>k</em> = 0 to <em>n</em>−1, so that
+To cast this into the right form, set Δ*r* × Δ*q* = π / (*n*+1) and
+assign *r*<sub>*j*</sub> = (*j*+1) × Δ*r* for *j* = 0 to *n*−1, and
+likewise *q*<sub>*k*</sub> = (*k*+1) × Δ*q* for *k* = 0 to *n*−1, so
+that
 
-<em>Y</em><sub><em>k</em></sub> = 2
-∑<sub><em>j</em>=0</sub><sup><em>n</em>−1</sup>
-<em>X</em><sub><em>j</em></sub>
-sin <em>q</em><sub><em>k</em></sub><em>r</em><sub><em>j</em></sub> .
+*Y*<sub>*k*</sub> = 2 ∑<sub>*j*=0</sub><sup>*n*−1</sup>
+*X*<sub>*j*</sub> sin *q*<sub>*k*</sub>*r*<sub>*j*</sub> .
 
 For the desired integral we can then write
 
-<em>g</em>(<em>q</em><sub><em>k</em></sub>) = 2 π Δ<em>r</em> /
-<em>q</em><sub><em>k</em></sub> × 2
-∑<sub><em>j</em>=0</sub><sup><em>n</em>−1</sup>
-<em>r</em><sub><em>j</em></sub>
-<em>f</em>(<em>r</em><sub><em>j</em></sub>)
-sin <em>q</em><sub><em>k</em></sub><em>r</em><sub><em>j</em></sub> ,
+*g*(*q*<sub>*k*</sub>) = 2 π Δ*r* / *q*<sub>*k*</sub> × 2
+∑<sub>*j*=0</sub><sup>*n*−1</sup> *r*<sub>*j*</sub>
+*f*(*r*<sub>*j*</sub>) sin *q*<sub>*k*</sub>*r*<sub>*j*</sub> ,
 
 with the factor after the multiplication sign being calculated by
 `RODFT00`.
 
 The Fourier-Bessel back transform,
 
-<em>f</em>(<em>r</em>) = 1 / (2π²<em>r</em>) ∫<sub>0</sub><sup>∞</sup>
-d<em>q</em> <em>q</em> <em>g</em>(<em>q</em>) sin <em>qr</em> ,
+*f*(*r*) = 1 / (2π<sup>2</sup>*r*) ∫<sub>0</sub><sup>∞</sup> d*q* *q*
+*g*(*q*) sin *qr* ,
 
 is handled similarly.
 
 #### On FFTW efficiency
 
 Timing tests (below) indicate that FFTW is very fast when the array
-length <em>n</em> in the above is a power of two _minus one_, which
+length *n* in the above is a power of two _minus one_, which
 doesn't quite seem to fit with the
 [documentation](https://www.fftw.org/fftw3_doc/Real_002dto_002dReal-Transforms.html).
-Hence, the grid size <em>N</em><sub>g</sub> = <em>n</em> + 1 in pyHNC
+Hence, the grid size *N*<sub>g</sub> = *n* + 1 in pyHNC
 is typically a power of two, but the arrays passed to FFTW are
-shortened to <em>N</em><sub>g</sub> − 1.  Some typical timing results
+shortened to *N*<sub>g</sub> − 1.  Some typical timing results
 on a moderately fast [Intel<sup>®</sup>
 NUC11TZi7](https://www.intel.com/content/www/us/en/products/sku/205605/intel-nuc-11-pro-kit-nuc11tnhi7/specifications.html)
 with an [11th Gen Intel<sup>®</sup> Core™
@@ -400,17 +370,17 @@ heuristic implied by `FFTW_ESTIMATE`.  Obviously some further
 investigations could be undertaken into this aspect.
 
 The TL;DR take-home message here is _use a power of two_ for the
-<em>N</em><sub>g</sub> parameter in the code!
+*N*<sub>g</sub> parameter in the code!
 
 #### Choice of grid size
 
-From above Δ<em>r</em> × Δ<em>q</em> = π / <em>N</em><sub>g</sub> can be
-inverted to suggest <em>N</em><sub>g</sub> = π /
-Δ<em>r</em> Δ<em>q</em>.  Since presumably we want the grid resolution
-in real space and reciprocal space to be comparable, Δ<em>r</em> ≈
-Δ<em>q</em>, and we want <em>N</em><sub>g</sub> =
-2<sup><em>r</em></sup>, this suggests the following table (where
-Δ<em>q</em> is computed from Δ<em>r</em> and <em>N</em><sub>g</sub>):
+From above Δ*r* × Δ*q* = π / *N*<sub>g</sub> can be
+inverted to suggest *N*<sub>g</sub> = π /
+Δ*r* Δ*q*.  Since presumably we want the grid resolution
+in real space and reciprocal space to be comparable, Δ*r* ≈
+Δ*q*, and we want *N*<sub>g</sub> =
+2<sup>*r*</sup>, this suggests the following table (where
+Δ*q* is computed from Δ*r* and *N*<sub>g</sub>):
 ```
 --deltar=0.05 --ng=2^11 (ng=2048 ⇒ Δq ≈ 0.031  )
 --deltar=0.02 --ng=2^13 (ng=8192 ⇒ Δq ≈ 0.019  )
@@ -424,8 +394,8 @@ in real space and reciprocal space to be comparable, Δ<em>r</em> ≈
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+the Free Software Foundation, either version 3 of the License, or (at
+your option) any later version.
 
 This program is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of
