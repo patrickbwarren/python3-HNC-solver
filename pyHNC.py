@@ -227,7 +227,7 @@ def grid_spacing(x):
 
 def trapz_integrand(y, dx=1):
     '''Implement trapezium rule and return integrand'''
-    return dx * np.pad((y[1:] + y[:-1]) / 2.0, (1, 0), 'constant') # pad with zero at start
+    return dx * np.pad(0.5*(y[1:]+y[:-1]), (1, 0)) # pad with zero at start
 
 def trapz(y, dx=1):
     '''Return the trapezium rule integral, drop-in replacement for np.trapz'''

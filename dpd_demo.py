@@ -180,7 +180,7 @@ if args.show:
         plt.plot(w.r[0:imax], 1.0+w.hr[0:imax,0,0], '.')
         plt.plot(r[cut], gr[cut], '--')
     else:
-        plt.plot(r[cut], gr[cut])        
+        plt.plot(r[cut], gr[cut])
     plt.xlabel('$r$')
     plt.ylabel('$g(r)$')
 
