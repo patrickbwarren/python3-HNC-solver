@@ -242,12 +242,13 @@ class SolutePicardHNC(PicardHNC):
 
     def __init__(self, rho0, c00, *args, **kwargs):
         self.rho0 = rho0
-        self.c00 = c00
+        self.c00r = c00
         super().__init__(*args, **kwargs)
+        self.c00q = self.grid.fourier_bessel_forward(self.c00r)
 
     def oz_solution(self, rho, cq):
         '''Solution to the OZ equation in reciprocal k-space.'''
-        return cq / (1 - rho*self.c00) - cq
+        return cq / (1 - rho*self.c00q) - cq
 
     def solve(self, vr, cr_init=None, monitor=False):
         return super().solve(vr, self.rho0, cr_init, monitor)
