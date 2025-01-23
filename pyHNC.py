@@ -90,12 +90,16 @@ class PicardHNC:
         self.warmed_up = False
         self.details = f'HNC: α = {self.alpha}, tol = {self.tol:0.1e}, npicard = {self.npicard}'
 
+    def oz_solution(self, rho, cq):
+        '''Solution to the OZ equation in reciprocal k-space.'''
+        return cq / (1 - rho*cq) - cq
+
     def solve(self, vr, rho, cr_init=None, monitor=False):
         '''Solve HNC for a given potential, with an optional initial guess at cr'''
         cr = np.copy(cr_init) if cr_init is not None else np.copy(self.cr) if self.warmed_up else -np.copy(vr)
         for i in range(self.npicard):
             cq = self.grid.fourier_bessel_forward(cr) # forward transform c(r) to c(q)
-            eq = cq / (1 - rho*cq) - cq # solve the OZ equation for e(q)
+            eq = self.oz_solution(rho, cq) # solve the OZ equation for e(q)
             er = self.grid.fourier_bessel_backward(eq) # back transform e(q) to e(r)
             cr_new = np.exp(-vr+er) - er - 1 # iterate with the HNC closure
             cr = self.alpha * cr_new + (1-self.alpha) * cr # apply a Picard mixing rule
@@ -232,3 +236,18 @@ def trapz_integrand(y, dx=1):
 def trapz(y, dx=1):
     '''Return the trapezium rule integral, drop-in replacement for np.trapz'''
     return trapz_integrand(y, dx=dx).sum()
+
+class SolutePicardHNC(PicardHNC):
+    '''Specialisation for infinitesimally dilute solute inside solvent.'''
+
+    def __init__(self, rho0, c00, *args, **kwargs):
+        self.rho0 = rho0
+        self.c00 = c00
+        super().__init__(*args, **kwargs)
+
+    def oz_solution(self, rho, cq):
+        '''Solution to the OZ equation in reciprocal k-space.'''
+        return cq / (1 - rho*self.c00) - cq
+
+    def solve(self, vr, cr_init=None, monitor=False):
+        return super().solve(vr, self.rho0, cr_init, monitor)
