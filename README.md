@@ -254,6 +254,41 @@ virial route pressure, not just the mean-field contributions.  So
 differences here are a test of the numerics rather than the physical
 approximations.
 
+### Solutes
+
+The above methodology can be repurposed to solve also the case of an
+infinitely dilute solute inside a solvent.  To do this we start from
+the OZ equations for a two-component mixture and specialise to the
+case where the density of the second component vanishes.  In this
+limit the OZ equations partially decouple in the sense that the
+solvent case reduces to the above one-component problem, which can be
+solved as already indicated.  The off-diagonal OZ relations become
+
+* *h<sub>01</sub>*(*q*) = *c<sub>01</sub>*(*q*) +
+ρ<sub>0</sub> *h<sub>01</sub>*(*q*) *c<sub>00</sub>*(*q*) ,
+
+or
+
+* *h<sub>01</sub>*(*q*) = *c<sub>01</sub>*(*q*) +
+ρ<sub>0</sub> *h<sub>00</sub>*(*q*) *c<sub>01</sub>*(*q*) .
+
+The equivalence between the two can be proven from the OZ relation for
+the solvent but in practice (below) it is the first of these that is
+used.  The OZ relation here should be supplemented by the HNC closure
+for the off-diagonal case
+
+* *g<sub>01</sub>*(*r*) = exp[ − *v<sub>01</sub>*(*r*) +
+*h<sub>01</sub>*(*r*) − *c<sub>01</sub>*(*r*)] .
+
+This solute problem can be solved be re-purposing the exact same above
+algorithm, but with a revised version of the OZ equation step, namely
+
+* solve the OZ equation for *e<sub>01</sub>*(*q*) = *c<sub>01</sub>*(*q*) 
+/ [1 − ρ<sub>0</sub> *c<sub>00</sub>*(*q*)] − *c<sub>01</sub>*(*q*) .
+
+Applications of this infinitely-dilute solute limit are in the process
+of being investigated.
+
 ### FFTW and Fourier-Bessel transforms
 
 The code illustrates how to implement three-dimensional Fourier-Bessel
@@ -407,6 +442,7 @@ along with this program.  If not, see
 ### Copyright
 
 This program is copyright &copy; 2023 Patrick B Warren (STFC).  
+The implementation of the solute case is copyright &copy; 2025 Joshua F Robinson (STFC).  
 
 ### Contact
 

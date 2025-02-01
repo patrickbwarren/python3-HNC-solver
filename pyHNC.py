@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This program is part of pyHNC, copyright (c) 2023 Patrick B Warren (STFC).
+# The implementation of the solute case is copyright (c) 2025 Joshua F Robinson (STFC).
 # Email: patrick.warren{at}stfc.ac.uk.
 
 # This program is free software: you can redistribute it and/or modify
@@ -91,7 +92,7 @@ class PicardHNC:
         self.details = f'HNC: α = {self.alpha}, tol = {self.tol:0.1e}, npicard = {self.npicard}'
 
     def oz_solution(self, rho, cq):
-        '''Solution to the OZ equation in reciprocal k-space.'''
+        '''Solution to the OZ equation in reciprocal space.'''
         return cq / (1 - rho*cq) - cq
 
     def solve(self, vr, rho, cr_init=None, monitor=False):
@@ -127,6 +128,47 @@ class PicardHNC:
                 print(f'pyHNC.solve: Picard iteration {i:3d}, error = {self.error:0.3e}')
                 print('pyHNC.solve: Picard failed to converge')
         return self # the user can name this 'soln' or something
+
+# Below, subclass the above to redefine the OZ equation in terms of a
+# solvent density rho00 and direct correlation function c00 (in real
+# space).  This enables the above machinery to be re-used for solving
+# the problem of an infinitely dilute solute inside the solvent.
+
+# The math here is as follows.  In a two-component system the OZ equations are
+#  h00q = c00q + rho0 c00q h00q + rho1 c01q h01q,
+#  h01q = c01q + rho0 c01q h00q + rho1 c11q h01q = c01q + rho0 c00q h01q + rho1 c01q h11q,
+#  h11q = c11q + rho0 c01q h01q + rho1 c11q h11q.
+# (the equivalence of the two off-diagonal expressions can be verified).
+# Now take the limit rho1 --> 0 so that the second component becomes
+# an infinitely dilute solute in the first component (solvent).
+# The OZ relations in this limit are
+#  h00q = c00q + rho0 c00q h00q,
+#  h01q = c01q + rho0 c01q h00q = c01q + rho0 c00q h01q,
+#  h11q = c11q + rho0 c01q h01q.
+# The first of these is simply the one-component OZ relation for the solvent.
+# The second can be written as
+#  h01q = c01q / (1 - rho0 c00q).
+# This resembles the OZ equation for the solvent except that it is the
+# solvent density and direct correlation function that feature.  To
+# solve this case therefore we should allow for the introduction of
+# rho0 and c00, and change the OZ relation that the solver uses.  This
+# is what is implemented below.
+
+class SolutePicardHNC(PicardHNC):
+    '''Specialisation for infinitely dilute solute inside solvent.'''
+
+    def __init__(self, rho0, c00, *args, **kwargs):
+        self.rho0 = rho0
+        self.c00r = c00
+        super().__init__(*args, **kwargs)
+        self.c00q = self.grid.fourier_bessel_forward(self.c00r)
+
+    def oz_solution(self, rho, cq):
+        '''Solution to the modified OZ equation in reciprocal space.'''
+        return cq / (1 - rho*self.c00q) - cq
+
+    def solve(self, vr, cr_init=None, monitor=False):
+        return super().solve(vr, self.rho0, cr_init, monitor)
 
 # Extend the ArgumentParser class to be able to add boolean options, adapted from
 # https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
@@ -236,19 +278,3 @@ def trapz_integrand(y, dx=1):
 def trapz(y, dx=1):
     '''Return the trapezium rule integral, drop-in replacement for np.trapz'''
     return trapz_integrand(y, dx=dx).sum()
-
-class SolutePicardHNC(PicardHNC):
-    '''Specialisation for infinitesimally dilute solute inside solvent.'''
-
-    def __init__(self, rho0, c00, *args, **kwargs):
-        self.rho0 = rho0
-        self.c00r = c00
-        super().__init__(*args, **kwargs)
-        self.c00q = self.grid.fourier_bessel_forward(self.c00r)
-
-    def oz_solution(self, rho, cq):
-        '''Solution to the OZ equation in reciprocal k-space.'''
-        return cq / (1 - rho*self.c00q) - cq
-
-    def solve(self, vr, cr_init=None, monitor=False):
-        return super().solve(vr, self.rho0, cr_init, monitor)
