@@ -129,30 +129,36 @@ class PicardHNC:
                 print('pyHNC.solve: Picard failed to converge')
         return self # the user can name this 'soln' or something
 
-# Below, subclass the above to redefine the OZ equation in terms of a
-# solvent density rho00 and direct correlation function c00 (in real
-# space).  This enables the above machinery to be re-used for solving
-# the problem of an infinitely dilute solute inside the solvent.
+# Below, the above is sub-classed to redefine the OZ equation in terms
+# of the product of the solvent density rho00 and total correlation
+# function h00q (in reciprocal space).  This enables the above
+# machinery to be re-used for solving the problem of an infinitely
+# dilute solute inside the solvent.
 
 # The math here is as follows.  In a two-component system the OZ equations are
 #  h00q = c00q + rho0 c00q h00q + rho1 c01q h01q,
-#  h01q = c01q + rho0 c01q h00q + rho1 c11q h01q = c01q + rho0 c00q h01q + rho1 c01q h11q,
+#  h01q = c01q + rho0 c01q h00q + rho1 c11q h01q,
+#  h01q = c01q + rho0 c00q h01q + rho1 c01q h11q,
 #  h11q = c11q + rho0 c01q h01q + rho1 c11q h11q.
 # (the equivalence of the two off-diagonal expressions can be verified).
 # Now take the limit rho1 --> 0 so that the second component becomes
 # an infinitely dilute solute in the first component (solvent).
 # The OZ relations in this limit are
 #  h00q = c00q + rho0 c00q h00q,
-#  h01q = c01q + rho0 c01q h00q = c01q + rho0 c00q h01q,
+#  h01q = c01q + rho0 c01q h00q
+#  h01q = c01q + rho0 c00q h01q,
 #  h11q = c11q + rho0 c01q h01q.
 # The first of these is simply the one-component OZ relation for the solvent.
-# The second can be written as
-#  h01q = c01q / (1 - rho0 c00q).
-# This resembles the OZ equation for the solvent except that it is the
-# solvent density and direct correlation function that feature.  To
-# solve this case therefore we should allow for the introduction of
-# rho0 and c00, and change the OZ relation that the solver uses.  This
-# is what is implemented below.
+# The second of these can be written as
+#  h01q = c01q (1 + rho0 h00q).
+# This should be supplemented by the HNC closure in the off-diagonal
+# component.  In the form e01q = rho0 h00q c01q it can be used as a
+# drop-in replacement for the OZ equation in the one-component
+# problem, to solve this solute case.
+
+# To solve this case therefore we should allow for the introduction of
+# the product rho0 h00q, and change the OZ relation that the solver
+# uses.  This is what is implemented below.
 
 class SolutePicardHNC(PicardHNC):
     '''Specialisation for infinitely dilute solute inside solvent.'''
