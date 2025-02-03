@@ -284,8 +284,8 @@ The second off-diagonal OZ relation can be written as
 
 Since *e*<sub>01</sub> = *h*<sub>01</sub> − *c*<sub>01</sub>, it
 follows that the solute problem can be solved be re-purposing the
-exact same above algorithm, replacing the OZ equation step by the
-assignment,
+exact same algorithm as for the one-component system, replacing the OZ
+equation step by the assignment,
 
 * set *e*<sub>01</sub>(*q*) = ρ<sub>0</sub> 
 *h*<sub>00</sub>(*q*) *c*<sub>01</sub>(*q*) .
