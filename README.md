@@ -273,18 +273,23 @@ or
 ρ<sub>0</sub> *h*<sub>00</sub>(*q*) *c*<sub>01</sub>(*q*) .
 
 The equivalence between the two can be proven from the OZ relation for
-the solvent but in practice (below) it is the first of these that is
-used.  The OZ relation here should be supplemented by the HNC closure
-for the off-diagonal case
+the solvent.  These should be supplemented by the HNC closure for the
+off-diagonal case
 
 * *g*<sub>01</sub>(*r*) = exp[ − *v*<sub>01</sub>(*r*) +
 *h*<sub>01</sub>(*r*) − *c*<sub>01</sub>(*r*)] .
 
-This solute problem can be solved be re-purposing the exact same above
-algorithm, but with a revised version of the OZ equation step, namely
+The second version of the off-diagonal OZ relation can be written as 
 
-* solve the OZ equation for *e*<sub>01</sub>(*q*) = *c*<sub>01</sub>(*q*) 
-/ [1 − ρ<sub>0</sub> *c*<sub>00</sub>(*q*)] − *c*<sub>01</sub>(*q*) .
+* *h*<sub>01</sub>(*q*) = *c*<sub>01</sub>(*q*) 
+(1 + ρ<sub>0</sub> *h*<sub>00</sub>(*q*)) .
+
+Since *e*<sub>01</sub> = *h*<sub>01</sub> − *c*<sub>01</sub>, it
+follows that the solute problem can be solved be re-purposing the
+exact same above algorithm, replacing the OZ equation step by the
+simple assignment,
+
+* set *e*<sub>01</sub>(*q*) = ρ<sub>0</sub> *h*<sub>00</sub>(*q*) *c*<sub>01</sub>(*q*) .
 
 Applications of this infinitely-dilute solute limit are in the process
 of being investigated.

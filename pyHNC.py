@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This program is part of pyHNC, copyright (c) 2023 Patrick B Warren (STFC).
-# The implementation of the solute case is copyright (c) 2025 Joshua F Robinson (STFC).
+# The solute case implementation is copyright (c) 2025 Joshua F Robinson (STFC).
 # Email: patrick.warren{at}stfc.ac.uk.
 
 # This program is free software: you can redistribute it and/or modify
@@ -157,18 +157,16 @@ class PicardHNC:
 class SolutePicardHNC(PicardHNC):
     '''Specialisation for infinitely dilute solute inside solvent.'''
 
-    def __init__(self, rho0, c00, *args, **kwargs):
-        self.rho0 = rho0
-        self.c00r = c00
+    def __init__(self, rho0_h00q, *args, **kwargs):
+        self.rho0_h00q = rho0_h00q
         super().__init__(*args, **kwargs)
-        self.c00q = self.grid.fourier_bessel_forward(self.c00r)
 
-    def oz_solution(self, rho, cq):
+    def oz_solution(self, rho, cq): # rho is no longer used
         '''Solution to the modified OZ equation in reciprocal space.'''
-        return cq / (1 - rho*self.c00q) - cq
+        return self.rho0_h00q * cq
 
     def solve(self, vr, cr_init=None, monitor=False):
-        return super().solve(vr, self.rho0, cr_init, monitor)
+        return super().solve(vr, 0.0, cr_init, monitor) # rho = 0.0 is not needed
 
 # Extend the ArgumentParser class to be able to add boolean options, adapted from
 # https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
