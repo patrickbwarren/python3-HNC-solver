@@ -267,8 +267,6 @@ solved as already indicated.  The off-diagonal OZ relations become
 * *h*<sub>01</sub>(*q*) = *c*<sub>01</sub>(*q*) +
 ρ<sub>0</sub> *h*<sub>01</sub>(*q*) *c*<sub>00</sub>(*q*) ,
 
-or
-
 * *h*<sub>01</sub>(*q*) = *c*<sub>01</sub>(*q*) +
 ρ<sub>0</sub> *h*<sub>00</sub>(*q*) *c*<sub>01</sub>(*q*) .
 
@@ -279,7 +277,7 @@ off-diagonal case
 * *g*<sub>01</sub>(*r*) = exp[ − *v*<sub>01</sub>(*r*) +
 *h*<sub>01</sub>(*r*) − *c*<sub>01</sub>(*r*)] .
 
-The second version of the off-diagonal OZ relation can be written as 
+The second off-diagonal OZ relation can be written as 
 
 * *h*<sub>01</sub>(*q*) = *c*<sub>01</sub>(*q*) 
 (1 + ρ<sub>0</sub> *h*<sub>00</sub>(*q*)) .
@@ -287,9 +285,10 @@ The second version of the off-diagonal OZ relation can be written as
 Since *e*<sub>01</sub> = *h*<sub>01</sub> − *c*<sub>01</sub>, it
 follows that the solute problem can be solved be re-purposing the
 exact same above algorithm, replacing the OZ equation step by the
-simple assignment,
+assignment,
 
-* set *e*<sub>01</sub>(*q*) = ρ<sub>0</sub> *h*<sub>00</sub>(*q*) *c*<sub>01</sub>(*q*) .
+* set *e*<sub>01</sub>(*q*) = ρ<sub>0</sub> 
+*h*<sub>00</sub>(*q*) *c*<sub>01</sub>(*q*) .
 
 Applications of this infinitely-dilute solute limit are in the process
 of being investigated.
