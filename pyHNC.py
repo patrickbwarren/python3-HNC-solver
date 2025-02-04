@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This program is part of pyHNC, copyright (c) 2023 Patrick B Warren (STFC).
-# The solute case implementation is copyright (c) 2025 Joshua F Robinson (STFC).
+# Additional modifications copyright (c) 2025 Joshua F Robinson (STFC).  
 # Email: patrick.warren{at}stfc.ac.uk.
 
 # This program is free software: you can redistribute it and/or modify

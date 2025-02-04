@@ -69,6 +69,12 @@ The other codes are all experimental, and under development:
 * `mdpd_percus.py` : Percus-like DFT for MB DPD;
 * `timing.py` : for measuring performance of condor DAGMan jobs.
 
+Other files herein:
+
+* `solute_demo.ipynb` : jupyter notebook illustrating solute calculations;
+* `mu_dpd_hendrikse2025.csv` : solute excess chemical potential data digitised from Fig. 1 of
+[Hendrikse *et al.*, Phys. Chem. Chem. Phys. **27**, 1554-66 (2025)](https://doi.org/10.1039/D4CP03791J).
+
 ### What's being solved here?
 
 #### HNC closure of the OZ equation
@@ -446,7 +452,7 @@ along with this program.  If not, see
 ### Copyright
 
 This program is copyright &copy; 2023 Patrick B Warren (STFC).  
-The implementation of the solute case is copyright &copy; 2025 Joshua F Robinson (STFC).  
+Additional modifications copyright &copy; 2025 Joshua F Robinson (STFC).  
 
 ### Contact
 
