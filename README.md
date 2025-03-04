@@ -126,6 +126,8 @@ standard DPD for example convergence to an accuracy of
 8192 with a grid spacing Δ*r* = 0.02 is achieved with a few hundred
 iterations (a fraction of a second CPU time).
 
+### Structural properties
+
 Once converged, the pair correlation function and static structure
 factor can be found from:
 
