@@ -92,7 +92,7 @@ class PicardHNC:
         self.details = f'HNC: α = {self.alpha}, tol = {self.tol:0.1e}, npicard = {self.npicard}'
 
     def oz_solution(self, rho, cq):
-        '''Solution to the OZ equation in reciprocal space.'''
+        '''Solve the OZ equation for e = h - c, in reciprocal space.'''
         return cq / (1 - rho*cq) - cq
 
     def solve(self, vr, rho, cr_init=None, monitor=False):
@@ -150,26 +150,23 @@ class PicardHNC:
 #  h11q = c11q + rho0 c01q h01q.
 # The first of these is simply the one-component OZ relation for the solvent.
 # The second of these can be written as
-#  h01q = c01q (1 + rho0 h00q).
+#  h01q = c01q (1 + rho0 h00q) = c01q S00q.
 # This should be supplemented by the HNC closure in the off-diagonal
-# component.  In the form e01q = rho0 h00q c01q it can be used as a
-# drop-in replacement for the OZ equation in the one-component
-# problem, to solve this solute case.
-
-# To solve this case therefore we should allow for the introduction of
-# the product rho0 h00q, and change the OZ relation that the solver
-# uses.  This is what is implemented below.
+# component.  we have identified 1 + rho0 h00q = S00q as the structure
+# factor for the solvent.  To solve this case therefore we should ask
+# the user to provide the structure factor, and change the OZ relation
+# that the solver uses.  This is what is implemented below.
 
 class SolutePicardHNC(PicardHNC):
     '''Specialisation for infinitely dilute solute inside solvent.'''
 
-    def __init__(self, rho0_h00q, *args, **kwargs):
-        self.rho0_h00q = rho0_h00q
+    def __init__(self, S00q, *args, **kwargs):
+        self.S00q = S00q
         super().__init__(*args, **kwargs)
 
     def oz_solution(self, rho, cq): # rho is no longer used
-        '''Solution to the modified OZ equation in reciprocal space.'''
-        return self.rho0_h00q * cq
+        '''Solve the modified OZ equation for e = h - c, in reciprocal space.'''
+        return self.S00q * cq - cq
 
     def solve(self, vr, cr_init=None, monitor=False):
         return super().solve(vr, 0.0, cr_init, monitor) # rho = 0.0 is not needed
