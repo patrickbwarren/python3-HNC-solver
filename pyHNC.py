@@ -152,7 +152,7 @@ class PicardHNC:
 # The second of these can be written as
 #  h01q = c01q (1 + rho0 h00q) = c01q S00q.
 # This should be supplemented by the HNC closure in the off-diagonal
-# component.  we have identified 1 + rho0 h00q = S00q as the structure
+# component.  We have identified 1 + rho0 h00q = S00q as the structure
 # factor for the solvent.  To solve this case therefore we should ask
 # the user to provide the structure factor, and change the OZ relation
 # that the solver uses.  This is what is implemented below.
