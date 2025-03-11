@@ -136,37 +136,37 @@ class PicardHNC:
 # dilute solute inside the solvent.
 
 # The math here is as follows.  In a two-component system the OZ equations are
-#  h00q = c00q + rho0 c00q h00q + rho1 c01q h01q,
-#  h01q = c01q + rho0 c01q h00q + rho1 c11q h01q,
-#  h01q = c01q + rho0 c00q h01q + rho1 c01q h11q,
-#  h11q = c11q + rho0 c01q h01q + rho1 c11q h11q.
+#   h00q = c00q + rho0 c00q h00q + rho1 c01q h01q,
+#   h01q = c01q + rho0 c01q h00q + rho1 c11q h01q,
+#   h01q = c01q + rho0 c00q h01q + rho1 c01q h11q,
+#   h11q = c11q + rho0 c01q h01q + rho1 c11q h11q.
 # (the equivalence of the two off-diagonal expressions can be verified).
-# Now take the limit rho1 --> 0 so that the second component becomes
-# an infinitely dilute solute in the first component (solvent).
+# In the limit rho1 --> 0 the second component becomes an infinitely
+# dilute solute in the first component (solvent).
 # The OZ relations in this limit are
-#  h00q = c00q + rho0 c00q h00q,
-#  h01q = c01q + rho0 c01q h00q
-#  h01q = c01q + rho0 c00q h01q,
-#  h11q = c11q + rho0 c01q h01q.
+#   h00q = c00q + rho0 c00q h00q,
+#   h01q = c01q + rho0 c01q h00q
+#   h01q = c01q + rho0 c00q h01q,
+#   h11q = c11q + rho0 c01q h01q.
 # The first of these is simply the one-component OZ relation for the solvent.
 # The second of these can be written as
-#  h01q = c01q (1 + rho0 h00q) = c01q S00q.
+#   h01q = c01q (1 + rho0 h00q).
 # This should be supplemented by the HNC closure in the off-diagonal
-# component.  We have identified 1 + rho0 h00q = S00q as the structure
-# factor for the solvent.  To solve this case therefore we should ask
-# the user to provide the structure factor, and change the OZ relation
-# that the solver uses.  This is what is implemented below.
+# component.  The factor 1 + rho0 h00q can be identified as the
+# solvent structure factor S00q.  To solve this case therefore we ask
+# the user to provide the product rho0 h00q, and change the OZ
+# relation that the solver uses.  This is what is implemented below.
 
 class SolutePicardHNC(PicardHNC):
     '''Specialisation for infinitely dilute solute inside solvent.'''
 
-    def __init__(self, S00q, *args, **kwargs):
-        self.S00q = S00q
+    def __init__(self, rho0_h00q, *args, **kwargs):
+        self.rho0_h00q = rho0_h00q
         super().__init__(*args, **kwargs)
 
     def oz_solution(self, rho, cq): # rho is no longer used
         '''Solve the modified OZ equation for e = h - c, in reciprocal space.'''
-        return self.S00q * cq - cq
+        return self.rho0_h00q * cq
 
     def solve(self, vr, cr_init=None, monitor=False):
         return super().solve(vr, 0.0, cr_init, monitor) # rho = 0.0 is not needed
