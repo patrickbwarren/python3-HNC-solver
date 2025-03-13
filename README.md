@@ -310,7 +310,7 @@ pair
 *g*(**q**) = ∫ d<sup>3</sup>**r** 
 *e*<sup>−*i***q**∙**r**</sup> *f*(**r**) ,
 
-*f*(**r**) = ∫ d<sup>3</sup>**q** / (2π)<sup>3</sup> 
+*f*(**r**) = 1 / (2π)<sup>3</sup> ∫ d<sup>3</sup>**q** 
 *e*<sup>*i***q**∙**r**</sup> *g*(**q**) .
 
 If the functions have radial symmetry, these reduce to the forward and
