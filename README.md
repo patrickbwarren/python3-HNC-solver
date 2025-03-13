@@ -308,21 +308,16 @@ transforms using FFTW.  The starting points are the Fourier transform
 pair
 
 *g*(**q**) = ∫ d<sup>3</sup>**r** 
-*e*<sup>−*i***q**∙**r**</sup> *f*(**r**)
-
-and 
+*e*<sup>−*i***q**∙**r**</sup> *f*(**r**) ,
 
 *f*(**r**) = ∫ d<sup>3</sup>**q** / (2π)<sup>3</sup> 
 *e*<sup>*i***q**∙**r**</sup> *g*(**q**) .
 
 If the functions have radial symmetry, these reduce to the forward and
-backward Fourier-Bessel transforms, as
+backward Fourier-Bessel transforms
 
 *g*(*q*) = 4π / *q* ∫<sub>0</sub><sup>∞</sup> 
-d*r* *r* *f*(*r*) sin
-*qr*
-
-and
+d*r* *r* *f*(*r*) sin *qr* ,
 
 *f*(*r*) = 1 / (2π<sup>2</sup>*r*) ∫<sub>0</sub><sup>∞</sup> 
 d*q* *q* *g*(*q*) sin *qr* .
