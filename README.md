@@ -304,7 +304,7 @@ of being investigated.
 ### FFTW and Fourier-Bessel transforms
 
 The code illustrates how to implement three-dimensional Fourier
-transforms using FFTW.  The starting points are the Fourier transform
+transforms using FFTW.  The starting point is the Fourier transform
 pair
 
 *g*(**q**) = ∫ d<sup>3</sup>**r** 
