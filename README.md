@@ -303,14 +303,29 @@ of being investigated.
 
 ### FFTW and Fourier-Bessel transforms
 
-The code illustrates how to implement three-dimensional Fourier-Bessel
-transforms using FFTW.  The Fourier-Bessel forward transform of a
-function *f*(*r*) in three dimensions is (see
-[SunlightHNC](https://github.com/patrickbwarren/SunlightHNC)
-documentation):
+The code illustrates how to implement three-dimensional Fourier
+transforms using FFTW.  The starting points are the Fourier transform
+pair
 
-*g*(*q*) = 4π / *q* ∫<sub>0</sub><sup>∞</sup> d*r* *r* *f*(*r*) sin
-*qr* .
+*g*(**q**) = ∫ d<sup>3</sup>**r** 
+*e*<sup>−*i***q**∙**r**</sup> *f*(**r**)
+
+and 
+
+*f*(**r**) = ∫ d<sup>3</sup>**q** / (2π)<sup>3</sup> 
+*e*<sup>*i***q**∙**r**</sup> *g*(**q**) .
+
+If the functions have radial symmetry, these reduce to the forward and
+backward Fourier-Bessel transforms, as
+
+*g*(*q*) = 4π / *q* ∫<sub>0</sub><sup>∞</sup> 
+d*r* *r* *f*(*r*) sin
+*qr*
+
+and
+
+*f*(*r*) = 1 / (2π<sup>2</sup>*r*) ∫<sub>0</sub><sup>∞</sup> 
+d*q* *q* *g*(*q*) sin *qr* .
 
 From the [FFTW
 documentation](https://www.fftw.org/fftw3_doc/1d-Real_002dodd-DFTs-_0028DSTs_0029.html),
@@ -330,7 +345,7 @@ that
 *Y*<sub>*k*</sub> = 2 ∑<sub>*j*=0</sub><sup>*n*−1</sup>
 *X*<sub>*j*</sub> sin *q*<sub>*k*</sub>*r*<sub>*j*</sub> .
 
-For the desired integral we can then write
+For the desired Fourier-Bessel forward transform  we can then write
 
 *g*(*q*<sub>*k*</sub>) = 2 π Δ*r* / *q*<sub>*k*</sub> × 2
 ∑<sub>*j*=0</sub><sup>*n*−1</sup> *r*<sub>*j*</sub>
@@ -339,12 +354,7 @@ For the desired integral we can then write
 with the factor after the multiplication sign being calculated by
 `RODFT00`.
 
-The Fourier-Bessel back transform,
-
-*f*(*r*) = 1 / (2π<sup>2</sup>*r*) ∫<sub>0</sub><sup>∞</sup> d*q* *q*
-*g*(*q*) sin *qr* ,
-
-is handled similarly.
+The Fourier-Bessel back transform is handled similarly.
 
 #### On FFTW efficiency
 
