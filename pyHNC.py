@@ -157,6 +157,15 @@ class PicardHNC:
 # the user to provide the product rho0 h00q, and change the OZ
 # relation that the solver uses.  This is what is implemented below.
 
+class TestParticleRPA(PicardHNC):
+    def oz_solution(self, rho, cq):
+        '''Solution to the OZ equation in reciprocal space.'''
+        return cq / (1 + rho*self.vq) - cq # force RPA closure in reciprocal term
+
+    def solve(self, vr, *args, **kwargs):
+        self.vq = self.grid.fourier_bessel_forward(vr) # forward transform v(r) to v(q)
+        return super().solve(vr, *args, **kwargs)
+
 class SolutePicardHNC(PicardHNC):
     '''Specialisation for infinitely dilute solute inside solvent.'''
 
@@ -170,6 +179,17 @@ class SolutePicardHNC(PicardHNC):
 
     def solve(self, vr, cr_init=None, monitor=False):
         return super().solve(vr, 0.0, cr_init, monitor) # rho = 0.0 is not needed
+
+
+class SoluteTestParticleRPA(SolutePicardHNC):
+    def oz_solution(self, rho, cq):
+        '''Solution to the OZ equation in reciprocal space.'''
+        return -self.rho0_h00q * self.vq01 # RPA closure
+
+    def solve(self, vr01, *args, **kwargs):
+        self.vq01 = self.grid.fourier_bessel_forward(vr01) # forward transform v(r) to v(q)
+        return super().solve(vr01, *args, **kwargs)
+
 
 # Extend the ArgumentParser class to be able to add boolean options, adapted from
 # https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
