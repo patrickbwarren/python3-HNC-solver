@@ -157,46 +157,68 @@ class PicardHNC:
 # the user to provide the product rho0 h00q, and change the OZ
 # relation that the solver uses.  This is what is implemented below.
 
+# This solver class can also be repurposed to solve the mean-field DFT
+# problem in Archer and Evans, J. Chem. Phys. 118(21), 9726-46 (2003).
+
+# The governing equation corresponds to eq (15) in the above paper and
+# describes the density of solvent particles around a test solute
+# particle.  This density can be written as rho0 g01 and eq (15) can
+# be cast into the form ln g01 = - v01 - rho0 h01 * v00 where '*'
+# denotes a convolution and h01 = g01 - 1.  Given a solution to this,
+# the solvent-mediated potential between the test particle and a
+# second particle is given by eq (10) in the above paper which can be
+# written W12 = rho0 h01 * v02.  Given the privileged role of the test
+# particle it is apparent that this approach doesn't necessarily
+# satisfy reciprocity W12 = W21 (discussed in Archer + Evans), but one
+# might hope the deviations are small.
+
+# If we define e01 = - rho0 h01 * v00 and c01 = h01 - e01, the
+# governing equation can be written as the pair
+#  h01q = c01q / (1 + rho0 v00q),
+#  ln g01 = - v01 + e01.
+# In this form they strongly resemble the problem of the infinitely
+# dilute solute in HNC solved above, with the only change is to the
+# first equation which replaces the OZ relation.  Note that c01 and
+# e01 as defined are NOT the direct and indirect correlation functions
+# since this mean-field DFT approach is an RPA-HNC hybrid in some sense.
+
+# To utilise the code we can instantiate SolutePicardHNC as usual and
+# then redefine self.rhoq_h00q to be - rho0 v00q / (1 + rho0 v00q).
+
+# Finally the solver class can also be repurposed to solve the vanilla
+# RISM equations for homodimers.  The RISM eqs H = Ω.C.Ω + Ω.C.R.H
+# closed by HNC in the case of infinitely dilute heterodimers reduce
+# to the standard HNC problem for the solvent, plus the following eq
+# for the site-solvent functions
+#  h01q = (c01q + omega12q c02q) (1 + rho0 h00q),
+#  h02q = (c02q + omega12q c01q) (1 + rho0 h00q),
+# from which it is clear the homodimer case,
+#  h01q = h02q = c01q (1 + omega12q) (1 + rho0 h00q).
+# Here omega12q = sin(ql) / (ql) for a rigid bond.  This is again
+# exactly of the form required to repurpose the solute OZ relation.
+
+# To utilise the code for this problem instantiate SolutePicardHNC as
+# before and redefine self.rho0_h00q as rho0 h00q + omega12q (1 + rho0 h00q).
+
 class SolutePicardHNC(PicardHNC):
-    '''Specialisation for infinitely dilute solute inside solvent.'''
+    '''Subclass for infinitely dilute solute inside solvent.'''
 
     def __init__(self, rho0_h00q, *args, **kwargs):
         self.rho0_h00q = rho0_h00q
         super().__init__(*args, **kwargs)
 
-    def oz_solution(self, rho, cq): # rho is no longer used
+    def oz_solution(self, rho, cq): # rho is not used here
         '''Solve the modified OZ equation for e = h - c, in reciprocal space.'''
         return self.rho0_h00q * cq
 
     def solve(self, vr, cr_init=None, monitor=False):
         return super().solve(vr, 0.0, cr_init, monitor) # rho = 0.0 is not needed
 
-# Here the main solver class is sub-classed in a different way to
-# solve the mean-field DFT problem in Archer and Evans,
-# J. Chem. Phys. 118(21), 9726-46 (2003).
-
-# The governing equation corresponds to eq (15) in the above paper and
-# describes the density of solvent particles around a test solute
-# particle.  This density can be written as rho0 g01 and eq (15) can
-# be cast into the form ln g01 = - v01 - rho0 h01 * v00 where '*'
-# denotes a convolution and h01 = g01 - 1.  Given a solution g01 to
-# this, the solvent-mediated potential between this test particle and
-# a second particle is given by eq (10) in the above paper and can be
-# written W12 = rho0 h01 * v02.  It's apparent that this approach
-# doesn't necessarily satisfy reciprocity W12 = W21 (discussed in
-# Archer + Evans), but one might hope that deviations to be small.
-
-# If we define e01 = - rho0 h01 * v00 and c01 = h01 - e01, the
-# governing equation can be written as the pair
-#  h01q = c01 / (1 + rho0 v00q),
-#  ln g01 = - v01 + e01.
-# In this form they strongly resemble the problem of the infinitely
-# dilute solute in HNC solved in the main code above: the only change
-# is to the first equation which replaces the OZ relation.
-
-# Given a solution we find the PMF from W12q = rho0 h01q v02q.
+# Below, cases added by Josh
 
 class TestParticleRPA(PicardHNC):
+    '''Subclass for mean-field DFT approach.'''
+    
     def oz_solution(self, rho, cq):
         '''Solution to the OZ equation in reciprocal space.'''
         return cq / (1 + rho*self.vq) - cq # force RPA closure in reciprocal term
@@ -205,9 +227,8 @@ class TestParticleRPA(PicardHNC):
         self.vq = self.grid.fourier_bessel_forward(vr) # forward transform v(r) to v(q)
         return super().solve(vr, *args, **kwargs)
 
-# A further sub-class solves the RPA [to be defined].
-    
 class SoluteTestParticleRPA(SolutePicardHNC):
+    
     def oz_solution(self, rho, cq):
         '''Solution to the OZ equation in reciprocal space.'''
         return -self.rho0_h00q * self.vq01 # RPA closure
