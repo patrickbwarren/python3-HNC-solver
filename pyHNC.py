@@ -157,15 +157,6 @@ class PicardHNC:
 # the user to provide the product rho0 h00q, and change the OZ
 # relation that the solver uses.  This is what is implemented below.
 
-class TestParticleRPA(PicardHNC):
-    def oz_solution(self, rho, cq):
-        '''Solution to the OZ equation in reciprocal space.'''
-        return cq / (1 + rho*self.vq) - cq # force RPA closure in reciprocal term
-
-    def solve(self, vr, *args, **kwargs):
-        self.vq = self.grid.fourier_bessel_forward(vr) # forward transform v(r) to v(q)
-        return super().solve(vr, *args, **kwargs)
-
 class SolutePicardHNC(PicardHNC):
     '''Specialisation for infinitely dilute solute inside solvent.'''
 
@@ -180,7 +171,42 @@ class SolutePicardHNC(PicardHNC):
     def solve(self, vr, cr_init=None, monitor=False):
         return super().solve(vr, 0.0, cr_init, monitor) # rho = 0.0 is not needed
 
+# Here the main solver class is sub-classed in a different way to
+# solve the mean-field DFT problem in Archer and Evans,
+# J. Chem. Phys. 118(21), 9726-46 (2003).
 
+# The governing equation corresponds to eq (15) in the above paper and
+# describes the density of solvent particles around a test solute
+# particle.  This density can be written as rho0 g01 and eq (15) can
+# be cast into the form ln g01 = - v01 - rho0 h01 * v00 where '*'
+# denotes a convolution and h01 = g01 - 1.  Given a solution g01 to
+# this, the solvent-mediated potential between this test particle and
+# a second particle is given by eq (10) in the above paper and can be
+# written W12 = rho0 h01 * v02.  It's apparent that this approach
+# doesn't necessarily satisfy reciprocity W12 = W21 (discussed in
+# Archer + Evans), but one might hope that deviations to be small.
+
+# If we define e01 = - rho0 h01 * v00 and c01 = h01 - e01, the
+# governing equation can be written as the pair
+#  h01q = c01 / (1 + rho0 v00q),
+#  ln g01 = - v01 + e01.
+# In this form they strongly resemble the problem of the infinitely
+# dilute solute in HNC solved in the main code above: the only change
+# is to the first equation which replaces the OZ relation.
+
+# Given a solution we find the PMF from W12q = rho0 h01q v02q.
+
+class TestParticleRPA(PicardHNC):
+    def oz_solution(self, rho, cq):
+        '''Solution to the OZ equation in reciprocal space.'''
+        return cq / (1 + rho*self.vq) - cq # force RPA closure in reciprocal term
+
+    def solve(self, vr, *args, **kwargs):
+        self.vq = self.grid.fourier_bessel_forward(vr) # forward transform v(r) to v(q)
+        return super().solve(vr, *args, **kwargs)
+
+# A further sub-class solves the RPA [to be defined].
+    
 class SoluteTestParticleRPA(SolutePicardHNC):
     def oz_solution(self, rho, cq):
         '''Solution to the OZ equation in reciprocal space.'''
