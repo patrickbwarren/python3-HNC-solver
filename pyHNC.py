@@ -177,28 +177,29 @@ class PicardHNC:
 #  h01q = c01q / (1 + rho0 v00q),
 #  ln g01 = - v01 + e01.
 # In this form they strongly resemble the problem of the infinitely
-# dilute solute in HNC solved above, with the only change is to the
-# first equation which replaces the OZ relation.  Note that c01 and
-# e01 as defined are NOT the direct and indirect correlation functions
-# since this mean-field DFT approach is an RPA-HNC hybrid in some sense.
+# dilute solute in HNC solved above, with the only change being to the
+# replace the OZ relation.  Note that c01 and e01 as defined are NOT
+# the direct and indirect correlation functions since this mean-field
+# DFT approach is an RPA-HNC hybrid in some sense.
 
-# To utilise the code we can instantiate SolutePicardHNC as usual and
-# then redefine self.rhoq_h00q to be - rho0 v00q / (1 + rho0 v00q).
+# To utilise the code we can instantiate SolutePicardHNC using the
+# quantity -rho0 v00q / (1 + rho0 v00q) instead of rho0 h00q.
 
 # Finally the solver class can also be repurposed to solve the vanilla
 # RISM equations for homodimers.  The RISM eqs H = Ω.C.Ω + Ω.C.R.H
 # closed by HNC in the case of infinitely dilute heterodimers reduce
-# to the standard HNC problem for the solvent, plus the following eq
-# for the site-solvent functions
+# to the standard HNC problem for the solvent, plus the following for
+# the site-solvent functions
 #  h01q = (c01q + omega12q c02q) (1 + rho0 h00q),
 #  h02q = (c02q + omega12q c01q) (1 + rho0 h00q),
-# from which it is clear the homodimer case,
+# where omega12q = sin(ql) / (ql) for a rigid bond.  From these it is
+# clear that in the homodimer case,
 #  h01q = h02q = c01q (1 + omega12q) (1 + rho0 h00q).
-# Here omega12q = sin(ql) / (ql) for a rigid bond.  This is again
-# exactly of the form required to repurpose the solute OZ relation.
+# This is of the form required to repurpose the solute OZ relation.
 
-# To utilise the code for this problem instantiate SolutePicardHNC as
-# before and redefine self.rho0_h00q as rho0 h00q + omega12q (1 + rho0 h00q).
+# To utilise the code for this problem instantiate SolutePicardHNC
+# using the quantity rho0 h00q + omega12q (1 + rho0 h00q) instead of
+# the product rho0 h00q.
 
 class SolutePicardHNC(PicardHNC):
     '''Subclass for infinitely dilute solute inside solvent.'''
