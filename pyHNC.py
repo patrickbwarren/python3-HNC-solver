@@ -48,11 +48,13 @@ class Grid:
         self.q = self.deltaq * np.arange(1, self.ng) # ditto
         self.fftwx = pyfftw.empty_aligned(self.ng-1)
         self.fftwy = pyfftw.empty_aligned(self.ng-1)
-        self.fftw = pyfftw.FFTW(self.fftwx, self.fftwy, direction='FFTW_RODFT00',
+        self.fftw = pyfftw.FFTW(self.fftwx, self.fftwy,
+                                direction='FFTW_RODFT00',
                                 flags=('FFTW_ESTIMATE',))
-        r = round(np.log2(ng)) # the exponent if ng = 2^r
-        self.details = f'Grid: ng = {self.ng} = 2^{r}, Δr = {self.deltar}, ' \
-            f'Δq = {self.deltaq:0.3g}, |FFTW arrays| = {self.ng-1}'
+        self.parstrings = [f'ng = {self.ng} = 2^{round(np.log2(ng))}',
+                           f'Δr = {self.deltar}', f'Δq = {self.deltaq:0.3g}',
+                           f'|FFTW arrays| = {self.ng-1}']
+        self.details = 'Grid: ' + ', '.join(self.parstrings)
 
     # These functions assume the FFTW has been initialised as above, the
     # arrays r and q exist, as do the parameters Δr and Δq.
@@ -89,7 +91,9 @@ class PicardHNC:
         self.nmonitor = nmonitor
         self.converged = False
         self.warmed_up = False
-        self.details = f'PicardHNC: α = {self.alpha}, tol = {self.tol:0.1e}, npicard = {self.npicard}'
+        self.parstrings = [f'α = {self.alpha}', f'tol = {self.tol:0.1e}',
+                           f'npicard = {self.npicard}']
+        self.details = 'PicardHNC: ' + ', '.join(self.parstrings)
 
     def oz_solution(self, rho, cq):
         '''Solve the OZ equation for h in terms of c, in reciprocal space.'''
@@ -205,9 +209,9 @@ class SolutePicardHNC(PicardHNC):
     '''Subclass for infinitely dilute solute inside solvent.'''
 
     def __init__(self, S00q, *args, **kwargs):
-        self.S00q = S00q
         super().__init__(*args, **kwargs)
-        self.details = f'SolutePicardHNC: α = {self.alpha}, tol = {self.tol:0.1e}, npicard = {self.npicard}'
+        self.S00q = S00q
+        self.details = 'SolutePicardHNC: ' + ', '.join(self.parstrings)
 
     def oz_solution(self, rho, cq): # rho is not used here
         '''Solve the modified OZ equation for h, in reciprocal space.'''
