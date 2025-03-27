@@ -92,15 +92,15 @@ class PicardHNC:
         self.details = f'HNC: α = {self.alpha}, tol = {self.tol:0.1e}, npicard = {self.npicard}'
 
     def oz_solution(self, rho, cq):
-        '''Solve the OZ equation for e = h - c, in reciprocal space.'''
-        return cq / (1 - rho*cq) - cq
+        '''Solve the OZ equation for h in terms of c, in reciprocal space.'''
+        return cq / (1 - rho*cq)
 
     def solve(self, vr, rho, cr_init=None, monitor=False):
         '''Solve HNC for a given potential, with an optional initial guess at cr'''
         cr = np.copy(cr_init) if cr_init is not None else np.copy(self.cr) if self.warmed_up else -np.copy(vr)
         for i in range(self.npicard):
             cq = self.grid.fourier_bessel_forward(cr) # forward transform c(r) to c(q)
-            eq = self.oz_solution(rho, cq) # solve the OZ equation for e(q)
+            eq = self.oz_solution(rho, cq) - cq # solve the OZ equation for e(q) = h(q) - c(q)
             er = self.grid.fourier_bessel_backward(eq) # back transform e(q) to e(r)
             cr_new = np.exp(-vr+er) - er - 1 # iterate with the HNC closure
             cr = self.alpha * cr_new + (1-self.alpha) * cr # apply a Picard mixing rule
@@ -130,10 +130,9 @@ class PicardHNC:
         return self # the user can name this 'soln' or something
 
 # Below, the above is sub-classed to redefine the OZ equation in terms
-# of the product of the solvent density rho00 and total correlation
-# function h00q (in reciprocal space).  This enables the above
-# machinery to be re-used for solving the problem of an infinitely
-# dilute solute inside the solvent.
+# of the product of the solvent structure factor S(q).  This enables
+# the above machinery to be re-used for solving the problem of an
+# infinitely dilute solute inside the solvent.
 
 # The math here is as follows.  In a two-component system the OZ equations are
 #   h00q = c00q + rho0 c00q h00q + rho1 c01q h01q,
@@ -150,12 +149,12 @@ class PicardHNC:
 #   h11q = c11q + rho0 c01q h01q.
 # The first of these is simply the one-component OZ relation for the solvent.
 # The second of these can be written as
-#   h01q = c01q (1 + rho0 h00q).
-# This should be supplemented by the HNC closure in the off-diagonal
-# component.  The factor 1 + rho0 h00q can be identified as the
-# solvent structure factor S00q.  To solve this case therefore we ask
-# the user to provide the product rho0 h00q, and change the OZ
-# relation that the solver uses.  This is what is implemented below.
+#   h01q = c01q S00q
+# where S00q = 1 + rho0 h00q is the solvent structure factor This
+# should be supplemented by the HNC closure in the off-diagonal
+# component.  To solve this case therefore we ask the user to provide
+# S00q, and change the OZ relation that the solver uses.  This is what
+# is implemented below.
 
 # This solver class can also be repurposed to solve the mean-field DFT
 # problem in Archer and Evans, J. Chem. Phys. 118(21), 9726-46 (2003).
@@ -166,9 +165,9 @@ class PicardHNC:
 # be cast into the form ln g01 = - v01 - rho0 h01 * v00 where '*'
 # denotes a convolution and h01 = g01 - 1.  Given a solution to this,
 # the solvent-mediated potential between the test particle and a
-# second particle is given by eq (10) in the above paper which can be
-# written W12 = rho0 h01 * v02.  Given the privileged role of the test
-# particle it is apparent that this approach doesn't necessarily
+# second particle is expressed in eq (10) in the above paper which can
+# be written W12 = rho0 h01 * v02.  Given the privileged role of the
+# test particle it is apparent that this approach doesn't necessarily
 # satisfy reciprocity W12 = W21 (discussed in Archer + Evans), but one
 # might hope the deviations are small.
 
@@ -183,7 +182,8 @@ class PicardHNC:
 # DFT approach is an RPA-HNC hybrid in some sense.
 
 # To utilise the code for this problem instantiate SolutePicardHNC
-# using -rho0 v00q / (1 + rho0 v00q) instead of rho0 h00q.
+# using 1 / (1 + rho0 v00q) instead of S00q, or replace this in an
+# existing instantiation.
 
 # Finally the solver class can also be repurposed to solve the vanilla
 # RISM equations for homodimers.  The RISM eqs H = Ω.C.Ω + Ω.C.R.H
@@ -193,24 +193,24 @@ class PicardHNC:
 #  h01q = (c01q + omega12q c02q) (1 + rho0 h00q),
 #  h02q = (c02q + omega12q c01q) (1 + rho0 h00q),
 # where omega12q = sin(ql) / (ql) for a rigid bond.  From these it is
-# clear that in the homodimer case,
-#  h01q = h02q = c01q (1 + omega12q) (1 + rho0 h00q).
-# This is of the form required to repurpose the solute OZ relation.
+# clear that in the homodimer case, utilising S00q = 1 + rho0 h00q,
+#  h01q = h02q = c01q S00q (1 + omega12q).
+# This is in the form required to repurpose the solute OZ relation.
 
 # To utilise the code for this problem instantiate SolutePicardHNC
-# using rho0 h00q + omega12q S00q instead of rho0 h00q (having set
-# S00q = 1 + rho0 h00q).
+# using S00q (1 + omega12q) instead of S00q, or replace this in an
+# existing instantiation.
 
 class SolutePicardHNC(PicardHNC):
     '''Subclass for infinitely dilute solute inside solvent.'''
 
-    def __init__(self, rho0_h00q, *args, **kwargs):
-        self.rho0_h00q = rho0_h00q
+    def __init__(self, S00q, *args, **kwargs):
+        self.S00q = S00q
         super().__init__(*args, **kwargs)
 
     def oz_solution(self, rho, cq): # rho is not used here
-        '''Solve the modified OZ equation for e = h - c, in reciprocal space.'''
-        return self.rho0_h00q * cq
+        '''Solve the modified OZ equation for h, in reciprocal space.'''
+        return self.S00q * cq
 
     def solve(self, vr, cr_init=None, monitor=False):
         return super().solve(vr, 0.0, cr_init, monitor) # rho = 0.0 is not needed
@@ -222,7 +222,7 @@ class TestParticleRPA(PicardHNC):
     
     def oz_solution(self, rho, cq):
         '''Solution to the OZ equation in reciprocal space.'''
-        return cq / (1 + rho*self.vq) - cq # force RPA closure in reciprocal term
+        return cq / (1 + rho*self.vq) # force RPA closure in reciprocal term
 
     def solve(self, vr, *args, **kwargs):
         self.vq = self.grid.fourier_bessel_forward(vr) # forward transform v(r) to v(q)
@@ -232,12 +232,11 @@ class SoluteTestParticleRPA(SolutePicardHNC):
     
     def oz_solution(self, rho, cq):
         '''Solution to the OZ equation in reciprocal space.'''
-        return -self.rho0_h00q * self.vq01 # RPA closure
+        return cq - self.rho0_h00q * self.vq01 # RPA closure
 
     def solve(self, vr01, *args, **kwargs):
         self.vq01 = self.grid.fourier_bessel_forward(vr01) # forward transform v(r) to v(q)
         return super().solve(vr01, *args, **kwargs)
-
 
 # Extend the ArgumentParser class to be able to add boolean options, adapted from
 # https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
