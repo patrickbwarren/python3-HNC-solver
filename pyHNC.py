@@ -89,7 +89,7 @@ class PicardHNC:
         self.nmonitor = nmonitor
         self.converged = False
         self.warmed_up = False
-        self.details = f'HNC: α = {self.alpha}, tol = {self.tol:0.1e}, npicard = {self.npicard}'
+        self.details = f'PicardHNC: α = {self.alpha}, tol = {self.tol:0.1e}, npicard = {self.npicard}'
 
     def oz_solution(self, rho, cq):
         '''Solve the OZ equation for h in terms of c, in reciprocal space.'''
@@ -207,6 +207,7 @@ class SolutePicardHNC(PicardHNC):
     def __init__(self, S00q, *args, **kwargs):
         self.S00q = S00q
         super().__init__(*args, **kwargs)
+        self.details = f'SolutePicardHNC: α = {self.alpha}, tol = {self.tol:0.1e}, npicard = {self.npicard}'
 
     def oz_solution(self, rho, cq): # rho is not used here
         '''Solve the modified OZ equation for h, in reciprocal space.'''
