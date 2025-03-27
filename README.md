@@ -288,15 +288,15 @@ off-diagonal case
 The second off-diagonal OZ relation can be written as 
 
 * *h*<sub>01</sub>(*q*) = *c*<sub>01</sub>(*q*) 
-(1 + ρ<sub>0</sub> *h*<sub>00</sub>(*q*)) .
+(1 + ρ<sub>0</sub> *h*<sub>00</sub>(*q*))  = *c*<sub>01</sub>(*q*) *S*<sub>00</sub>(*q*)
 
-Since *e*<sub>01</sub> = *h*<sub>01</sub> − *c*<sub>01</sub>, it
+where *S*<sub>00</sub>(*q*) is the solvent structure factor.  It
 follows that the solute problem can be solved be re-purposing the
 exact same algorithm as for the one-component system, replacing the OZ
 equation step by the assignment,
 
-* set *e*<sub>01</sub>(*q*) = ρ<sub>0</sub> 
-*h*<sub>00</sub>(*q*) *c*<sub>01</sub>(*q*) .
+* set *e*<sub>01</sub>(*q*) = *S*<sub>00</sub>(*q*) *c*<sub>01</sub>(*q*)
+− *c*<sub>01</sub>(*q*) .
 
 Applications of this infinitely-dilute solute limit are in the process
 of being investigated.
