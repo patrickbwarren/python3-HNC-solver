@@ -288,7 +288,8 @@ off-diagonal case
 The second off-diagonal OZ relation can be written as 
 
 * *h*<sub>01</sub>(*q*) = *c*<sub>01</sub>(*q*) 
-(1 + ρ<sub>0</sub> *h*<sub>00</sub>(*q*))  = *c*<sub>01</sub>(*q*) *S*<sub>00</sub>(*q*)
+(1 + ρ<sub>0</sub> *h*<sub>00</sub>(*q*)) 
+= *S*<sub>00</sub>(*q*) *c*<sub>01</sub>(*q*) ,
 
 where *S*<sub>00</sub>(*q*) is the solvent structure factor.  It
 follows that the solute problem can be solved be re-purposing the
