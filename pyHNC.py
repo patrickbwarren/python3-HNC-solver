@@ -237,7 +237,7 @@ class SoluteTestParticleRPA(SolutePicardHNC):
     
     def oz_solution(self, rho, cq):
         '''Solution to the OZ equation in reciprocal space.'''
-        return cq - self.rho0_h00q * self.vq01 # RPA closure
+        return cq - (self.S00q - 1) * self.vq01 # RPA closure
 
     def solve(self, vr01, *args, **kwargs):
         self.vq01 = self.grid.fourier_bessel_forward(vr01) # forward transform v(r) to v(q)
