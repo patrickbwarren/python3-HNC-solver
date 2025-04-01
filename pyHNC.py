@@ -93,7 +93,8 @@ class PicardHNC:
         self.warmed_up = False
         self.parstrings = [f'α = {self.alpha}', f'tol = {self.tol:0.1e}',
                            f'npicard = {self.npicard}']
-        self.details = 'PicardHNC: ' + ', '.join(self.parstrings)
+        self.name = 'PicardHNC'
+        self.details = f'{self.name}: ' + ', '.join(self.parstrings)
 
     def oz_solution(self, rho, cq):
         '''Solve the OZ equation for h in terms of c, in reciprocal space.'''
@@ -101,6 +102,7 @@ class PicardHNC:
 
     def solve(self, vr, rho, cr_init=None, monitor=False):
         '''Solve HNC for a given potential, with an optional initial guess at cr'''
+        self_name = self.name + '.solve' # used in reporting below
         cr = np.copy(cr_init) if cr_init is not None else np.copy(self.cr) if self.warmed_up else -np.copy(vr)
         for i in range(self.npicard):
             cq = self.grid.fourier_bessel_forward(cr) # forward transform c(r) to c(q)
@@ -113,7 +115,7 @@ class PicardHNC:
             self.error = np.sqrt(np.trapz((cr_new - cr)**2, dx=self.grid.deltar)) # convergence test
             self.converged = self.error < self.tol
             if monitor and (i % self.nmonitor == 0 or self.converged):
-                iter_s = f'pyHNC.solve: Picard iteration %{len(str(self.npicard))}d,' % i
+                iter_s = f'{self_name}: Picard iteration %{len(str(self.npicard))}d,' % i
                 print(f'{iter_s} error = {self.error:0.3e}')
             if self.converged:
                 break
@@ -127,10 +129,10 @@ class PicardHNC:
             pass
         if monitor:
             if self.converged:
-                print('pyHNC.solve: Picard converged')
+                print(f'{self_name}: Picard converged')
             else:
-                print(f'pyHNC.solve: Picard iteration {i:3d}, error = {self.error:0.3e}')
-                print('pyHNC.solve: Picard failed to converge')
+                print(f'{self_name}: Picard iteration {i:3d}, error = {self.error:0.3e}')
+                print(f'{self_name}: Picard failed to converge')
         return self # the user can name this 'soln' or something
 
 # Below, the above is sub-classed to redefine the OZ equation in terms
@@ -211,7 +213,8 @@ class SolutePicardHNC(PicardHNC):
     def __init__(self, S00q, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.S00q = S00q
-        self.details = 'SolutePicardHNC: ' + ', '.join(self.parstrings)
+        self.name = 'SolutePicardHNC'
+        self.details = f'{self.name}: ' + ', '.join(self.parstrings)
 
     def oz_solution(self, rho, cq): # rho is not used here
         '''Solve the modified OZ equation for h, in reciprocal space.'''
