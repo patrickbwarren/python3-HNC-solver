@@ -104,11 +104,12 @@ class PicardHNC:
         '''Solve HNC for a given potential, with an optional initial guess at cr'''
         self_name = self.name + '.solve' # used in reporting below
         cr = np.copy(cr_init) if cr_init is not None else np.copy(self.cr) if self.warmed_up else -np.copy(vr)
+        expnegvr = np.exp(-vr) # for convenience, also works with np.inf
         for i in range(self.npicard):
             cq = self.grid.fourier_bessel_forward(cr) # forward transform c(r) to c(q)
             eq = self.oz_solution(rho, cq) - cq # solve the OZ equation for e(q) = h(q) - c(q)
             er = self.grid.fourier_bessel_backward(eq) # back transform e(q) to e(r)
-            cr_new = np.exp(-vr+er) - er - 1 # iterate with the HNC closure
+            cr_new = expnegvr*np.exp(er) - er - 1 # iterate with the HNC closure
             cr = self.alpha * cr_new + (1-self.alpha) * cr # apply a Picard mixing rule
             if any(np.isnan(cr)): # break early if something blows up
                 break
