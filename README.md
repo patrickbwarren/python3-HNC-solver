@@ -39,9 +39,8 @@ edition](https://www.sciencedirect.com/book/9780123870322/theory-of-simple-liqui
 
 Simplifications compared to the (faster)
 [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC) include
-the fact that hard cores are not implemented, only a single component
-is assumed, and simple Picard iteration is used rather than the Ng
-accelerator.  The present code is also implemented entirely in python,
+the fact that hard cores are not implemented and only a single component
+is assumed.  The present code is also implemented entirely in python,
 rather than
 [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC) which is
 mostly implemented in FORTRAN 90.
@@ -89,7 +88,7 @@ as
 
 * *g*(*r*) = exp[ − *v*(*r*) + *h*(*r*) − *c*(*r*)] ,
 
-using Picard iteration.
+using a quasi-Newton method.
 
 Here ρ is the number density, *v*(*r*) is the potential in units of
 *k*<sub>B</sub>*T*, *g*(*r*) is the pair correlation function,
@@ -116,7 +115,10 @@ scheme (*cf*
 * Fourier-Bessel back transform *e*(*q*) → *e*(*r*) ;
 * implement the HNC closure as *c*'(*r*) = exp[ − *v*(*r*) + *e*(*r*)]
   − *e*(*r*) − 1 ;
-* replace *c*(*r*) by α *c*'(*r*) + (1−α) *c*(*r*) (Picard mixing step);
+* for the first few iterations *c*(*r*) by α *c*'(*r*) + (1−α) *c*(*r*)
+(Picard mixing step) ;
+* in subsequent iterations, line search along a direction suggested by
+the quasi-Newton algorithm ;
 * check for convergence by comparing *c*(*r*) and *c*'(*r*) ;
 * if not converged, repeat.
 

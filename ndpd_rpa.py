@@ -28,7 +28,7 @@ import argparse
 import numpy as np
 from numpy import exp, log
 from numpy import pi as π
-from pyHNC import Grid, PicardHNC, truncate_to_zero, ExtendedArgumentParser
+from pyHNC import Grid, Solver, truncate_to_zero, ExtendedArgumentParser
 
 parser = ExtendedArgumentParser(description='nDPD RPA and EXP calculator')
 pyHNC.add_grid_args(parser)

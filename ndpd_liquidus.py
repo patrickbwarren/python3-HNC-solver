@@ -47,7 +47,7 @@ def multiply_by(x, iff=True):
 
 parser = ExtendedArgumentParser(description='nDPD HNC calculator')
 pyHNC.add_grid_args(parser)
-pyHNC.add_solver_args(parser, alpha=0.01, npicard=20000) # greatly reduce alpha and increase npicard here !!
+pyHNC.add_solver_args(parser, alpha=0.01, niters=20000) # greatly reduce alpha and increase niters here !!
 parser.add_argument('-v', '--verbose', action='count', help='more details (repeat as required)')
 parser.add_argument('job_name', nargs='?', default=None, help='set the name of the output files, default None')
 parser.add_argument('--process', default=None, type=int, help='process number, default None')
@@ -188,7 +188,7 @@ try:
     φ = truncate_to_zero(A*B/(n+1)*(1-r)**(n+1) - A/2*(1-r)**2, r, 1)
     f = truncate_to_zero(A*B*(1-r)**n - A*(1-r), r, 1)
 
-    solver = pyHNC.PicardHNC(grid, nmonitor=500, **pyHNC.solver_args(args))
+    solver = pyHNC.Solver(grid, nmonitor=500, **pyHNC.solver_args(args))
 
     if args.verbose:
         print(f'{args.script}: {solver.details}')

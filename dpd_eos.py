@@ -37,7 +37,7 @@ args = parser.parse_args()
 grid = pyHNC.Grid(**pyHNC.grid_args(args)) # make the initial working grid
 r, Δr = grid.r, grid.deltar # extract the co-ordinate array for use below
 
-solver = pyHNC.PicardHNC(grid, **pyHNC.solver_args(args))
+solver = pyHNC.Solver(grid, **pyHNC.solver_args(args))
 
 # DPD potential and force law omitting amplitude;
 # the array sizes here are ng-1, same as r[:].

@@ -33,11 +33,11 @@ import pyHNC
 import argparse
 import numpy as np
 from numpy import pi as π
-from pyHNC import Grid, PicardHNC, truncate_to_zero, ExtendedArgumentParser
+from pyHNC import Grid, Solver, truncate_to_zero, ExtendedArgumentParser
 
 parser = ExtendedArgumentParser(description='nDPD HNC calculator')
 pyHNC.add_grid_args(parser)
-pyHNC.add_solver_args(parser, alpha=0.01, npicard=20000) # greatly reduce alpha and increase npicard here !!
+pyHNC.add_solver_args(parser, alpha=0.01, niters=20000) # greatly reduce alpha and increase niters here !!
 parser.add_argument('-v', '--verbose', action='count', help='more details (repeat as required)')
 parser.add_argument('-n', '--n', default='2', help='governing exponent, default 2')
 parser.add_argument('-A', '--A', default=None, type=float, help='overwrite repulsion amplitude, default none')
@@ -97,7 +97,7 @@ if args.verbose:
 φ = truncate_to_zero(A*B/(n+1)*(1-r)**(n+1) - A/2*(1-r)**2, r, 1) # the nDPD potential
 f = truncate_to_zero(A*B*(1-r)**n - A*(1-r), r, 1) # the force f = -dφ/dr
 
-solver = PicardHNC(grid, nmonitor=500, **pyHNC.solver_args(args))
+solver = Solver(grid, nmonitor=500, **pyHNC.solver_args(args))
 
 if args.verbose:
     print(f'{args.script}: {solver.details}')

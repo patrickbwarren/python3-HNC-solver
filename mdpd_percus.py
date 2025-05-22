@@ -48,7 +48,7 @@ from pyHNC import truncate_to_zero, ExtendedArgumentParser
 
 parser = ExtendedArgumentParser(description='DPD EoS calculator')
 pyHNC.add_grid_args(parser)
-pyHNC.add_solver_args(parser, alpha=0.02, npicard=5000, tol=1e-12) # repurpose these here
+pyHNC.add_solver_args(parser, alpha=0.02, niters=5000, tol=1e-12) # repurpose these here
 parser.add_argument('-v', '--verbose', action='count', help='more details (repeat as required)')
 parser.add_argument('-A', '--A', default=10.0, type=float, help='repulsion amplitude')
 parser.add_argument('-B', '--B', default=5.0, type=float, help='repulsion amplitude')
@@ -96,7 +96,7 @@ h = np.zeros_like(r) if args.hzero else (exp(-v) - 1) # initial guess
 
 # Iterate from here ..
 
-for i in range(args.npicard):
+for i in range(args.niters):
 
     hq = grid.fourier_bessel_forward(h) # to reciprocal space
     ħ = grid.fourier_bessel_backward(hq*wq) # convolution ρbar = ρ(1+h) ⊗ w = ρ(1+ħ)

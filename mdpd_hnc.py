@@ -37,7 +37,7 @@ from pyHNC import truncate_to_zero, ExtendedArgumentParser
 
 parser = ExtendedArgumentParser(description='DPD EoS calculator')
 pyHNC.add_grid_args(parser)
-pyHNC.add_solver_args(parser, npicard=10000) # boost the possible number of Picard iteration steps
+pyHNC.add_solver_args(parser, niters=10000) # boost the possible number of iteration steps
 parser.add_argument('-v', '--verbose', action='count', help='more details (repeat as required)')
 parser.add_argument('--header', default=None, help='set the name of the output files, default None')
 parser.add_argument('--process', default=None, type=int, help='process number, default None')
@@ -132,7 +132,7 @@ grid = pyHNC.Grid(**pyHNC.grid_args(args)) # make the initial working grid
 r, Δr, q, Δq = grid.r, grid.deltar, grid.q, grid.deltaq # extract for use below
 rbyR, qR = r/R, q*R # some reduced variables
 
-solver = pyHNC.PicardHNC(grid, **pyHNC.solver_args(args))
+solver = pyHNC.Solver(grid, **pyHNC.solver_args(args))
 
 # DPD potential and force law f = −dφ/dr.
 # The array sizes here are ng-1, same as r[:].

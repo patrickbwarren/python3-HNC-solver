@@ -34,7 +34,7 @@
 import numpy as np
 import pandas as pd
 from numpy import pi as π
-from pyHNC import Grid, PicardHNC, truncate_to_zero, df_to_agr
+from pyHNC import Grid, Solver, truncate_to_zero, df_to_agr
 import matplotlib.pyplot as plt
 
 gw_data_df = pd.DataFrame([[0.0, 0.038], [1.5, 0.075], [2.5, 0.089], [3.0, 0.092], [3.5, 0.095],
@@ -49,7 +49,7 @@ r = grid.r # extract the co-ordinate array for use below
 φ = truncate_to_zero(A/2*(1-r)**2, r, 1) # DPD potential
 fbyA = truncate_to_zero((1-r), r, 1) # the force f(r) = −dφ/dr, omitting the amplitude
 
-solver = PicardHNC(grid)
+solver = Solver(grid)
 
 hnc_data = []
 for ρ in np.linspace(0.0, 10.0, 41)[1:]: # omit rho = 0.0

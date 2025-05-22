@@ -43,7 +43,7 @@ import pyHNC
 import argparse
 import numpy as np
 from numpy import pi as π
-from pyHNC import Grid, PicardHNC, truncate_to_zero
+from pyHNC import Grid, Solver, truncate_to_zero
 
 parser = argparse.ArgumentParser(description='DPD HNC calculator')
 pyHNC.add_grid_args(parser)
@@ -78,7 +78,7 @@ if args.verbose:
 φ = truncate_to_zero(A/2*(1-r)**2, r, 1) # the DPD potential
 f = truncate_to_zero(A*(1-r), r, 1) # the force f = -dφ/dr
 
-solver = PicardHNC(grid, **pyHNC.solver_args(args))
+solver = Solver(grid, **pyHNC.solver_args(args))
 
 if args.verbose:
     print(f'{args.script}: {solver.details}')

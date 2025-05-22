@@ -24,6 +24,8 @@
 import pyfftw
 import argparse
 import numpy as np
+from scipy.integrate import simpson
+from collections import deque
 
 version = '1.0' # for reporting purposes
 
@@ -77,27 +79,38 @@ Grid = RadialGrid
 
 # What's being solved here is the Ornstein-Zernike (OZ) equation in
 # the form h(q) = c(q) + ρ h(q) c(q) in combination with the HNC
-# closure g(r) = exp[ - v(r) + h(r) - c(r)], using Picard iteration.
+# closure g(r) = exp[ - v(r) + h(r) - c(r)] iteratively.
 # Here c(r) is the direct correlation function, h(r) = g(r) - 1 is the
 # total correlation function, and v(r) is the potential.  In practice
 # the OZ equation and the HNC closure are written in terms of the
 # indirect correlation function e(r) = h(r) - c(r).  An initial guess
 # if the solver is not warmed up is c(r) = - v(r) (ie, the RPA soln).
 
-class PicardHNC:
+class Solver:
 
-    def __init__(self, grid, alpha=0.2, tol=1e-12, npicard=500, nmonitor=50):
+    def __init__(self, grid,
+                 alpha=0.5, tol=1e-12, niters=500, npicard=None,
+                 history_size=4, line_search_decay=0.8, nline_searches=25,
+                 nmonitor=50):
         '''Initialise basic data structure'''
         self.grid = grid
+
         self.alpha = alpha
         self.tol = tol
+        self.niters = niters
+        self.history_size = 4
+        if npicard is None: npicard = history_size + 1
         self.npicard = npicard
+        self.line_search_decay = line_search_decay
+        self.nline_searches = nline_searches
+
         self.nmonitor = nmonitor
+
         self.converged = False
         self.warmed_up = False
         self.parstrings = [f'α = {self.alpha}', f'tol = {self.tol:0.1e}',
-                           f'npicard = {self.npicard}']
-        self.name = 'PicardHNC'
+                           f'niters = {self.niters}']
+        self.name = 'Solver'
         self.details = f'{self.name}: ' + ', '.join(self.parstrings)
 
     def oz_solution(self, rho, cq):
@@ -109,35 +122,108 @@ class PicardHNC:
         self_name = self.name + '.solve' # used in reporting below
         cr = np.copy(cr_init) if cr_init is not None else np.copy(self.cr) if self.warmed_up else -np.copy(vr)
         expnegvr = np.exp(-vr) # for convenience, also works with np.inf
-        for i in range(self.npicard):
+
+        inner = lambda u, v: simpson(u*v, dx=self.grid.deltar)
+        magnitude = lambda u: inner(u, u)**0.5
+
+        # Memory of iterations for inferring hessian
+        cr_in = deque(maxlen=self.history_size) # input value of c
+        cr_out = deque(maxlen=self.history_size) # output value of c
+        cr_delta = deque(maxlen=self.history_size) # change out[i] - in[i]
+
+        # Solve OZ equation during each iteration.
+        def iteration(cr):
+            if np.any(np.isnan(cr)): raise ValueError
             cq = self.grid.fourier_bessel_forward(cr) # forward transform c(r) to c(q)
             eq = self.oz_solution(rho, cq) - cq # solve the OZ equation for e(q) = h(q) - c(q)
             er = self.grid.fourier_bessel_backward(eq) # back transform e(q) to e(r)
             cr_new = expnegvr*np.exp(er) - er - 1 # iterate with the HNC closure
-            cr = self.alpha * cr_new + (1-self.alpha) * cr # apply a Picard mixing rule
-            if any(np.isnan(cr)): # break early if something blows up
-                break
-            self.error = np.sqrt(np.trapz((cr_new - cr)**2, dx=self.grid.deltar)) # convergence test
+            if np.any(np.isnan(cr_new)): raise ValueError
+            return cr_new, er
+
+        cr_in += [cr.copy()]
+        cr_new, er = iteration(cr)
+        cr_out += [cr_new.copy()]
+        cr_delta += [cr_out[-1] - cr_in[-1]]
+
+        for iter in range(self.niters):
+
+            # Determine optimal direction for line search.
+            if iter < self.npicard:
+                # First few iterations we do not have curvature information
+                # so we must resort to normal downhill direction (Picard). 
+                step = cr_delta[-1]
+                step_size = self.alpha
+
+            else:
+                # Switch to limited-memory quasi-Newton method of
+                # K.-C. Ng, J. Chem. Phys. 61, 2680 (1974).
+  
+                n = len(cr_in)
+                delta = [cr_delta[-1] - cr_delta[-i-1] for i in range(1, n)]
+                residual = [inner(cr_delta[-1], delta[i]) for i in range(n-1)]
+
+                A = np.empty((n-1, n-1))
+                for i in range(len(A)):
+                    for j in range(i, len(A)):
+                        A[i,j] = inner(delta[i], delta[j])
+                        A[j,i] = A[i,j]
+
+                α = np.zeros(n)
+                α[1:] = np.linalg.solve(A, residual)
+                α[0] = 1 - np.sum(α[1:])
+                α = np.flipud(α)
+                step = α.dot(cr_out) - cr_in[-1]
+                step_size = 1.
+
+            if np.any(np.isnan(step)): raise ValueError
+
+            # Backtracking line search
+            for line_iter in range(self.nline_searches):
+                cr = cr_in[-1] + step_size * step
+
+                self.error = np.inf
+                try:
+                    cr_new, er = iteration(cr)
+                    if np.any(np.isnan(cr_new)): raise ValueError
+                    delta = cr_new - cr
+                    self.error = magnitude(delta)
+
+                except: pass
+
+                if np.isfinite(self.error): break
+                step_size *= self.line_search_decay
+
+            else:
+                raise RuntimeError('line search stalled!')
+
+            cr_in += [cr.copy()]
+            cr_out += [cr_new.copy()]
+            cr_delta += [delta.copy()]
+
+            # Convergence test
             self.converged = self.error < self.tol
-            if monitor and (i % self.nmonitor == 0 or self.converged):
-                iter_s = f'{self_name}: Picard iteration %{len(str(self.npicard))}d,' % i
+            if monitor and (iter % self.nmonitor == 0 or self.converged):
+                iter_s = f'{self_name}: iteration %{len(str(self.niters))}d,' % iter
                 print(f'{iter_s} error = {self.error:0.3e}')
             if self.converged:
                 break
-        if self.converged: 
+
+        if self.converged:
             self.cr = cr_new # use the most recent calculation
             self.cq = self.grid.fourier_bessel_forward(cr)
             self.hr = self.cr + er # total correlation function
+            eq = self.grid.fourier_bessel_forward(er)
             self.hq = self.cq + eq
             self.warmed_up = True
         else: # we leave it to the user to check if self.converged is False :-)
             pass
         if monitor:
             if self.converged:
-                print(f'{self_name}: Picard converged')
+                print(f'{self_name}: converged')
             else:
-                print(f'{self_name}: Picard iteration {i:3d}, error = {self.error:0.3e}')
-                print(f'{self_name}: Picard failed to converge')
+                print(f'{self_name}: iteration {iter:3d}, error = {self.error:0.3e}')
+                print(f'{self_name}: failed to converge')
         return self # the user can name this 'soln' or something
 
 # Below, the above is sub-classed to redefine the OZ equation in terms
@@ -192,7 +278,7 @@ class PicardHNC:
 # the direct and indirect correlation functions since this mean-field
 # DFT approach is an RPA-HNC hybrid in some sense.
 
-# To utilise the code for this problem instantiate SolutePicardHNC
+# To utilise the code for this problem instantiate SoluteSolver
 # using 1 / (1 + rho0 v00q) instead of S00q, or replace this in an
 # existing instantiation.
 
@@ -208,17 +294,17 @@ class PicardHNC:
 #  h01q = h02q = c01q S00q (1 + omega12q).
 # This is in the form required to repurpose the solute OZ relation.
 
-# To utilise the code for this problem instantiate SolutePicardHNC
+# To utilise the code for this problem instantiate SoluteSolver
 # using S00q (1 + omega12q) instead of S00q, or replace this in an
 # existing instantiation.
 
-class SolutePicardHNC(PicardHNC):
+class SoluteSolver(Solver):
     '''Subclass for infinitely dilute solute inside solvent.'''
 
     def __init__(self, S00q, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.S00q = S00q
-        self.name = 'SolutePicardHNC'
+        self.name = 'SoluteSolver'
         self.details = f'{self.name}: ' + ', '.join(self.parstrings)
 
     def oz_solution(self, rho, cq): # rho is not used here
@@ -230,7 +316,7 @@ class SolutePicardHNC(PicardHNC):
 
 # Below, cases added by Josh
 
-class TestParticleRPA(PicardHNC):
+class TestParticleRPA(Solver):
     '''Subclass for mean-field DFT approach.'''
     
     def oz_solution(self, rho, cq):
@@ -241,7 +327,7 @@ class TestParticleRPA(PicardHNC):
         self.vq = self.grid.fourier_bessel_forward(vr) # forward transform v(r) to v(q)
         return super().solve(vr, *args, **kwargs)
 
-class SoluteTestParticleRPA(SolutePicardHNC):
+class SoluteTestParticleRPA(SoluteSolver):
     
     def oz_solution(self, rho, cq):
         '''Solution to the OZ equation in reciprocal space.'''
@@ -294,15 +380,15 @@ def grid_args(args):
     ng = power_eval(args.ngrid)
     return {'ng':ng, 'deltar': args.deltar}
 
-def add_solver_args(parser, alpha=0.2, npicard=500, tol=1e-12):
+def add_solver_args(parser, alpha=0.2, niters=500, tol=1e-12):
     '''Add generic solver args to parser'''
     parser.add_argument('--alpha', default=alpha, type=float, help=f'Picard mixing fraction, default {alpha}')
-    parser.add_argument('--npicard', default=npicard, type=int, help=f'max number of Picard steps, default {npicard}')
+    parser.add_argument('--niters', default=niters, type=int, help=f'max number of iterations, default {niters}')
     parser.add_argument('--tol', default=tol, type=float, help=f'tolerance for convergence, default {tol}')
 
 def solver_args(args):
     '''Return a dict of generic solver args that can be used as **solver_args()'''
-    return {'alpha': args.alpha, 'tol': args.tol, 'npicard': args.npicard}
+    return {'alpha': args.alpha, 'tol': args.tol, 'niters': args.niters}
 
 # Make the data output suitable for plotting in xmgrace if captured by redirection
 # stackoverflow.com/questions/30833409/python-deleting-the-first-2-lines-of-a-string
