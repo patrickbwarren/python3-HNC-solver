@@ -37,7 +37,7 @@ version = '1.0' # for reporting purposes
 # the FFT arrays.  Testing indicate the best efficiency is obtained
 # when ng = 2^r with r being an integer.
 
-class Grid:
+class RadialGrid:
 
     def __init__(self, ng=8192, deltar=0.02):
         '''Initialise grids with the desired size and spacing'''
@@ -70,6 +70,10 @@ class Grid:
         self.fftwx[:] = self.q * fq
         self.fftw.execute()
         return self.deltaq/(4*np.pi**2*self.r) * self.fftwy
+
+# Assume radial by default as normally spherical polars will be used for
+# spherical pair potentials
+Grid = RadialGrid
 
 # What's being solved here is the Ornstein-Zernike (OZ) equation in
 # the form h(q) = c(q) + ρ h(q) c(q) in combination with the HNC
