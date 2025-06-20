@@ -4,7 +4,7 @@ _Current version:_ v1.0 - initial working version
 
 ### Summary
 
-Implements a python module `pyHNC` for solving the Ornstein-Zernike
+Implements a python module `pyhnc` for solving the Ornstein-Zernike
 (OZ) equation using the hypernetted-chain (HNC) closure, for
 single-component systems, with soft potentials (no hard cores) such as
 dissipative particle dynamics (DPD).  It uses the
@@ -20,7 +20,7 @@ involved in undertaking this kind of calculation.
 
 Basic codes in the repository include:
 
-* `pyHNC.py` : python module implementing the functionality;
+* `pyhnc/pyhnc.py` : python module implementing the functionality;
 * `fftw_demo.py` : test FFTW for Fourier-Bessel transforms;
 * `dpd_demo.py` : demonstrate the capabilities for standard DPD;
 * `dpd_eos.py` : calculate data for standard DPD equation of state (EoS);
@@ -71,7 +71,7 @@ The other codes are all experimental, and under development:
 Other files herein:
 
 * `solute_demo.ipynb` : jupyter notebook illustrating solute calculations;
-* `mu_dpd_hendrikse2025.csv` : solute excess chemical potential data digitised from Fig. 1 of
+* `data/mu_dpd_hendrikse2025.csv` : solute excess chemical potential data digitised from Fig. 1 of
 [Hendrikse *et al.*, Phys. Chem. Chem. Phys. **27**, 1554-66 (2025)](https://doi.org/10.1039/D4CP03791J).
 
 ### What's being solved here?

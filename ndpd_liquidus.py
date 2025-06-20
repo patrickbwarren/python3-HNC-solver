@@ -30,14 +30,13 @@
 
 import os
 import sys
-import pyHNC
+import pyhnc
 import argparse
 import subprocess
 import numpy as np
-import pyHNC
 
 from numpy import pi as π
-from pyHNC import truncate_to_zero, ExtendedArgumentParser
+from pyhnc import truncate_to_zero, ExtendedArgumentParser
 
 failure = None
 
@@ -46,8 +45,8 @@ def multiply_by(x, iff=True):
     return x if iff else 1.0
 
 parser = ExtendedArgumentParser(description='nDPD HNC calculator')
-pyHNC.add_grid_args(parser)
-pyHNC.add_solver_args(parser, alpha=0.01, niters=20000) # greatly reduce alpha and increase niters here !!
+pyhnc.add_grid_args(parser)
+pyhnc.add_solver_args(parser, alpha=0.01, niters=20000) # greatly reduce alpha and increase niters here !!
 parser.add_argument('-v', '--verbose', action='count', help='more details (repeat as required)')
 parser.add_argument('job_name', nargs='?', default=None, help='set the name of the output files, default None')
 parser.add_argument('--process', default=None, type=int, help='process number, default None')
@@ -79,7 +78,7 @@ opts = [f'--n={args.n}', f'--T={args.T}', f'--rho={args.rho}',
         '--relative' if args.relative else '--no-relative',
         '--search' if args.search else '--no-search']
 
-T_vals = pyHNC.as_linspace(args.T)
+T_vals = pyhnc.as_linspace(args.T)
 
 if args.condor: # create scripts to run jobs then exit
 
@@ -91,7 +90,7 @@ if args.condor: # create scripts to run jobs then exit
              'notification = never',
              'universe = vanilla',
              f'opts = ' + ' '.join(opts),
-             f'transfer_input_files = pyHNC.py,{args.script}',
+             f'transfer_input_files = pyhnc.py,{args.script}',
              f'executable = {args.executable}',
              f'arguments = {args.script} {args.job_name} $(opts) --process=$(Process)',
              f'output = {args.job_name}__$(Process).out',
@@ -167,14 +166,14 @@ try:
 
     # density, temperature
 
-    ρ_vals = pyHNC.as_linspace(args.rho) * multiply_by(ρc, iff=args.relative)
+    ρ_vals = pyhnc.as_linspace(args.rho) * multiply_by(ρc, iff=args.relative)
 
     if len(ρ_vals) == 1:
         ρ = ρ_vals[0]
     else:
         ρ1, ρ2 = ρ_vals.tolist()[0:2]
 
-    grid = pyHNC.Grid(**pyHNC.grid_args(args)) # make the initial working grid
+    grid = pyhnc.Grid(**pyhnc.grid_args(args)) # make the initial working grid
 
     r, Δr = grid.r, grid.deltar # extract the co-ordinate array for use below
 
@@ -188,7 +187,7 @@ try:
     φ = truncate_to_zero(A*B/(n+1)*(1-r)**(n+1) - A/2*(1-r)**2, r, 1)
     f = truncate_to_zero(A*B*(1-r)**n - A*(1-r), r, 1)
 
-    solver = pyHNC.Solver(grid, nmonitor=500, **pyHNC.solver_args(args))
+    solver = pyhnc.Solver(grid, nmonitor=500, **pyhnc.solver_args(args))
 
     if args.verbose:
         print(f'{args.script}: {solver.details}')

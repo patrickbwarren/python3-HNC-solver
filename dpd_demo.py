@@ -39,15 +39,15 @@
 # Data is from a forthcoming publication on osmotic pressure in DPD.
 
 import os
-import pyHNC
+import pyhnc
 import argparse
 import numpy as np
 from numpy import pi as π
-from pyHNC import Grid, Solver, truncate_to_zero
+from pyhnc import Grid, Solver, truncate_to_zero
 
 parser = argparse.ArgumentParser(description='DPD HNC calculator')
-pyHNC.add_grid_args(parser)
-pyHNC.add_solver_args(parser)
+pyhnc.add_grid_args(parser)
+pyhnc.add_solver_args(parser)
 parser.add_argument('-v', '--verbose', action='count', help='more details (repeat as required)')
 parser.add_argument('-A', '--A', default=25.0, type=float, help='repulsion amplitude, default 25.0')
 parser.add_argument('-r', '--rho', default=3.0, type=float, help='density, default 3.0')
@@ -65,7 +65,7 @@ args.script = os.path.basename(__file__)
 
 A, ρ = args.A, args.rho
 
-grid = Grid(**pyHNC.grid_args(args)) # make the initial working grid
+grid = Grid(**pyhnc.grid_args(args)) # make the initial working grid
 
 r, Δr, q = grid.r, grid.deltar, grid.q # extract the co-ordinate arrays for use below
 
@@ -78,7 +78,7 @@ if args.verbose:
 φ = truncate_to_zero(A/2*(1-r)**2, r, 1) # the DPD potential
 f = truncate_to_zero(A*(1-r), r, 1) # the force f = -dφ/dr
 
-solver = Solver(grid, **pyHNC.solver_args(args))
+solver = Solver(grid, **pyhnc.solver_args(args))
 
 if args.verbose:
     print(f'{args.script}: {solver.details}')
@@ -124,7 +124,7 @@ def excess(λ):
     return e_xc
 
 λ_arr = np.linspace(0, 1, 1+round(1/args.dlambda))
-dλ = pyHNC.grid_spacing(λ_arr)
+dλ = pyhnc.grid_spacing(λ_arr)
 e_xc_arr = np.array([excess(λ) for λ in np.flip(λ_arr)]) # descend, to assure convergence
 f_xc = np.trapz(e_xc_arr, dx=dλ) # the coupling constant integral
 f_ex = e_mf + f_xc # f_mf = e_mf in this case
@@ -134,9 +134,9 @@ closure = 'EXP' if args.exp else 'RPA' if args.rpa else 'HNC'
 print(f'{args.script}: model: standard DPD with A = {A:g}, ρ = {ρ:g}, {closure} closure')
 print(f'{args.script}: Monte-Carlo (A,ρ = 25,3):      energy, virial pressure =',
       '\t13.63±0.02\t\t\t23.65±0.02')
-print(f'{args.script}: pyHNC v{pyHNC.version}:        energy, free energy, virial pressure =',
+print(f'{args.script}: pyhnc v{pyhnc.__version__}:        energy, free energy, virial pressure =',
       '\t%0.5f\t%0.5f\t%0.5f' % (e_ex, f_ex, p))
-print(f'{args.script}: pyHNC v{pyHNC.version}:        chemical potential, free energy =',
+print(f'{args.script}: pyhnc v{pyhnc.__version__}:        chemical potential, free energy =',
       '\t%0.5f\t%0.5f' % (μ, ρ*μ_ex - p_ex))
 
 if args.rpa or args.exp:
@@ -206,7 +206,7 @@ if args.output:
     cut = r < args.rcut
 
     df = pd.DataFrame({'r': r[cut], 'g': g[cut]})
-    df_agr = pyHNC.df_to_agr(df[['r', 'g']])
+    df_agr = pyhnc.df_to_agr(df[['r', 'g']])
 
     with open(args.output, 'w') as f:
         f.write(f'# DPD with A = {A:g}, ρ = {ρ:g}, {closure} closure\n')

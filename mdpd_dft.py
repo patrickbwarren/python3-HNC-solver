@@ -35,17 +35,17 @@
 
 import os
 import sys
-import pyHNC
+import pyhnc
 import argparse
 import subprocess
 import numpy as np
 
 from numpy import pi as π
 from numpy import cos, sin, exp
-from pyHNC import truncate_to_zero, ExtendedArgumentParser
+from pyhnc import truncate_to_zero, ExtendedArgumentParser
 
 parser = ExtendedArgumentParser(description='DPD EoS calculator')
-pyHNC.add_grid_args(parser)
+pyhnc.add_grid_args(parser)
 parser.add_argument('-v', '--verbose', action='count', help='more details (repeat as required)')
 parser.add_argument('-A', '--A', default=10.0, type=float, help='repulsion amplitude')
 parser.add_argument('-B', '--B', default=5.0, type=float, help='repulsion amplitude')
@@ -60,7 +60,7 @@ args.script = os.path.basename(__file__)
 
 A, B, R = args.A, args.B, args.R
 
-grid = pyHNC.Grid(**pyHNC.grid_args(args)) # make the initial working grid
+grid = pyhnc.Grid(**pyhnc.grid_args(args)) # make the initial working grid
 r, Δr, q, Δq = grid.r, grid.deltar, grid.q, grid.deltaq # extract for use below
 rbyR, qR = r/R, q*R # some reduced variables
 
@@ -80,7 +80,7 @@ wf = truncate_to_zero((1-rbyR), r, R) # omit the normalisation
 
 K = π*B*R**4/30 # used in many expressions below
 
-for ρ in pyHNC.as_linspace(args.rho):
+for ρ in pyhnc.as_linspace(args.rho):
     ρbar = ρ # under this approximation
     negcq = φq + 4*K*ρbar*wq + 2*ρ*K*wq**2 # note ρ in second
     hq = - negcq / (1 + ρ*negcq) # Ornstein-Zernike relation

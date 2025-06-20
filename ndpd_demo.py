@@ -29,15 +29,15 @@
 # ./ndpd_demo.py --relative -n 4 -T 0.4 -r 3.56
 
 import os
-import pyHNC
+import pyhnc
 import argparse
 import numpy as np
 from numpy import pi as π
-from pyHNC import Grid, Solver, truncate_to_zero, ExtendedArgumentParser
+from pyhnc import Grid, Solver, truncate_to_zero, ExtendedArgumentParser
 
 parser = ExtendedArgumentParser(description='nDPD HNC calculator')
-pyHNC.add_grid_args(parser)
-pyHNC.add_solver_args(parser, alpha=0.01, niters=20000) # greatly reduce alpha and increase niters here !!
+pyhnc.add_grid_args(parser)
+pyhnc.add_solver_args(parser, alpha=0.01, niters=20000) # greatly reduce alpha and increase niters here !!
 parser.add_argument('-v', '--verbose', action='count', help='more details (repeat as required)')
 parser.add_argument('-n', '--n', default='2', help='governing exponent, default 2')
 parser.add_argument('-A', '--A', default=None, type=float, help='overwrite repulsion amplitude, default none')
@@ -83,7 +83,7 @@ B = args.B if args.B is not None else B # overwrite if necessary
 kT = (args.T * Tc) if args.relative else args.T
 β = 1 / kT
 
-grid = Grid(**pyHNC.grid_args(args)) # make the initial working grid
+grid = Grid(**pyhnc.grid_args(args)) # make the initial working grid
 
 r, Δr = grid.r, grid.deltar # extract the co-ordinate array for use below
 
@@ -97,7 +97,7 @@ if args.verbose:
 φ = truncate_to_zero(A*B/(n+1)*(1-r)**(n+1) - A/2*(1-r)**2, r, 1) # the nDPD potential
 f = truncate_to_zero(A*B*(1-r)**n - A*(1-r), r, 1) # the force f = -dφ/dr
 
-solver = Solver(grid, nmonitor=500, **pyHNC.solver_args(args))
+solver = Solver(grid, nmonitor=500, **pyhnc.solver_args(args))
 
 if args.verbose:
     print(f'{args.script}: {solver.details}')
@@ -130,7 +130,7 @@ p = ρ*kT + p_ex
 
 description = f'nDPD with n = {n:d}, A = {A:g}, B = {B:g}, σ = {σ:g}, ρ = {ρ:g}, β = {β:g}'
 print(f'{args.script}: model: {description}')
-print(f'{args.script}: pyHNC v{pyHNC.version}: e, e_ex, p =\t{e:g}\t{e_ex:g}\t{p:g}')
+print(f'{args.script}: pyhnc v{pyhnc.version}: e, e_ex, p =\t{e:g}\t{e_ex:g}\t{p:g}')
 
 if args.show:
 
@@ -156,7 +156,7 @@ if args.output:
 
     df = pd.DataFrame({'r': r[cut], 'g': g[cut]})
     df['r/σ'] = df.r / σ
-    df_agr = pyHNC.df_to_agr(df[['r', 'r/σ', 'g']])
+    df_agr = pyhnc.df_to_agr(df[['r', 'r/σ', 'g']])
 
     with open(args.output, 'w') as f:
         f.write(f'# {description}\n')

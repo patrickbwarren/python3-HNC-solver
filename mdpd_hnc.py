@@ -26,18 +26,18 @@
 
 import os
 import sys
-import pyHNC
+import pyhnc
 import argparse
 import subprocess
 import numpy as np
 
 from numpy import pi as π
 from numpy import cos, sin
-from pyHNC import truncate_to_zero, ExtendedArgumentParser
+from pyhnc import truncate_to_zero, ExtendedArgumentParser
 
 parser = ExtendedArgumentParser(description='DPD EoS calculator')
-pyHNC.add_grid_args(parser)
-pyHNC.add_solver_args(parser, niters=10000) # boost the possible number of iteration steps
+pyhnc.add_grid_args(parser)
+pyhnc.add_solver_args(parser, niters=10000) # boost the possible number of iteration steps
 parser.add_argument('-v', '--verbose', action='count', help='more details (repeat as required)')
 parser.add_argument('--header', default=None, help='set the name of the output files, default None')
 parser.add_argument('--process', default=None, type=int, help='process number, default None')
@@ -65,7 +65,7 @@ args.executable = sys.executable
 
 A, B, R = args.A, args.B, args.R
 
-ρ_vals = pyHNC.as_linspace(args.rho)
+ρ_vals = pyhnc.as_linspace(args.rho)
 
 opts = [f'--A={args.A}', f'--B={args.B}', f'--R={args.R}',
         f'--rho={args.rho}', 
@@ -86,7 +86,7 @@ if args.condor: # create scripts to run jobs then exit
              'notification = never',
              'universe = vanilla',
              f'opts = ' + ' '.join(opts),
-             f'transfer_input_files = pyHNC.py,{args.script}',
+             f'transfer_input_files = pyhnc.py,{args.script}',
              f'executable = {args.executable}',
              f'arguments = {args.script} --header={args.header} $(opts) --process=$(Process)',
              f'output = {args.header}__$(Process).out',
@@ -128,11 +128,11 @@ k = args.process if args.process is not None else 0
 
 print(f'{args.script}: solving for A, B, R, ρ = {A}, {B}, {R}, {ρ}')
 
-grid = pyHNC.Grid(**pyHNC.grid_args(args)) # make the initial working grid
+grid = pyhnc.Grid(**pyhnc.grid_args(args)) # make the initial working grid
 r, Δr, q, Δq = grid.r, grid.deltar, grid.q, grid.deltaq # extract for use below
 rbyR, qR = r/R, q*R # some reduced variables
 
-solver = pyHNC.Solver(grid, **pyHNC.solver_args(args))
+solver = pyhnc.Solver(grid, **pyhnc.solver_args(args))
 
 # DPD potential and force law f = −dφ/dr.
 # The array sizes here are ng-1, same as r[:].
