@@ -108,6 +108,7 @@ class OrnsteinZernikeSolver(ABC):
 
         if old.warmed_up:
             new.er = old.er.copy()
+            new.br = old.br.copy()
             new.cr = old.cr.copy()
             new.potential = old.potential
             new.rho = old.rho
@@ -163,10 +164,6 @@ class OrnsteinZernikeSolver(ABC):
     @property
     def hr(self):
         return self.er + self.cr
-
-    @property
-    def br(self):
-        return self.bridge_closure(self.er)
 
     @property
     def gr(self):
@@ -225,17 +222,17 @@ class OrnsteinZernikeSolver(ABC):
         """Solve the reciprocal OZ equation for $h(q)$ in terms of $c(q)$."""
         return cq / (1 - rho*cq)
 
-    # def oz_solution_cq_from_hq(self, hq: NDArray, rho: float, *args, **kwargs):
-    #     """Solve the reciprocal OZ equation for $c(q)$ in terms of $h(q)$."""
-    #     return hq / (1 + rho*hq)
+    def oz_solution_cq_from_hq(self, hq: NDArray, rho: float, *args, **kwargs):
+        """Solve the reciprocal OZ equation for $c(q)$ in terms of $h(q)$."""
+        return hq / (1 + rho*hq)
 
     def oz_solution_eq_from_cq(self, cq: NDArray, rho: float, *args, **kwargs):
         """Solve the reciprocal OZ equation for $e(q)$ in terms of $c(q)$."""
         return self.oz_solution_hq_from_cq(cq, rho, *args, **kwargs) - cq
 
-    # def oz_solution_eq_from_hq(self, hq: NDArray, rho: float, *args, **kwargs):
-    #     """Solve the reciprocal OZ equation for $e(q)$ in terms of $h(q)$."""
-    #     return rho * hq**2 / (1 + rho*hq)
+    def oz_solution_eq_from_hq(self, hq: NDArray, rho: float, *args, **kwargs):
+        """Solve the reciprocal OZ equation for $e(q)$ in terms of $h(q)$."""
+        return hq - self.oz_solution_cq_from_hq(hq, rho)
 
     def oz_solution_hr_from_cr(self, cr: NDArray, *args, **kwargs):
         """Solve the OZ equation for $h(r)$ in terms of $c(r)$"""
@@ -249,15 +246,15 @@ class OrnsteinZernikeSolver(ABC):
         eq = self.oz_solution_eq_from_cq(cq, *args, **kwargs)
         return self.grid.fourier_bessel_backward(eq)
 
-    # def oz_solution_er_from_hr(self, hr: NDArray, *args, **kwargs):
-    #     """Solve the OZ equation for $e(r) = h(r) - c(r)$"""
-    #     hq = self.grid.fourier_bessel_forward(hr)
-    #     eq = self.oz_solution_eq_from_hq(hq, *args, **kwargs)
-    #     return self.grid.fourier_bessel_backward(eq)
+    def oz_solution_er_from_hr(self, hr: NDArray, *args, **kwargs):
+        """Solve the OZ equation for $e(r) = h(r) - c(r)$"""
+        hq = self.grid.fourier_bessel_forward(hr)
+        eq = self.oz_solution_eq_from_hq(hq, *args, **kwargs)
+        return self.grid.fourier_bessel_backward(eq)
 
     def solve(self, potential: Type[potentials.Potential],
               rho: float, T: float=1.,
-              cr_init: NDArray=None,
+              e_init: NDArray=None,
               monitor: bool=False,
               restart: bool=False):
         """Solve HNC for a given potential, with an optional initial guess at cr.
@@ -270,7 +267,7 @@ class OrnsteinZernikeSolver(ABC):
             potential: pair potential.
             rho: density.
             T: temperature (defaults to 1 so potential in units of kT).
-            cr_init: initial guess for c(r).
+            e_init: initial guess for e(r).
             monitor: if True will print iteration updates monitoring progress.
             restart: if True, will start afresh regardless. If False, will
                         start from the most recently converged solution (if
@@ -278,45 +275,41 @@ class OrnsteinZernikeSolver(ABC):
         """
 
         vr = potential(self.r) / T
-        if cr_init is not None:
+        if e_init is not None:
             assert not restart
-            cr = cr_init.copy()
+            e = e_init.copy()
         elif not self.warmed_up or restart:
-            cr = -vr
+            h = np.zeros_like(self.r)
+            b = np.zeros_like(self.r)
+            e = self.oz_solution_er_from_hr(h, rho)
         else:
-            cr = self.cr.copy()
-        expnegvr = np.exp(-vr) # for convenience, also works with np.inf
+            h = self.h.copy()
+            b = self.b.copy()
+            e = self.e.copy()
+        if np.any(np.isnan(e)): raise ValueError
 
         inner = lambda u, v: simpson(u*v, dx=self.grid.deltar)
         magnitude = lambda u: inner(u, u)**0.5
 
         # Memory of iterations for inferring hessian
-        cr_in = deque(maxlen=self.history_size) # input value of c
-        cr_out = deque(maxlen=self.history_size) # output value of c
-        cr_delta = deque(maxlen=self.history_size) # change out[i] - in[i]
+        f = deque(maxlen=self.history_size) # input value of e
+        g = deque(maxlen=self.history_size) # output value of e
+        d = deque(maxlen=self.history_size) # change g[i] - f[i]
 
-        # Solve OZ equation during each iteration.
-        def iteration(cr):
-            if np.any(np.isnan(cr)): raise ValueError
-            er = self.oz_solution_er_from_cr(cr, rho)
-            br = self.bridge_closure(er)
-            cr_new = expnegvr*np.exp(er + br) - er - 1 # iterate with the OZ closure
-            if np.any(np.isnan(cr_new)): raise ValueError
-            return cr_new, er
+        f += [e]
+        c = np.exp(-vr + f[-1] + b) - f[-1] - 1
+        g += [self.oz_solution_er_from_cr(c, rho)]
+        d += [g[-1] - f[-1]]
+        prev_change = magnitude(d[-1])
 
-        cr_in += [cr.copy()]
-        cr_new, er = iteration(cr)
-        cr_out += [cr_new.copy()]
-        cr_delta += [cr_out[-1] - cr_in[-1]]
-        prev_change = magnitude(cr_delta[-1])
-
-        assert not np.any(np.isnan(cr_in[-1]))
-        assert not np.any(np.isnan(cr_new[-1]))
+        assert np.all(f[-1] > -1)
+        assert not np.any(np.isnan(f[-1]))
+        assert not np.any(np.isnan(g[-1]))
 
         for iter in range(self.niters):
 
-            self.converged = prev_change < self.tol
-            if self.converged:
+            converged = prev_change < self.tol
+            if converged:
                 if iter > 0 and monitor:
                     print(f'{iter:>4}  {prev_change:<10.4g}')
                 break
@@ -327,41 +320,43 @@ class OrnsteinZernikeSolver(ABC):
             if iter < self.npicard:
                 # First few iterations we do not have curvature information
                 # so we must resort to normal downhill direction (Picard). 
-                step = cr_delta[-1]
+                step = d[-1]
                 step_size = self.alpha
 
             else:
                 # Switch to limited-memory quasi-Newton method of
                 # K.-C. Ng, J. Chem. Phys. 61, 2680 (1974).
 
-                n = len(cr_in)
-                delta = [cr_delta[-1] - cr_delta[-i-1] for i in range(1, n)]
-                residual = [inner(cr_delta[-1], delta[i]) for i in range(n-1)]
+                delta = [d[-1] - d[-i-1] for i in range(1, len(f))]
+                residual = [inner(d[-1], delta[i]) for i in range(len(f)-1)]
 
-                A = np.empty((n-1, n-1))
+                A = np.empty((len(f)-1, len(f)-1))
                 for i in range(len(A)):
                     for j in range(i, len(A)):
                         A[i,j] = inner(delta[i], delta[j])
                         A[j,i] = A[i,j]
 
-                α = np.zeros(n)
+                α = np.zeros(len(f))
                 α[1:] = np.linalg.solve(A, residual)
                 α[0] = 1 - np.sum(α[1:])
                 α = np.flipud(α)
-                step = α.dot(cr_out) - cr_in[-1]
+                step = α.dot(g) - f[-1]
                 step_size = 1.
 
             if np.any(np.isnan(step)): raise ValueError
 
             # Backtracking line search
             for line_iter in range(self.nline_searches):
-                cr = cr_in[-1] + step_size * step
+                trial = f[-1] + step_size * step
 
                 new_change = np.inf
                 try:
-                    cr_new, er = iteration(cr)
-                    if np.any(np.isnan(cr_new)): raise ValueError
-                    delta = cr_new - cr
+                    b = self.bridge_closure(trial)
+                    c = np.exp(-vr + trial + b) - trial - 1
+                    e = self.oz_solution_er_from_cr(c, rho)
+                    if np.any(np.isnan(e)): raise ValueError
+
+                    delta = e - trial
                     new_change = magnitude(delta)
 
                 except NotImplementedError as err:
@@ -375,22 +370,32 @@ class OrnsteinZernikeSolver(ABC):
             else:
                 raise RuntimeError('line search stalled!')
 
-            cr_in += [cr.copy()]
-            cr_out += [cr_new.copy()]
-            cr_delta += [delta.copy()]
+            f += [trial]
+            g += [e]
+            d += [delta]
             prev_change = new_change
 
             if monitor and (iter % self.nmonitor == 0):
                 print(f'{iter:>4}  {prev_change:<10.4g}')
 
-        self.cr = cr_new
-        self.er = er
+        self.er = f[-1]
+        self.br = b
+        self.cr = c
         self.potential = potential
         self.rho = rho
         self.T = T
         self.error = prev_change
 
-        if self.converged: self.warmed_up = True
+        if converged:
+            # Final check for finite size effects - the domain should be large
+            # enough that $h(r) \to 0$  as $r \to \infty$
+            nend = 10
+            error = simpson(np.abs(self.h[-nend:]), self.r[-nend:])
+            error /= simpson(np.ones_like(self.r[-nend:]), self.r[-nend:])
+            converged = error < self.tol
+            if converged: self.warmed_up = True
+
+        self.converged = converged
 
         if monitor:
             if self.converged:
