@@ -178,7 +178,7 @@ try:
     r, Δr = grid.r, grid.deltar # extract the co-ordinate array for use below
 
     if args.verbose:
-        print(f'{args.script}: {grid.details}')
+        print(f'{args.script}: {grid}')
 
     # Define the nDPD potential as in Eq. (5) in Sokhan et al., assuming
     # r_c = 1, and the force (negative derivative), then solve the HNC
@@ -190,7 +190,7 @@ try:
     solver = pyhnc.Solver(grid, nmonitor=500, **pyhnc.solver_args(args))
 
     if args.verbose:
-        print(f'{args.script}: {solver.details}')
+        print(f'{args.script}: {solver}')
 
     # The excess virial pressure p = ρ + 2πρ²/3 ∫_0^∞ dr r³ f(r) h(r),
     # where f(r) = −dφ/dr is the force: see Eq. (2.5.22) in Hansen &

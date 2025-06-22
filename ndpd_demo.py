@@ -88,7 +88,7 @@ grid = Grid(**pyhnc.grid_args(args)) # make the initial working grid
 r, Δr = grid.r, grid.deltar # extract the co-ordinate array for use below
 
 if args.verbose:
-    print(f'{args.script}: {grid.details}')
+    print(f'{args.script}: {grid}')
 
 # Define the nDPD potential as in Eq. (5) in Sokhan et al., assuming
 # r_c = 1, and the derivative, then solve the HNC problem.  The arrays
@@ -100,7 +100,7 @@ f = truncate_to_zero(A*B*(1-r)**n - A*(1-r), r, 1) # the force f = -dφ/dr
 solver = Solver(grid, nmonitor=500, **pyhnc.solver_args(args))
 
 if args.verbose:
-    print(f'{args.script}: {solver.details}')
+    print(f'{args.script}: {solver}')
 
 h = solver.solve(β*φ, ρ, monitor=args.verbose).hr # solve model at β = 1/T
 

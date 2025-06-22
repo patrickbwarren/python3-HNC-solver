@@ -83,7 +83,7 @@ grid = Grid(**grid_args(args)) # make a working grid
 r, Δr = grid.r, grid.deltar # extract the co-ordinate array for use below
 
 if args.verbose:
-    print(f'{args.script}: {grid.details}')
+    print(f'{args.script}: {grid}')
 
 # Define the nDPD potential and derivative as in Eq. (5) in Sokhan et
 # al., assuming r_c = 1.  The arrays here are size ng-1, same as r[:].

@@ -26,8 +26,13 @@ import argparse
 import numpy as np
 from scipy.integrate import simpson
 from collections import deque
-from .utilities import *
 
+from .utilities import *
+from . import potentials
+
+from abc import ABC, abstractmethod
+from typing import Type
+from numpy.typing import NDArray
 
 # Provide a grid as a working platform.  This is the pair of arrays
 # r(:) and q(:) initialised to match the desired ng (# grid points)
@@ -42,7 +47,7 @@ from .utilities import *
 class RadialGrid:
 
     def __init__(self, ng=8192, deltar=0.02):
-        '''Initialise grids with the desired size and spacing'''
+        """Initialise grids with the desired size and spacing"""
         self.ng = ng
         self.deltar = deltar
         self.deltaq = np.pi / (self.deltar*self.ng) # as above
@@ -56,19 +61,25 @@ class RadialGrid:
         self.parstrings = [f'ng = {self.ng} = 2^{round(np.log2(ng))}',
                            f'Δr = {self.deltar}', f'Δq = {self.deltaq:0.3g}',
                            f'|FFTW arrays| = {self.ng-1}']
-        self.details = 'Grid: ' + ', '.join(self.parstrings)
+
+    @property
+    def name(self):
+        return type(self).__name__
+
+    def __repr__(self):
+        return f'{self.name}: ' + ', '.join(self.parstrings)
 
     # These functions assume the FFTW has been initialised as above, the
     # arrays r and q exist, as do the parameters Δr and Δq.
 
     def fourier_bessel_forward(self, fr):
-        '''Forward transform f(r) to reciprocal space'''
+        """Forward transform f(r) to reciprocal space"""
         self.fftwx[:] = self.r * fr
         self.fftw.execute()
         return 2*np.pi*self.deltar/self.q * self.fftwy
 
     def fourier_bessel_backward(self, fq):
-        '''Back transform f(q) to real space'''
+        """Back transform f(q) to real space"""
         self.fftwx[:] = self.q * fq
         self.fftw.execute()
         return self.deltaq/(4*np.pi**2*self.r) * self.fftwy
@@ -86,19 +97,46 @@ Grid = RadialGrid
 # indirect correlation function e(r) = h(r) - c(r).  An initial guess
 # if the solver is not warmed up is c(r) = - v(r) (ie, the RPA soln).
 
-class Solver:
+class OrnsteinZernikeSolver(ABC):
+
+    @classmethod
+    def from_instance(cls, old):
+        new = cls(*old.init_args())
+
+        new.converged = old.converged
+        new.warmed_up = old.warmed_up
+
+        if old.warmed_up:
+            new.er = old.er.copy()
+            new.cr = old.cr.copy()
+            new.potential = old.potential
+            new.rho = old.rho
+            new.T = old.T
+            new.error = old.error
+
+        return new
+
+    def copy(self):
+        return self.from_instance(self)
+
+    def init_args(self):
+        return [self.grid, self.alpha,
+                self.tol, self.niters,
+                self.npicard, self.history_size,
+                self.line_search_decay, self.nline_searches,
+                self.nmonitor]
 
     def __init__(self, grid,
                  alpha=0.5, tol=1e-12, niters=500, npicard=None,
                  history_size=4, line_search_decay=0.8, nline_searches=25,
                  nmonitor=50):
-        '''Initialise basic data structure'''
+        """Initialise basic data structure"""
         self.grid = grid
 
         self.alpha = alpha
         self.tol = tol
         self.niters = niters
-        self.history_size = 4
+        self.history_size = history_size
         if npicard is None: npicard = history_size + 1
         self.npicard = npicard
         self.line_search_decay = line_search_decay
@@ -110,17 +148,143 @@ class Solver:
         self.warmed_up = False
         self.parstrings = [f'α = {self.alpha}', f'tol = {self.tol:0.1e}',
                            f'niters = {self.niters}']
-        self.name = 'Solver'
-        self.details = f'{self.name}: ' + ', '.join(self.parstrings)
 
-    def oz_solution(self, rho, cq):
-        '''Solve the OZ equation for h in terms of c, in reciprocal space.'''
+    @property
+    def name(self):
+        return type(self).__name__
+
+    def __repr__(self):
+        return f'{self.name}: ' + ', '.join(self.parstrings)
+
+    @property
+    def r(self):
+        return self.grid.r
+
+    @property
+    def hr(self):
+        return self.er + self.cr
+
+    @property
+    def br(self):
+        return self.bridge_closure(self.er)
+
+    @property
+    def gr(self):
+        return 1 + self.hr
+
+    @property
+    def eq(self):
+        return self.grid.fourier_bessel_forward(self.er)
+
+    @property
+    def bq(self):
+        return self.grid.fourier_bessel_forward(self.br)
+
+    @property
+    def cq(self):
+        return self.grid.fourier_bessel_forward(self.cr)
+
+    @property
+    def hq(self):
+        return self.grid.fourier_bessel_forward(self.hr)
+
+    @property
+    def gq(self):
+        return self.grid.fourier_bessel_forward(self.gr)
+
+    @property
+    def Sq(self):
+        return 1 + self.rho * self.hq
+
+    @property
+    def e(self):
+        return self.er
+
+    @property
+    def b(self):
+        return self.br
+
+    @property
+    def c(self):
+        return self.cr
+
+    @property
+    def h(self):
+        return self.hr
+
+    @property
+    def g(self):
+        return self.gr
+
+    @abstractmethod
+    def bridge_closure(self, e: NDArray, *args, **kwargs):
+        """Closure of the OZ equation for $b(r)$."""
+        raise NotImplementedError
+
+    def oz_solution_hq_from_cq(self, cq: NDArray, rho: float, *args, **kwargs):
+        """Solve the reciprocal OZ equation for $h(q)$ in terms of $c(q)$."""
         return cq / (1 - rho*cq)
 
-    def solve(self, vr, rho, cr_init=None, monitor=False):
-        '''Solve HNC for a given potential, with an optional initial guess at cr'''
-        self_name = self.name + '.solve' # used in reporting below
-        cr = np.copy(cr_init) if cr_init is not None else np.copy(self.cr) if self.warmed_up else -np.copy(vr)
+    # def oz_solution_cq_from_hq(self, hq: NDArray, rho: float, *args, **kwargs):
+    #     """Solve the reciprocal OZ equation for $c(q)$ in terms of $h(q)$."""
+    #     return hq / (1 + rho*hq)
+
+    def oz_solution_eq_from_cq(self, cq: NDArray, rho: float, *args, **kwargs):
+        """Solve the reciprocal OZ equation for $e(q)$ in terms of $c(q)$."""
+        return self.oz_solution_hq_from_cq(cq, rho, *args, **kwargs) - cq
+
+    # def oz_solution_eq_from_hq(self, hq: NDArray, rho: float, *args, **kwargs):
+    #     """Solve the reciprocal OZ equation for $e(q)$ in terms of $h(q)$."""
+    #     return rho * hq**2 / (1 + rho*hq)
+
+    def oz_solution_hr_from_cr(self, cr: NDArray, *args, **kwargs):
+        """Solve the OZ equation for $h(r)$ in terms of $c(r)$"""
+        cq = self.grid.fourier_bessel_forward(cr)
+        hq = self.oz_solution_hq_from_cq(cq, *args, **kwargs)
+        return self.grid.fourier_bessel_backward(hq)
+
+    def oz_solution_er_from_cr(self, cr: NDArray, *args, **kwargs):
+        """Solve the OZ equation for $e(r) = h(r) - c(r)$"""
+        cq = self.grid.fourier_bessel_forward(cr)
+        eq = self.oz_solution_eq_from_cq(cq, *args, **kwargs)
+        return self.grid.fourier_bessel_backward(eq)
+
+    # def oz_solution_er_from_hr(self, hr: NDArray, *args, **kwargs):
+    #     """Solve the OZ equation for $e(r) = h(r) - c(r)$"""
+    #     hq = self.grid.fourier_bessel_forward(hr)
+    #     eq = self.oz_solution_eq_from_hq(hq, *args, **kwargs)
+    #     return self.grid.fourier_bessel_backward(eq)
+
+    def solve(self, potential: Type[potentials.Potential],
+              rho: float, T: float=1.,
+              cr_init: NDArray=None,
+              monitor: bool=False,
+              restart: bool=False):
+        """Solve HNC for a given potential, with an optional initial guess at cr.
+
+        To iteratively solve the OZ equation we use the limited memory
+        quasi-Newton method of:
+        K.-C. Ng, J. Chem. Phys. 61, 2680 (1974).
+
+        Args:
+            potential: pair potential.
+            rho: density.
+            T: temperature (defaults to 1 so potential in units of kT).
+            cr_init: initial guess for c(r).
+            monitor: if True will print iteration updates monitoring progress.
+            restart: if True, will start afresh regardless. If False, will
+                        start from the most recently converged solution (if
+                        available) or cr_init if given.
+        """
+
+        vr = potential(self.r) / T
+        if cr_init is not None:
+            assert not restart
+            cr = cr_init.copy()
+        elif not self.warmed_up or restart:
+            cr = -vr
+        else:
+            cr = self.cr.copy()
         expnegvr = np.exp(-vr) # for convenience, also works with np.inf
 
         inner = lambda u, v: simpson(u*v, dx=self.grid.deltar)
@@ -134,10 +298,9 @@ class Solver:
         # Solve OZ equation during each iteration.
         def iteration(cr):
             if np.any(np.isnan(cr)): raise ValueError
-            cq = self.grid.fourier_bessel_forward(cr) # forward transform c(r) to c(q)
-            eq = self.oz_solution(rho, cq) - cq # solve the OZ equation for e(q) = h(q) - c(q)
-            er = self.grid.fourier_bessel_backward(eq) # back transform e(q) to e(r)
-            cr_new = expnegvr*np.exp(er) - er - 1 # iterate with the HNC closure
+            er = self.oz_solution_er_from_cr(cr, rho)
+            br = self.bridge_closure(er)
+            cr_new = expnegvr*np.exp(er + br) - er - 1 # iterate with the OZ closure
             if np.any(np.isnan(cr_new)): raise ValueError
             return cr_new, er
 
@@ -145,8 +308,20 @@ class Solver:
         cr_new, er = iteration(cr)
         cr_out += [cr_new.copy()]
         cr_delta += [cr_out[-1] - cr_in[-1]]
+        prev_change = magnitude(cr_delta[-1])
+
+        assert not np.any(np.isnan(cr_in[-1]))
+        assert not np.any(np.isnan(cr_new[-1]))
 
         for iter in range(self.niters):
+
+            self.converged = prev_change < self.tol
+            if self.converged:
+                if iter > 0 and monitor:
+                    print(f'{iter:>4}  {prev_change:<10.4g}')
+                break
+
+            if iter == 0 and monitor: print('iter  error')
 
             # Determine optimal direction for line search.
             if iter < self.npicard:
@@ -158,7 +333,7 @@ class Solver:
             else:
                 # Switch to limited-memory quasi-Newton method of
                 # K.-C. Ng, J. Chem. Phys. 61, 2680 (1974).
-  
+
                 n = len(cr_in)
                 delta = [cr_delta[-1] - cr_delta[-i-1] for i in range(1, n)]
                 residual = [inner(cr_delta[-1], delta[i]) for i in range(n-1)]
@@ -182,16 +357,19 @@ class Solver:
             for line_iter in range(self.nline_searches):
                 cr = cr_in[-1] + step_size * step
 
-                self.error = np.inf
+                new_change = np.inf
                 try:
                     cr_new, er = iteration(cr)
                     if np.any(np.isnan(cr_new)): raise ValueError
                     delta = cr_new - cr
-                    self.error = magnitude(delta)
+                    new_change = magnitude(delta)
+
+                except NotImplementedError as err:
+                    raise err from None
 
                 except: pass
 
-                if np.isfinite(self.error): break
+                if np.isfinite(new_change): break
                 step_size *= self.line_search_decay
 
             else:
@@ -200,31 +378,71 @@ class Solver:
             cr_in += [cr.copy()]
             cr_out += [cr_new.copy()]
             cr_delta += [delta.copy()]
+            prev_change = new_change
 
-            # Convergence test
-            self.converged = self.error < self.tol
-            if monitor and (iter % self.nmonitor == 0 or self.converged):
-                iter_s = f'{self_name}: iteration %{len(str(self.niters))}d,' % iter
-                print(f'{iter_s} error = {self.error:0.3e}')
-            if self.converged:
-                break
+            if monitor and (iter % self.nmonitor == 0):
+                print(f'{iter:>4}  {prev_change:<10.4g}')
 
-        if self.converged:
-            self.cr = cr_new # use the most recent calculation
-            self.cq = self.grid.fourier_bessel_forward(cr)
-            self.hr = self.cr + er # total correlation function
-            eq = self.grid.fourier_bessel_forward(er)
-            self.hq = self.cq + eq
-            self.warmed_up = True
-        else: # we leave it to the user to check if self.converged is False :-)
-            pass
+        self.cr = cr_new
+        self.er = er
+        self.potential = potential
+        self.rho = rho
+        self.T = T
+        self.error = prev_change
+
+        if self.converged: self.warmed_up = True
+
         if monitor:
             if self.converged:
-                print(f'{self_name}: converged')
+                if iter > 0: print(f'{self.name}: converged')
             else:
-                print(f'{self_name}: iteration {iter:3d}, error = {self.error:0.3e}')
-                print(f'{self_name}: failed to converge')
-        return self # the user can name this 'soln' or something
+                print(f'{self.name}: iteration {iter:3d}, error = {self.error:0.3e}')
+                print(f'{self.name}: failed to converge')
+
+        return self.copy() # the user can name this 'soln' or something
+
+    @property
+    def pressure(self):
+        """$\beta p$ via virial route."""
+        assert self.converged
+        f = self.potential.force(self.r)
+        f[f > 1e4] = 0.
+        I = simpson(self.r**3*self.g*f, self.r)
+        return self.rho + 2/3 * np.pi * self.rho**2 / self.T * I
+
+    @property
+    def excess_chemical_potential(self):
+        raise NotImplementedError
+
+
+class PercusYevickSolver(OrnsteinZernikeSolver):
+    def bridge_closure(self, e: NDArray, *args, **kwargs):
+        """Closure to the OZ equation for $b(r)$."""
+        with np.errstate(invalid='ignore'):
+            return np.log(1 + e) - e
+
+
+class HypernettedChainSolver(OrnsteinZernikeSolver):
+    def bridge_closure(self, e: NDArray, *args, **kwargs):
+        """Closure to the OZ equation for $b(r)$."""
+        return np.zeros_like(e)
+
+    @property
+    def excess_chemical_potential(self):
+        r"""Chemical potential/test particle route for $\beta \mu^\mathrm{ex}$."""
+        assert self.converged
+        I = simpson(self.r**2*(self.h*self.e/2 - self.c), self.r)
+        return 4*np.pi * self.rho / self.T * I
+
+    @property
+    def excess_free_energy_density(self):
+        r"""Free energy route for $\beta f^\mathrm{ex} = \beta F^\mathrm{ex} / V$."""
+        return self.rho * (1 + self.excess_chemical_potential) - self.pressure
+
+
+# Default to HNC closure
+Solver = HypernettedChainSolver
+
 
 # Below, the above is sub-classed to redefine the OZ equation in terms
 # of the product of the solvent structure factor S(q).  This enables
@@ -299,40 +517,56 @@ class Solver:
 # existing instantiation.
 
 class SoluteSolver(Solver):
-    '''Subclass for infinitely dilute solute inside solvent.'''
+    """Subclass for infinitely dilute solute inside solvent."""
 
-    def __init__(self, S00q, *args, **kwargs):
+    def __init__(self, solvent, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.S00q = S00q
-        self.name = 'SoluteSolver'
-        self.details = f'{self.name}: ' + ', '.join(self.parstrings)
+        self.solvent = solvent.copy()
 
-    def oz_solution(self, rho, cq): # rho is not used here
-        '''Solve the modified OZ equation for h, in reciprocal space.'''
-        return self.S00q * cq
+    def init_args(self):
+        return [self.solvent] + super().init_args()
 
-    def solve(self, vr, cr_init=None, monitor=False):
-        return super().solve(vr, 0.0, cr_init, monitor) # rho = 0.0 is not needed
+    def oz_solution_hq_from_cq(self, cq: NDArray, rho: float):
+        """Solve the modified OZ equation for h, in reciprocal space."""
+        return self.solvent.Sq * cq
+
+    def solve(self, potential, *args, **kwargs):
+        # rho = 0.0 as it is not needed
+        return super().solve(potential, 0.0, *args, **kwargs)
 
 # Below, cases added by Josh
 
 class TestParticleRPA(Solver):
-    '''Subclass for mean-field DFT approach.'''
-    
-    def oz_solution(self, rho, cq):
-        '''Solution to the OZ equation in reciprocal space.'''
+    """Subclass for mean-field DFT approach."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def oz_solution_hq_from_cq(self, cq: NDArray, rho: float):
+        """Solution to the OZ equation in reciprocal space."""
         return cq / (1 + rho*self.vq) # force RPA closure in reciprocal term
 
-    def solve(self, vr, *args, **kwargs):
+    def solve(self, potential,
+              rho: float, T: float=1.,
+              *args, **kwargs):
+        vr = potential(self.r) / T
         self.vq = self.grid.fourier_bessel_forward(vr) # forward transform v(r) to v(q)
-        return super().solve(vr, *args, **kwargs)
+        return super().solve(potential, rho, T, *args, **kwargs)
 
 class SoluteTestParticleRPA(SoluteSolver):
-    
-    def oz_solution(self, rho, cq):
-        '''Solution to the OZ equation in reciprocal space.'''
-        return cq - (self.S00q - 1) * self.vq01 # RPA closure
 
-    def solve(self, vr01, *args, **kwargs):
+    def __init__(self, *args, npicard=np.inf, **kwargs):
+        try: super().__init__(*args, npicard=npicard, **kwargs)
+        except TypeError:
+            # If npicard given as positional argument drop it.
+            super().__init__(*args, **kwargs)
+
+    def oz_solution_hq_from_cq(self, cq: NDArray, rho: float):
+        """Solution to the OZ equation in reciprocal space."""
+        return cq - self.solvent.rho * self.solvent.hq * self.vq01 # RPA closure
+
+    def solve(self, potential, T: float=1.,
+              *args, **kwargs):
+        vr01 = potential(self.r) / T
         self.vq01 = self.grid.fourier_bessel_forward(vr01) # forward transform v(r) to v(q)
-        return super().solve(vr01, *args, **kwargs)
+        return super().solve(potential, T, *args, **kwargs)
