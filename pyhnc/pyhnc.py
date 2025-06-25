@@ -359,7 +359,7 @@ class OrnsteinZernikeSolver(ABC):
             assert not restart
             input = guess.copy()
         else:
-            if not self.warmed_up or restart:
+            if restart or not self.warmed_up:
                 h = np.zeros_like(self.r)
                 e = self.oz_solution_e_from_h(h, rho)
             else:
