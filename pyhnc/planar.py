@@ -271,7 +271,7 @@ class PlanarSolver(pyhnc.SoluteSolver):
         integrand = self.h*(self.h-self.c)/2 - self.c
 
         # Subtract homogeneous value taking Gibbs surface at x=0.
-        index = self.N//4 # Point furthest from interface on either side
+        index = len(self.x)//4 # Point furthest from interface on either side
         pressure = integrand[index]
         hom = pressure * np.ones_like(integrand)
         hom[self.x>0] = 0.
@@ -353,3 +353,9 @@ class PlanarSolver(pyhnc.SoluteSolver):
         step_size = 1.
 
         return step, step_size
+
+    def solve(self, *args, method: str='h', **kwargs):
+        """Change default method to total correlation $h(r)$ as there are
+        convergence issues (slow or non-existent) with indirect correlation
+        function with planar case for some reason."""
+        return super().solve(*args, **kwargs, method=method)
