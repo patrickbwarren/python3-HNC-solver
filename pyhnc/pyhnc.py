@@ -101,15 +101,15 @@ class OrnsteinZernikeSolver(ABC):
 
     @classmethod
     def from_instance(cls, old):
-        new = cls(*old.init_args())
+        new = cls(**old.init_kwargs())
 
         new.converged = old.converged
         new.warmed_up = old.warmed_up
 
         if old.warmed_up:
-            new.er = old.er.copy()
-            new.br = old.br.copy()
-            new.cr = old.cr.copy()
+            new.e = old.e.copy()
+            new.b = old.b.copy()
+            new.c = old.c.copy()
             new.potential = old.potential
             new.rho = old.rho
             new.T = old.T
@@ -120,12 +120,16 @@ class OrnsteinZernikeSolver(ABC):
     def copy(self):
         return self.from_instance(self)
 
-    def init_args(self):
-        return [self.grid, self.alpha,
-                self.tol, self.niters,
-                self.npicard, self.history_size,
-                self.line_search_decay, self.nline_searches,
-                self.nmonitor]
+    def init_kwargs(self):
+        return {'grid': self.grid,
+                'alpha': self.alpha,
+                'tol': self.tol,
+                'niters': self.niters,
+                'npicard': self.npicard,
+                'history_size': self.history_size,
+                'line_search_decay': self.line_search_decay,
+                'nline_searches': self.nline_searches,
+                'nmonitor': self.nmonitor}
 
     def __init__(self, grid,
                  alpha=0.5, tol=1e-12, niters=500, npicard=None,
@@ -162,56 +166,40 @@ class OrnsteinZernikeSolver(ABC):
         return self.grid.r
 
     @property
-    def hr(self):
-        return self.er + self.cr
+    def density(self):
+        return self.rho
 
     @property
-    def gr(self):
-        return 1 + self.hr
+    def h(self):
+        return self.e + self.c
+
+    @property
+    def g(self):
+        return 1 + self.h
 
     @property
     def eq(self):
-        return self.grid.fourier_bessel_forward(self.er)
+        return self.grid.fourier_bessel_forward(self.e)
 
     @property
     def bq(self):
-        return self.grid.fourier_bessel_forward(self.br)
+        return self.grid.fourier_bessel_forward(self.b)
 
     @property
     def cq(self):
-        return self.grid.fourier_bessel_forward(self.cr)
+        return self.grid.fourier_bessel_forward(self.c)
 
     @property
     def hq(self):
-        return self.grid.fourier_bessel_forward(self.hr)
+        return self.grid.fourier_bessel_forward(self.h)
 
     @property
     def gq(self):
-        return self.grid.fourier_bessel_forward(self.gr)
+        return self.grid.fourier_bessel_forward(self.g)
 
     @property
     def Sq(self):
         return 1 + self.rho * self.hq
-
-    @property
-    def e(self):
-        return self.er
-
-    @property
-    def b(self):
-        return self.br
-
-    @property
-    def c(self):
-        return self.cr
-
-    @property
-    def h(self):
-        return self.hr
-
-    @property
-    def g(self):
-        return self.gr
 
     @abstractmethod
     def bridge_closure(self, e: NDArray, *args, **kwargs):
@@ -274,7 +262,7 @@ class OrnsteinZernikeSolver(ABC):
                         available) or cr_init if given.
         """
 
-        vr = potential(self.r) / T
+        phi = potential(self.r) / T
         if e_init is not None:
             assert not restart
             e = e_init.copy()
@@ -297,7 +285,7 @@ class OrnsteinZernikeSolver(ABC):
         d = deque(maxlen=self.history_size) # change g[i] - f[i]
 
         f += [e]
-        c = np.exp(-vr + f[-1] + b) - f[-1] - 1
+        c = np.exp(-phi + f[-1] + b) - f[-1] - 1
         g += [self.oz_solution_er_from_cr(c, rho)]
         d += [g[-1] - f[-1]]
         prev_change = magnitude(d[-1])
@@ -352,7 +340,7 @@ class OrnsteinZernikeSolver(ABC):
                 new_change = np.inf
                 try:
                     b = self.bridge_closure(trial)
-                    c = np.exp(-vr + trial + b) - trial - 1
+                    c = np.exp(-phi + trial + b) - trial - 1
                     e = self.oz_solution_er_from_cr(c, rho)
                     if np.any(np.isnan(e)): raise ValueError
 
@@ -378,9 +366,9 @@ class OrnsteinZernikeSolver(ABC):
             if monitor and (iter % self.nmonitor == 0):
                 print(f'{iter:>4}  {prev_change:<10.4g}')
 
-        self.er = f[-1]
-        self.br = b
-        self.cr = c
+        self.e = f[-1]
+        self.b = b
+        self.c = c
         self.potential = potential
         self.rho = rho
         self.T = T
@@ -528,8 +516,10 @@ class SoluteSolver(Solver):
         super().__init__(*args, **kwargs)
         self.solvent = solvent.copy()
 
-    def init_args(self):
-        return [self.solvent] + super().init_args()
+    def init_kwargs(self):
+        kwargs = super().init_kwargs()
+        kwargs['solvent'] = self.solvent
+        return kwargs
 
     def oz_solution_hq_from_cq(self, cq: NDArray, rho: float):
         """Solve the modified OZ equation for h, in reciprocal space."""
