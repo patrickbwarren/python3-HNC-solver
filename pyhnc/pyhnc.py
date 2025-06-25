@@ -27,8 +27,12 @@ import numpy as np
 from scipy.integrate import simpson
 from collections import deque
 
-from .utilities import *
-from . import potentials
+try:
+    from .utilities import *
+    from . import potentials
+except ImportError:
+    from utilities import *
+    import potentials
 
 from abc import ABC, abstractmethod
 from typing import Type
@@ -166,6 +170,10 @@ class OrnsteinZernikeSolver(ABC):
         return self.grid.r
 
     @property
+    def dr(self):
+        return self.grid.deltar
+
+    @property
     def density(self):
         return self.rho
 
@@ -222,29 +230,88 @@ class OrnsteinZernikeSolver(ABC):
         """Solve the reciprocal OZ equation for $e(q)$ in terms of $h(q)$."""
         return hq - self.oz_solution_cq_from_hq(hq, rho)
 
-    def oz_solution_hr_from_cr(self, cr: NDArray, *args, **kwargs):
-        """Solve the OZ equation for $h(r)$ in terms of $c(r)$"""
-        cq = self.grid.fourier_bessel_forward(cr)
+    def oz_solution_h_from_c(self, c: NDArray, *args, **kwargs):
+        """Solve the OZ equation for $h(\vec{r})$ in terms of $c(\vec{r})$"""
+        cq = self.grid.fourier_bessel_forward(c)
         hq = self.oz_solution_hq_from_cq(cq, *args, **kwargs)
         return self.grid.fourier_bessel_backward(hq)
 
-    def oz_solution_er_from_cr(self, cr: NDArray, *args, **kwargs):
-        """Solve the OZ equation for $e(r) = h(r) - c(r)$"""
-        cq = self.grid.fourier_bessel_forward(cr)
+    def oz_solution_e_from_c(self, c: NDArray, *args, **kwargs):
+        """Solve the OZ equation for $e(\vec{r}) = h(\vec{r}) - c(\vec{r})$"""
+        cq = self.grid.fourier_bessel_forward(c)
         eq = self.oz_solution_eq_from_cq(cq, *args, **kwargs)
         return self.grid.fourier_bessel_backward(eq)
 
-    def oz_solution_er_from_hr(self, hr: NDArray, *args, **kwargs):
-        """Solve the OZ equation for $e(r) = h(r) - c(r)$"""
-        hq = self.grid.fourier_bessel_forward(hr)
+    def oz_solution_e_from_h(self, h: NDArray, *args, **kwargs):
+        """Solve the OZ equation for $e(\vec{r}) = h(\vec{r}) - c(\vec{r})$"""
+        hq = self.grid.fourier_bessel_forward(h)
         eq = self.oz_solution_eq_from_hq(hq, *args, **kwargs)
         return self.grid.fourier_bessel_backward(eq)
 
+    def inner_product(self, u, v):
+        return simpson(u*v, dx=self.dr)
+
+    def magnitude(self, u):
+        return self.inner_product(u, u)**0.5
+
+    def picard_direction(self, f, g, d):
+        """Most basic direction for line search simply moves in direction of
+        last change. This is required for (at least) the first few iterations
+        before we can infer more optimal directions from the curvature of the
+        fitness landscape.
+        """
+        return d[-1], self.alpha
+
+    def optimal_direction(self, f, g, d):
+        """Algorithm will try to switch to limited-memory quasi-Newton method
+        of K.-C. Ng, J. Chem. Phys. 61, 2680 (1974) to speed up convergence.
+        """
+        delta = [d[-1] - d[-i-1] for i in range(1, len(f))]
+        residual = [self.inner_product(d[-1], delta[i]) for i in range(len(f)-1)]
+
+        A = np.empty((len(f)-1, len(f)-1))
+        for i in range(len(A)):
+            for j in range(i, len(A)):
+                A[i,j] = self.inner_product(delta[i], delta[j])
+                A[j,i] = A[i,j]
+
+        # if np.linalg.cond(A) > 1:
+        #     # Revert to Picard if matrix singular
+        #     return self.picard_direction(f, g, d)
+
+        α = np.zeros(len(f))
+        α[1:] = np.linalg.solve(A, residual)
+        α[0] = 1 - np.sum(α[1:])
+        α = np.flipud(α)
+        step = α.dot(g) - f[-1]
+        step_size = 1.
+
+        return step, step_size
+
+    def e_iteration(self, e_in: NDArray,
+                    phi: NDArray, rho: float):
+
+        b = self.bridge_closure(e_in)
+        c = np.exp(-phi + e_in + b) - e_in - 1
+        e_out = self.oz_solution_e_from_c(c, rho)
+        if np.any(np.isnan(e_out)): raise ValueError
+        return e_out
+
+    def h_iteration(self, h_in: NDArray,
+                    phi: NDArray, rho: float):
+
+        e = self.oz_solution_e_from_h(h_in)
+        b = self.bridge_closure(e)
+        h_out = np.exp(-phi + e + b) - 1
+        if np.any(np.isnan(h_out)): raise ValueError
+        return h_out
+
     def solve(self, potential: Type[potentials.Potential],
               rho: float, T: float=1.,
-              e_init: NDArray=None,
+              guess: NDArray=None,
               monitor: bool=False,
-              restart: bool=False):
+              restart: bool=False,
+              method: str='e'):
         """Solve HNC for a given potential, with an optional initial guess at cr.
 
         To iteratively solve the OZ equation we use the limited memory
@@ -255,40 +322,50 @@ class OrnsteinZernikeSolver(ABC):
             potential: pair potential.
             rho: density.
             T: temperature (defaults to 1 so potential in units of kT).
-            e_init: initial guess for e(r).
+            guess: initial guess for e(r) or h(r) depending on selected method.
             monitor: if True will print iteration updates monitoring progress.
             restart: if True, will start afresh regardless. If False, will
                         start from the most recently converged solution (if
                         available) or cr_init if given.
+            method: either 'e' or 'h' to use indirect or total correlation as
+                        the iteration variable.
         """
 
-        phi = potential(self.r) / T
-        if e_init is not None:
-            assert not restart
-            e = e_init.copy()
-        elif not self.warmed_up or restart:
-            h = np.zeros_like(self.r)
-            b = np.zeros_like(self.r)
-            e = self.oz_solution_er_from_hr(h, rho)
-        else:
-            h = self.h.copy()
-            b = self.b.copy()
-            e = self.e.copy()
-        if np.any(np.isnan(e)): raise ValueError
+        assert method in ['e', 'h']
 
-        inner = lambda u, v: simpson(u*v, dx=self.grid.deltar)
-        magnitude = lambda u: inner(u, u)**0.5
+        phi = potential(self.r) / T
+        if guess is not None:
+            assert not restart
+            input = guess.copy()
+        else:
+            if not self.warmed_up or restart:
+                h = np.zeros_like(self.r)
+                e = self.oz_solution_e_from_h(h, rho)
+            else:
+                h = self.h.copy()
+                b = self.b.copy()
+                e = self.e.copy()
+
+            input = e if method == 'e' else h
+
+        if method == 'e':
+            iteration = self.e_iteration
+        else:
+            assert method == 'h'
+            iteration = self.h_iteration
+
+        if np.any(np.isnan(input)): raise ValueError
 
         # Memory of iterations for inferring hessian
-        f = deque(maxlen=self.history_size) # input value of e
-        g = deque(maxlen=self.history_size) # output value of e
+        f = deque(maxlen=self.history_size) # input value in each step
+        g = deque(maxlen=self.history_size) # output value in each step
         d = deque(maxlen=self.history_size) # change g[i] - f[i]
 
-        f += [e]
-        c = np.exp(-phi + f[-1] + b) - f[-1] - 1
-        g += [self.oz_solution_er_from_cr(c, rho)]
+        output = iteration(input, phi, rho)
+        f += [input]
+        g += [output]
         d += [g[-1] - f[-1]]
-        prev_change = magnitude(d[-1])
+        prev_change = self.magnitude(d[-1])
 
         assert np.all(f[-1] > -1)
         assert not np.any(np.isnan(f[-1]))
@@ -306,30 +383,9 @@ class OrnsteinZernikeSolver(ABC):
 
             # Determine optimal direction for line search.
             if iter < self.npicard:
-                # First few iterations we do not have curvature information
-                # so we must resort to normal downhill direction (Picard). 
-                step = d[-1]
-                step_size = self.alpha
-
+                step, step_size = self.picard_direction(f, g, d)
             else:
-                # Switch to limited-memory quasi-Newton method of
-                # K.-C. Ng, J. Chem. Phys. 61, 2680 (1974).
-
-                delta = [d[-1] - d[-i-1] for i in range(1, len(f))]
-                residual = [inner(d[-1], delta[i]) for i in range(len(f)-1)]
-
-                A = np.empty((len(f)-1, len(f)-1))
-                for i in range(len(A)):
-                    for j in range(i, len(A)):
-                        A[i,j] = inner(delta[i], delta[j])
-                        A[j,i] = A[i,j]
-
-                α = np.zeros(len(f))
-                α[1:] = np.linalg.solve(A, residual)
-                α[0] = 1 - np.sum(α[1:])
-                α = np.flipud(α)
-                step = α.dot(g) - f[-1]
-                step_size = 1.
+                step, step_size = self.optimal_direction(f, g, d)
 
             if np.any(np.isnan(step)): raise ValueError
 
@@ -339,13 +395,10 @@ class OrnsteinZernikeSolver(ABC):
 
                 new_change = np.inf
                 try:
-                    b = self.bridge_closure(trial)
-                    c = np.exp(-phi + trial + b) - trial - 1
-                    e = self.oz_solution_er_from_cr(c, rho)
-                    if np.any(np.isnan(e)): raise ValueError
-
-                    delta = e - trial
-                    new_change = magnitude(delta)
+                    output = iteration(trial, phi, rho)
+                    if np.any(np.isnan(output)): raise ValueError
+                    delta = output - trial
+                    new_change = self.magnitude(delta)
 
                 except NotImplementedError as err:
                     raise err from None
@@ -359,16 +412,23 @@ class OrnsteinZernikeSolver(ABC):
                 raise RuntimeError('line search stalled!')
 
             f += [trial]
-            g += [e]
+            g += [output]
             d += [delta]
             prev_change = new_change
 
             if monitor and (iter % self.nmonitor == 0):
                 print(f'{iter:>4}  {prev_change:<10.4g}')
 
-        self.e = f[-1]
-        self.b = b
-        self.c = c
+        if method == 'e':
+            self.e = f[-1]
+        else:
+            assert method == 'h'
+            h = f[-1]
+            self.e = self.oz_solution_e_from_h(h)
+
+        self.b = self.bridge_closure(self.e)
+        self.c = np.exp(-phi + self.e + self.b) - self.e - 1
+
         self.potential = potential
         self.rho = rho
         self.T = T

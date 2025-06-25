@@ -21,7 +21,8 @@
 
 # Hyper-netted chain (HNC) solver for Ornstein-Zernike (OZ) equation.
 
-from .utilities import *
+try: from .utilities import *
+except ImportError: from utilities import *
 
 from abc import ABC, abstractmethod
 from typing import Type

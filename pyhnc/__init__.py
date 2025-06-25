@@ -23,4 +23,9 @@
 
 __version__ = '1.0' # for reporting purposes
 
-from .pyhnc import *
+try:
+    from .pyhnc import *
+    from . import planar
+except ImportError:
+    from pyhnc import *
+    import planar
