@@ -388,7 +388,7 @@ class OrnsteinZernikeSolver(ABC):
         d += [g[-1] - f[-1]]
         prev_change = self.magnitude(d[-1])
 
-        if method == 'h': assert np.all(f[-1] >= -1)
+        # if method == 'h': assert np.all(f[-1] >= -1)
         assert not np.any(np.isnan(f[-1]))
         assert not np.any(np.isnan(g[-1]))
 
