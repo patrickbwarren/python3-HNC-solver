@@ -412,13 +412,13 @@ class OrnsteinZernikeSolver(ABC):
 
             # Backtracking line search
             for line_iter in range(self.nline_searches):
-                trial = f[-1] + step_size * step
+                input = f[-1] + step_size * step
 
                 new_change = np.inf
                 try:
-                    output = iteration(trial, phi, rho)
+                    output = iteration(input, phi, rho)
                     if np.any(np.isnan(output)): raise ValueError
-                    delta = output - trial
+                    delta = output - input
                     new_change = self.magnitude(delta)
 
                 except NotImplementedError as err:
@@ -432,7 +432,7 @@ class OrnsteinZernikeSolver(ABC):
             else:
                 raise RuntimeError('line search stalled!')
 
-            f += [trial]
+            f += [input]
             g += [output]
             d += [delta]
             prev_change = new_change
