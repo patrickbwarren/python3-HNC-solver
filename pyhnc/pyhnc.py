@@ -207,6 +207,7 @@ class OrnsteinZernikeSolver(ABC):
 
     @property
     def Sq(self):
+        """Static structure factor."""
         return 1 + self.rho * self.hq
 
     @abstractmethod
@@ -249,9 +250,16 @@ class OrnsteinZernikeSolver(ABC):
         return self.grid.fourier_bessel_backward(eq)
 
     def inner_product(self, u, v):
+        """Inner product between two real functions defined as
+        u.v = \int dx u(x) v(x).
+        This is needed to quantify errors during iteration.
+        """
         return simpson(u*v, dx=self.dr)
 
     def magnitude(self, u):
+        """Magnitude of function defined as its absolute value.
+        This is used to reduce error in the result to a scalar value to
+        e.g. estimate convergence."""
         return self.inner_product(u, u)**0.5
 
     def picard_direction(self, f, g, d):
@@ -290,6 +298,13 @@ class OrnsteinZernikeSolver(ABC):
 
     def e_iteration(self, e_in: NDArray,
                     phi: NDArray, rho: float):
+        """Determine the next 'output' indirect correlation
+        $e(r) = h(r) - c(r)$ by solving the OZ equation (with appropriate
+        closure) from the current 'input' $e(r)$.
+
+        The difference between input and output correlations indicates the
+        error at this iteration step.
+        """
 
         b = self.bridge_closure(e_in)
         c = np.exp(-phi + e_in + b) - e_in - 1
@@ -299,6 +314,12 @@ class OrnsteinZernikeSolver(ABC):
 
     def h_iteration(self, h_in: NDArray,
                     phi: NDArray, rho: float):
+        """Determine the next 'output' total correlation $h(r)$ by solving the
+        OZ equation (with appropriate closure) from the current 'input' $h(r)$.
+
+        The difference between input and output correlations indicates the
+        error at this iteration step.
+        """
 
         e = self.oz_solution_e_from_h(h_in)
         b = self.bridge_closure(e)
