@@ -43,20 +43,86 @@ class Potential(ABC):
 
 
 class DPD(Potential):
-    def __init__(self, A: float, *args, sigma: float=1., **kwargs):
+    """Quadratic potential used for coarse-graining in dissipative particle
+    dynamics (DPD):
+
+    $$v(r) = \frac{A}{2} (\sigma - r)^2 \qquad \forall r \le \sigma\,,$$
+
+    and $v(r) = 0$ for $r > \sigma$. This potential is convenient as the force
+    decreases linearly from $r = 0$ to $\sigma$ making it very soft and thus
+    suitable for large time-steps.
+    """
+
+    def __init__(self, A: float | NDArray,
+                 sigma: float | NDArray=1.):
+        A = np.atleast_2d(A)
+        assert A.shape[0] == A.shape[1]
+        sigma = np.atleast_2d(sigma)
+        assert sigma.shape[0] == sigma.shape[1]
+
+        if 1 in sigma.shape:
+            sigma = sigma[0][0] * np.ones_like(A)
+
         self.A = A
         self.sigma = sigma
 
-    def potential(self, r):
-        return truncate_to_zero(0.5*self.A*(self.sigma-r)**2/self.sigma, r, 1)
+    @property
+    def nspecies(self):
+        return len(self.A)
 
-    def force(self, r):
-        return truncate_to_zero(self.A*(1-r/self.sigma), r, 1)
+    def potential(self, r: float | NDArray):
+        r = np.atleast_1d(r)
+
+        v = 0.5 * self.A[:,:,None] * (self.sigma[:,:,None] - r[None,None,:])**2
+        v[r[None,None,:] > self.sigma[:,:,None]] = 0.
+        v = np.squeeze(v)
+        if v.ndim == 0: v = v.item()
+
+        return v
+
+    def force(self, r: float | NDArray):
+        r = np.atleast_1d(r)
+
+        f = -self.A[:,:,None] * (self.sigma[:,:,None] - r[None,None,:])
+        f[r[None,None,:] > self.sigma[:,:,None]] = 0.
+        f = np.squeeze(f)
+        if f.ndim == 0: f = f.item()
+
+        return f
+
+
+def test_dpd():
+    r = np.linspace(0, 10, 100)
+
+    # Tests for single-component systems.
+
+    A = 25
+    v = DPD(A)
+    assert np.isscalar(v.potential(1.))
+    assert not np.isscalar(v.potential(r))
+
+    from scipy.optimize import approx_fprime
+    exact = np.array([approx_fprime(rr, v.potential) for rr in r]).reshape(-1)
+    assert np.allclose(v.force(r), exact, rtol=1e-6)
+
+    sigma = 2.
+    v = DPD(A, sigma)
+    phi = v.potential(r)
+    assert np.all(np.isclose(phi[r > sigma], 0.))
+    assert np.all(~np.isclose(phi[r < sigma], 0.))
+
+    # Test it also works for binary and ternary mixtures.
+    for n in [2, 3]:
+        A = 25 * np.ones((n, n))
+        v = DPD(A)
+        assert v.potential(1.).shape == A.shape
+        assert v.potential(r).shape == (n, n, r.size)
 
 
 class LennardJones(Potential):
-    def __init__(self, sigma: float = 1., epsilon: float = 1., rcut: float = None,
-                 *args, **kwargs):
+    def __init__(self, sigma: float = 1.,
+                 epsilon: float = 1.,
+                 rcut: float = None):
         self.sigma = sigma
         self.epsilon = epsilon
         if rcut is None: rcut = 2.5*self.sigma
@@ -80,3 +146,7 @@ class LennardJones(Potential):
         f = 4*self.epsilon * (12*r6inv**2 - 6*r6inv) / r
         f[r >= self.rcut] = 0.
         return f
+
+
+if __name__ == '__main__':
+    test_dpd()
