@@ -243,19 +243,54 @@ class OrnsteinZernikeSolver(ABC):
         """Closure of the OZ equation for $b(r)$."""
         raise NotImplementedError
 
-    def oz_solution_hq_from_cq(self, cq: NDArray, rho: float, *args, **kwargs):
+    def oz_solution_hq_from_cq(self, cq: NDArray, rho: NDArray,
+                               *args, **kwargs):
         """Solve the reciprocal OZ equation for $h(q)$ in terms of $c(q)$."""
-        return cq / (1 - rho*cq)
+        if np.isscalar(rho):
+            return cq / (1 - rho*cq)
+        else:
+            nspecies = rho.size
+            m, m2, n = cq.shape
+            assert m == nspecies
+            assert m2 == m
 
-    def oz_solution_cq_from_hq(self, hq: NDArray, rho: float, *args, **kwargs):
+            R = np.diag(rho)                            # (m, m)
+            CR = np.einsum('ijk, jl->ilk', cq, R)       # (m, m, n)
+            I = np.eye(nspecies)[:, :, None]            # (m, m, n)
+            A = I - CR
+            A_inv = np.linalg.inv(A.transpose(2, 0, 1)) # (n, m, m)
+            A_inv = A_inv.transpose(1, 2, 0)            # (m, m, n)
+
+            return np.einsum('ijk, jlk->ilk', A_inv, cq)
+
+    def oz_solution_cq_from_hq(self, hq: NDArray, rho: NDArray,
+                               *args, **kwargs):
         """Solve the reciprocal OZ equation for $c(q)$ in terms of $h(q)$."""
-        return hq / (1 + rho*hq)
+        if np.isscalar(rho):
+            return hq / (1 + rho*hq)
+        else:
+            nspecies = rho.size
+            m, m2, n = hq.shape
+            assert m == nspecies
+            assert m2 == m
 
-    def oz_solution_eq_from_cq(self, cq: NDArray, rho: float, *args, **kwargs):
+            R = np.diag(rho)                            # (m, m)
+            R_inv = np.linalg.inv(R)                    # (m, m)
+            RH = np.einsum('ij, jkl->ikl', R, hq)       # (m, m, n)
+            I = np.eye(nspecies)[:, :, None]            # (m, m, n)
+            A = I + RH
+            A_inv = np.linalg.inv(A.transpose(2, 0, 1)) # (n, m, m)
+            A_inv = A_inv.transpose(1, 2, 0)            # (m, m, n)
+
+            return np.einsum('ij, jkl->ikl', R_inv, I - A_inv)
+
+    def oz_solution_eq_from_cq(self, cq: NDArray, rho: NDArray,
+                               *args, **kwargs):
         """Solve the reciprocal OZ equation for $e(q)$ in terms of $c(q)$."""
         return self.oz_solution_hq_from_cq(cq, rho, *args, **kwargs) - cq
 
-    def oz_solution_eq_from_hq(self, hq: NDArray, rho: float, *args, **kwargs):
+    def oz_solution_eq_from_hq(self, hq: NDArray, rho: NDArray,
+                               *args, **kwargs):
         """Solve the reciprocal OZ equation for $e(q)$ in terms of $h(q)$."""
         return hq - self.oz_solution_cq_from_hq(hq, rho)
 
@@ -277,20 +312,48 @@ class OrnsteinZernikeSolver(ABC):
         eq = self.oz_solution_eq_from_hq(hq, *args, **kwargs)
         return self.grid.fourier_bessel_backward(eq)
 
-    def inner_product(self, u, v):
+    def inner_product(self, u: NDArray, v: NDArray):
         r"""Inner product between two real functions defined as
 
             $$u.v = \int dx u(x) v(x)\,.$$
 
         This is needed to quantify errors during iteration.
-        """
-        return simpson(u*v, dx=self.dr)
 
-    def magnitude(self, u):
-        """Magnitude of function defined as its absolute value.
+        If u and v are multiple functions (e.g. on an mxm grid as occurs
+        for m-component mixtures) then the integrals are performed
+        independently.
+        """
+        out = np.empty(u.shape[:-1])
+        for idx in np.ndindex(out.shape):
+            out[idx] = simpson(u[idx]*v[idx], dx=self.dr)
+        return np.sum(out)
+
+    def magnitude(self, u: NDArray):
+        """Magnitude of function defined as its Euclidean norm.
         This is used to reduce error in the result to a scalar value to
         e.g. estimate convergence."""
         return self.inner_product(u, u)**0.5
+
+    def has_finite_size_effects(self, nend=10):
+        """Check solution for finite size effects.
+
+        Domain should be large enough that $h(r) \to 0$  as $r \to \infty$.
+        So our test is whether it stops varying near the end of the grid.
+        """
+
+        # Fetch edge of domain.
+        h = self.h.reshape(1, 1, -1) if self.h.ndim == 1 else self.h
+        h_end = h[:, :, -nend:]
+        h_end = h_end[:, :, -nend:]
+        r_end = self.r[-nend:]
+
+        # Check for changes near the boundary.
+        test = np.empty(h_end.shape[:-1])
+        L = simpson(np.ones_like(r_end), r_end)
+        for idx in np.ndindex(test.shape):
+            test[idx] = simpson(np.abs(h_end[idx]), r_end) / L
+        error = np.sum(test)
+        return error >= self.tol
 
     def picard_direction(self, f, g, d):
         """Most basic direction for line search simply moves in direction of
@@ -313,21 +376,19 @@ class OrnsteinZernikeSolver(ABC):
                 A[i,j] = self.inner_product(delta[i], delta[j])
                 A[j,i] = A[i,j]
 
-        # if np.linalg.cond(A) > 1:
-        #     # Revert to Picard if matrix singular
-        #     return self.picard_direction(f, g, d)
-
         α = np.zeros(len(f))
         α[1:] = np.linalg.solve(A, residual)
         α[0] = 1 - np.sum(α[1:])
         α = np.flipud(α)
-        step = α.dot(g) - f[-1]
+        step = np.einsum('i,i...->...', α, g) - f[-1]
         step_size = 1.
+
+        assert step.shape == f[-1].shape
 
         return step, step_size
 
     def e_iteration(self, e_in: NDArray,
-                    phi: NDArray, rho: float):
+                    phi: NDArray, rho: NDArray):
         """Determine the next 'output' indirect correlation
         $e(r) = h(r) - c(r)$ by solving the OZ equation (with appropriate
         closure) from the current 'input' $e(r)$.
@@ -343,7 +404,7 @@ class OrnsteinZernikeSolver(ABC):
         return e_out
 
     def h_iteration(self, h_in: NDArray,
-                    phi: NDArray, rho: float):
+                    phi: NDArray, rho: NDArray):
         """Determine the next 'output' total correlation $h(r)$ by solving the
         OZ equation (with appropriate closure) from the current 'input' $h(r)$.
 
@@ -358,7 +419,8 @@ class OrnsteinZernikeSolver(ABC):
         return h_out
 
     def solve(self, potential: Type[potentials.Potential],
-              rho: float, T: float=1.,
+              rho: float | NDArray,
+              T: float=1.,
               guess: NDArray=None,
               monitor: bool=False,
               restart: bool=False,
@@ -384,13 +446,27 @@ class OrnsteinZernikeSolver(ABC):
 
         assert method in ['e', 'h']
 
+        n = potential.nspecies
+        assert np.atleast_1d(rho).size == n
+
         phi = potential(self.r) / T
         if guess is not None:
             assert not restart
             input = guess.copy()
         else:
-            if restart or not self.warmed_up:
-                h = np.zeros_like(self.r)
+            if not restart:
+                if not self.warmed_up:
+                    # No previous solution so have to start afresh
+                    restart = True
+                else:
+                    # Check previous solution is compatabile with new potential
+                    # If it is, we'll use that as our initial guess.
+                    if self.e.ndim == 1: prev_nspecies = 1
+                    else: prev_nspecies = self.e.shape[0]
+                    if prev_nspecies != n: restart = True
+
+            if restart:
+                h = np.squeeze(np.zeros((n, n, self.r.size)))
                 e = self.oz_solution_e_from_h(h, rho)
             else:
                 h = self.h.copy()
@@ -486,12 +562,7 @@ class OrnsteinZernikeSolver(ABC):
         self.error = prev_change
 
         if converged:
-            # Final check for finite size effects - the domain should be large
-            # enough that $h(r) \to 0$  as $r \to \infty$
-            nend = 10
-            error = simpson(np.abs(self.h[-nend:]), self.r[-nend:])
-            error /= simpson(np.ones_like(self.r[-nend:]), self.r[-nend:])
-            converged = error < self.tol
+            if self.has_finite_size_effects(): converged = False
             if converged: self.warmed_up = True
 
         self.converged = converged
@@ -638,7 +709,8 @@ class SoluteSolver(Solver):
 
     def solve(self, potential, *args, **kwargs):
         # rho = 0.0 as it is not needed
-        return super().solve(potential, 0.0, *args, **kwargs)
+        rho = np.zeros(potential.nspecies) if potential.nspecies > 1 else 0.
+        return super().solve(potential, rho, *args, **kwargs)
 
 # Below, cases added by Josh
 
