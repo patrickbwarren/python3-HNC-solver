@@ -30,6 +30,11 @@ from numpy.typing import NDArray
 
 
 class Potential(ABC):
+    @property
+    @abstractmethod
+    def nspecies(self):
+        raise NotImplementedError
+
     @abstractmethod
     def potential(self, r: NDArray | float):
         raise NotImplementedError
@@ -120,6 +125,15 @@ def test_dpd():
 
 
 class LennardJones(Potential):
+    r"""Standard truncated Lennard-Jones potential used in atomic simulations:
+
+        $$v(r) = 4\epsilon \left( \left( \frac{\sigma}{r} \right)^12 - \left( \frac{\sigma}{r} \right)^6 \right)\,.$$
+
+    If truncated at some rcut < infinity) then this becomes
+
+        $$v_\text{truncate}(r) = v(r) - v(rcut)\,.$$
+    """
+
     def __init__(self, sigma: float = 1.,
                  epsilon: float = 1.,
                  rcut: float = None):
@@ -133,6 +147,10 @@ class LennardJones(Potential):
 
     def __call__(self, *args, **kwargs):
         return self.potential(*args, **kwargs)
+
+    @property
+    def nspecies(self):
+        return 1
 
     def potential(self, r):
         r6inv = (self.sigma/r)**6

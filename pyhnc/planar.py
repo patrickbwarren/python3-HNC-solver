@@ -41,6 +41,10 @@ except ImportError: import pyhnc, potentials
 
 
 class Wall(potentials.Potential):
+    @property
+    def nspecies(self):
+        return 1
+
     @abstractmethod
     def potential(self, x: NDArray | float):
         raise NotImplementedError
