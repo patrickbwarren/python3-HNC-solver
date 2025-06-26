@@ -78,29 +78,21 @@ class RadialGrid:
 
     def fourier_bessel_forward(self, fr):
         """Forward transform f(r) to reciprocal space"""
-        assert fr.ndim >= 1
-        if fr.ndim == 1:
-            self.fftwx[:] = self.r * fr
+        out = np.empty_like(fr)
+        for idx in np.ndindex(fr.shape[:-1]):
+            self.fftwx[:] = self.r * fr[idx]
             self.fftw.execute()
-            return 2*np.pi*self.deltar/self.q * self.fftwy
-        else:
-            out = np.empty_like(fr)
-            for idx in np.ndindex(fr.shape[:-1]):
-                out[idx] = self.fourier_bessel_forward(fr[idx])
-            return out
+            out[idx] = 2*np.pi*self.deltar/self.q * self.fftwy
+        return out
 
     def fourier_bessel_backward(self, fq):
         """Back transform f(q) to real space"""
-        assert fq.ndim >= 1
-        if fq.ndim == 1:
-            self.fftwx[:] = self.q * fq
+        out = np.empty_like(fq)
+        for idx in np.ndindex(fq.shape[:-1]):
+            self.fftwx[:] = self.q * fq[idx]
             self.fftw.execute()
-            return self.deltaq/(4*np.pi**2*self.r) * self.fftwy
-        else:
-            out = np.empty_like(fq)
-            for idx in np.ndindex(fq.shape[:-1]):
-                out[idx] = self.fourier_bessel_forward(fq[idx])
-            return out
+            out[idx] = self.deltaq/(4*np.pi**2*self.r) * self.fftwy
+        return out
 
 
 import pytest
