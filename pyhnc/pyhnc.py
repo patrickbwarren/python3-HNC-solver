@@ -78,15 +78,51 @@ class RadialGrid:
 
     def fourier_bessel_forward(self, fr):
         """Forward transform f(r) to reciprocal space"""
-        self.fftwx[:] = self.r * fr
-        self.fftw.execute()
-        return 2*np.pi*self.deltar/self.q * self.fftwy
+        assert fr.ndim >= 1
+        if fr.ndim == 1:
+            self.fftwx[:] = self.r * fr
+            self.fftw.execute()
+            return 2*np.pi*self.deltar/self.q * self.fftwy
+        else:
+            out = np.empty_like(fr)
+            for idx in np.ndindex(fr.shape[:-1]):
+                out[idx] = self.fourier_bessel_forward(fr[idx])
+            return out
 
     def fourier_bessel_backward(self, fq):
         """Back transform f(q) to real space"""
-        self.fftwx[:] = self.q * fq
-        self.fftw.execute()
-        return self.deltaq/(4*np.pi**2*self.r) * self.fftwy
+        assert fq.ndim >= 1
+        if fq.ndim == 1:
+            self.fftwx[:] = self.q * fq
+            self.fftw.execute()
+            return self.deltaq/(4*np.pi**2*self.r) * self.fftwy
+        else:
+            out = np.empty_like(fq)
+            for idx in np.ndindex(fq.shape[:-1]):
+                out[idx] = self.fourier_bessel_forward(fq[idx])
+            return out
+
+
+import pytest
+@pytest.mark.parametrize("alpha", [1, 0.1])
+def test_radial_grid(alpha, N=2**13, Δr=0.02):
+    grid = Grid(N, Δr)
+    r, q = grid.r, grid.q
+
+    # Verify against analytically calculatable function.
+    fr = (alpha/np.pi)**1.5 * np.exp(-alpha * r**2)
+    fq = grid.fourier_bessel_forward(fr)
+    exact = np.exp(-q**2 / (4*alpha))
+    assert np.all(np.isclose(fq, exact))
+
+    # Test fourier transform of an (m x m x n) matrix of 1xn arrays.
+    for m in [2, 3]:
+        fr_matrix = np.broadcast_to(fr, (m, m, fr.size))
+        fq = grid.fourier_bessel_forward(fr_matrix)
+        for i in range(m):
+            for j in range(m):
+                assert np.all(np.isclose(fq[i,j], exact))
+
 
 # Assume radial by default as normally spherical polars will be used for
 # spherical pair potentials
@@ -648,3 +684,7 @@ class SoluteTestParticleRPA(SoluteSolver):
         vr01 = potential(self.r) / T
         self.vq01 = self.grid.fourier_bessel_forward(vr01) # forward transform v(r) to v(q)
         return super().solve(potential, T, *args, **kwargs)
+
+
+if __name__ == '__main__':
+    test_radial_grid(1)
