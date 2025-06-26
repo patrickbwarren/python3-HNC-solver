@@ -250,8 +250,10 @@ class OrnsteinZernikeSolver(ABC):
         return self.grid.fourier_bessel_backward(eq)
 
     def inner_product(self, u, v):
-        """Inner product between two real functions defined as
-        u.v = \int dx u(x) v(x).
+        r"""Inner product between two real functions defined as
+
+            $$u.v = \int dx u(x) v(x)\,.$$
+
         This is needed to quantify errors during iteration.
         """
         return simpson(u*v, dx=self.dr)

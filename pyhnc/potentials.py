@@ -43,10 +43,10 @@ class Potential(ABC):
 
 
 class DPD(Potential):
-    """Quadratic potential used for coarse-graining in dissipative particle
+    r"""Quadratic potential used for coarse-graining in dissipative particle
     dynamics (DPD):
 
-    $$v(r) = \frac{A}{2} (\sigma - r)^2 \qquad \forall r \le \sigma\,,$$
+        $$v(r) = \frac{A}{2} (\sigma - r)^2 \qquad \forall r \le \sigma\,,$$
 
     and $v(r) = 0$ for $r > \sigma$. This potential is convenient as the force
     decreases linearly from $r = 0$ to $\sigma$ making it very soft and thus
