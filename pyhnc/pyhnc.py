@@ -335,7 +335,7 @@ class OrnsteinZernikeSolver(ABC):
         return self.inner_product(u, u)**0.5
 
     def has_finite_size_effects(self, nend=10):
-        """Check solution for finite size effects.
+        r"""Check solution for finite size effects.
 
         Domain should be large enough that $h(r) \to 0$  as $r \to \infty$.
         So our test is whether it stops varying near the end of the grid.
@@ -619,6 +619,26 @@ class HypernettedChainSolver(OrnsteinZernikeSolver):
 Solver = HypernettedChainSolver
 
 
+@pytest.mark.parametrize('m', [2, 3])
+def test_mixtures(m, A0=25, ρ=3.0, N=2**13, Δr=0.02):
+    """Test OZ solver for mixtures is consistent with single-component case."""
+
+    grid = Grid(N, Δr)
+    solvent = Solver(grid)
+
+    φ = potentials.DPD(A0)
+    sol1 = solvent.solve(φ, ρ)
+
+    A = A0 * np.ones((m, m))
+    φ = potentials.DPD(A)
+    xi = np.ones(m) / m
+    ρi = xi * ρ
+    sol2 = solvent.solve(φ, ρi)
+
+    for idx in np.ndindex(sol2.h.shape[:-1]):
+        assert np.all(np.isclose(sol2.h[idx], sol1.h))
+
+
 # Below, the above is sub-classed to redefine the OZ equation in terms
 # of the product of the solvent structure factor S(q).  This enables
 # the above machinery to be re-used for solving the problem of an
@@ -752,3 +772,4 @@ class SoluteTestParticleRPA(SoluteSolver):
 
 if __name__ == '__main__':
     test_radial_grid(1)
+    for m in [2, 3]: test_mixtures(m)
