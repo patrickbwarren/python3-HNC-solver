@@ -62,6 +62,40 @@ class Potential(ABC):
         return self.potential(*args, **kwargs)
 
 
+class ShortRangeResidual(Potential):
+    r"""Excess part of a potential after removing a long-range part.
+
+    In solving the OZ equation it's often convenient to separate off the
+    long-range tail using the asymptotic properties of correlation functions.
+    In particular, $c(r) \to -\beta v(r)$ for large $r$. This can be exploited
+    to use a smaller grid size and improve convergence. This class is a helper
+    interface to access the remaining part of $v(r)$ after subtracting the
+    long-range part that $v(r)$ approaches at large $r$.
+    """
+
+    def __getstate__(self):
+        return {'full': self.full, 'long': self.long}
+
+    def __repr__(self):
+        return rf'<ShortRangeResidual full={self.full} long={self.long}>'
+
+    def __init__(self, full, long):
+        self.full = full
+        self.long = long
+        assert self.full.nspecies == self.long.nspecies
+
+    @property
+    def nspecies(self):
+        assert self.full.nspecies == self.long.nspecies
+        return self.full.nspecies
+
+    def potential(self, r: float | NDArray):
+        return self.full.potential(r) - self.long.potential(r)
+
+    def force(self, r: float | NDArray):
+        return self.full.force(r) - self.long.force(r)
+
+
 class DPD(Potential):
     r"""Quadratic potential used for coarse-graining in dissipative particle
     dynamics (DPD):
@@ -102,9 +136,9 @@ class DPD(Potential):
 
         v = 0.5 * self.A[:,:,None] * (self.sigma[:,:,None] - r[None,None,:])**2
         v[r[None,None,:] > self.sigma[:,:,None]] = 0.
+
         v = np.squeeze(v)
         if v.ndim == 0: v = v.item()
-
         return v
 
     def force(self, r: float | NDArray):
@@ -112,9 +146,9 @@ class DPD(Potential):
 
         f = -self.A[:,:,None] * (self.sigma[:,:,None] - r[None,None,:])
         f[r[None,None,:] > self.sigma[:,:,None]] = 0.
+
         f = np.squeeze(f)
         if f.ndim == 0: f = f.item()
-
         return f
 
 
@@ -171,6 +205,12 @@ class LennardJones(Potential):
         $$v_\text{truncate}(r) = v(r) - v(rcut)\,.$$
     """
 
+    def __getstate__(self):
+        return {'sigma': self.sigma,
+                'epsilon': self.epsilon,
+                'rcut': self.rcut,
+                'vshift': self.vshift}
+
     def __init__(self, sigma: float = 1.,
                  epsilon: float = 1.,
                  rcut: float = None):
@@ -189,19 +229,66 @@ class LennardJones(Potential):
     def nspecies(self):
         return 1
 
-    def potential(self, r):
+    def potential(self, r: float | NDArray):
+        r = np.atleast_1d(r)
+
         r6inv = (self.sigma/r)**6
         v = 4*self.epsilon * (r6inv**2 - r6inv) - self.vshift
         v[r >= self.rcut] = 0.
+
+        v = np.squeeze(v)
+        if v.ndim == 0: v = v.item()
         return v
 
-    def force(self, r):
+    def force(self, r: float | NDArray):
+        r = np.atleast_1d(r)
+
         rinv = self.sigma/r
         r6inv = rinv**6
-        f = 4*self.epsilon * (12*r6inv**2 - 6*r6inv) / r
+        f = -4*self.epsilon * (12*r6inv**2 - 6*r6inv) / r
         f[r >= self.rcut] = 0.
+
+        f = np.squeeze(f)
+        if f.ndim == 0: f = f.item()
         return f
+
+
+def test_lj():
+    import pickle
+    def test_copy(v, v2):
+        assert v2 is not v
+        assert np.all(v.sigma == v2.sigma)
+        assert np.all(v.epsilon == v2.epsilon)
+        assert np.all(v.rcut == v2.rcut)
+        v2.sigma += 1
+        v2.epsilon += 1
+        v2.rcut += 1
+        assert np.all(v.sigma != v2.sigma)
+        assert np.all(v.epsilon != v2.epsilon)
+        assert np.all(v.rcut != v2.rcut)
+
+    r = np.linspace(1, 10, 100)
+
+    # Tests for single-component systems.
+
+    v = LennardJones()
+    assert np.isscalar(v.potential(1.))
+    assert not np.isscalar(v.potential(r))
+    assert v.copy().potential(1.) == v.potential(1.)
+    test_copy(v, v.copy())
+    test_copy(v, pickle.loads(pickle.dumps(v)))
+
+    from scipy.optimize import approx_fprime
+    exact = np.array([approx_fprime(rr, v.potential) for rr in r]).reshape(-1)
+    assert np.allclose(v.force(r), exact, rtol=1e-6)
+
+    rcut = 2.
+    v = LennardJones(rcut=rcut)
+    phi = v.potential(r)
+    assert np.all(np.isclose(phi[r > rcut], 0.))
+    assert np.all(~np.isclose(phi[r < rcut], 0.))
 
 
 if __name__ == '__main__':
     test_dpd()
+    test_lj()
