@@ -27,7 +27,7 @@ except ImportError: from utilities import *
 from abc import ABC, abstractmethod
 from typing import Type
 from numpy.typing import NDArray
-
+from scipy.special import erf
 
 class Potential(ABC):
 
@@ -195,6 +195,137 @@ def test_dpd():
         test_copy(v, pickle.loads(pickle.dumps(v)))
 
 
+class GaussianIonLongRange(Potential):
+    r"""Long range part of GaussianIon."""
+
+    def __getstate__(self):
+        return {'full': self.full}
+
+    def __init__(self, full):
+        self.full = full
+
+    @property
+    def nspecies(self):
+        return self.full.nspecies
+
+    def potential(self, r: float | NDArray):
+        r = np.atleast_1d(r)
+
+        with np.errstate(invalid='ignore'):
+            v = erf(self.full.α**0.5 * r) / (4*np.pi * r)
+        v = np.outer(self.full.q, self.full.q)[:,:,None] * v[None,None,:]
+
+        v = np.squeeze(v)
+        if v.ndim == 0: v = v.item()
+        return v
+
+    def potential_fourier(self, k: float | NDArray):
+        k = np.atleast_1d(k)
+
+        with np.errstate(invalid='ignore'):
+            v = np.exp(-k**2 / (4*self.full.α)) / k**2
+        v = np.outer(self.full.q, self.full.q)[:,:,None] * v[None,None,:]
+
+        v = np.squeeze(v)
+        if v.ndim == 0: v = v.item()
+        return v
+
+    def force(self, r: float | NDArray):
+        r = np.atleast_1d(r)
+        α = self.full.α
+
+        with np.errstate(invalid='ignore'):
+            f = (erf(α**0.5 * r)/r -
+                 2*(α/np.pi)**0.5 * np.exp(-α*r**2)) / (4*np.pi * r)
+        f = np.outer(self.full.q, self.full.q)[:,:,None] * f[None,None,:]
+
+        f = np.squeeze(f)
+        if f.ndim == 0: f = f.item()
+        return f
+
+
+class GaussianIon(Potential):
+    r"""Interactions between ions with normally distributed charges:
+
+        $$\rho_i(r) = q_i \left( \frac{\alpha}{\pi} \right)^{3/2} e^{-\alpha r^2}\,,$$
+
+    where $r$ is the distance from the atom centre.
+    """
+
+    def __getstate__(self):
+        return {'q': self.q.copy(),
+                'α': self.α.copy()}
+
+    def __repr__(self):
+        return rf'<GaussianIon q={self.q} α={self.α}>'
+
+    def __init__(self, q: float | NDArray, α: float):
+        self.q = np.atleast_1d(q)
+        self.α = np.array(α)
+        assert self.α.size == 1
+
+        self.long = GaussianIonLongRange(self)
+        self.short = ShortRangeResidual(self, self.long)
+
+    @property
+    def nspecies(self):
+        return len(self.q)
+
+    def potential(self, r: float | NDArray):
+        r = np.atleast_1d(r)
+
+        with np.errstate(invalid='ignore'):
+            v = erf((0.5*self.α)**0.5 * r) / (4*np.pi * r)
+        v = np.outer(self.q, self.q)[:,:,None] * v[None,None,:]
+
+        v = np.squeeze(v)
+        if v.ndim == 0: v = v.item()
+        return v
+
+    def force(self, r: float | NDArray):
+        r = np.atleast_1d(r)
+        α = self.α
+
+        with np.errstate(invalid='ignore'):
+            f = (erf((0.5*α)**0.5 * r)/r -
+                 (2*α/np.pi)**0.5 * np.exp(-0.5*α*r**2)) / (4*np.pi * r)
+        f = np.outer(self.q, self.q)[:,:,None] * f[None,None,:]
+
+        f = np.squeeze(f)
+        if f.ndim == 0: f = f.item()
+        return f
+
+
+def test_gaussian_ion():
+    import pickle
+    def test_copy(v, v2):
+        assert v2 is not v
+        assert np.all(v.α == v2.α)
+        assert np.all(v.q == v2.q)
+        v2.α += 1
+        v2.q *= 2
+        assert np.all(v.α != v2.α)
+        assert np.all(v.q != v2.q)
+
+    v = GaussianIon([1, -1], 1)
+    assert np.allclose(v.copy().potential(1.), v.potential(1.))
+    test_copy(v, v.copy())
+    test_copy(v, pickle.loads(pickle.dumps(v)))
+
+    from scipy.optimize import approx_fprime
+    r = np.linspace(0, 10, 100)[1:]
+
+    for i in range(2):
+        for j in range(2):
+            for vv in [v, v.short, v.long]:
+                f = lambda r: vv.potential(r)[i,j]
+                exact = np.array([-approx_fprime(rr, f) for rr in r]).reshape(-1)
+                assert np.allclose(vv.force(r)[i,j], exact, rtol=1e-6)
+
+    short, long = v.short.potential(r), v.long.potential(r)
+    assert np.all(np.isclose(v.potential(r), short + long))
+
+
 class LennardJones(Potential):
     r"""Standard truncated Lennard-Jones potential used in atomic simulations:
 
@@ -291,4 +422,5 @@ def test_lj():
 
 if __name__ == '__main__':
     test_dpd()
+    test_gaussian_ion()
     test_lj()
