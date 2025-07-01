@@ -292,7 +292,7 @@ class OrnsteinZernikeSolver(ABC):
     def oz_solution_eq_from_hq(self, hq: NDArray, rho: NDArray,
                                *args, **kwargs):
         """Solve the reciprocal OZ equation for $e(q)$ in terms of $h(q)$."""
-        return hq - self.oz_solution_cq_from_hq(hq, rho)
+        return hq - self.oz_solution_cq_from_hq(hq, rho, *args, **kwargs)
 
     def oz_solution_h_from_c(self, c: NDArray, *args, **kwargs):
         """Solve the OZ equation for $h(\vec{r})$ in terms of $c(\vec{r})$"""
@@ -412,7 +412,7 @@ class OrnsteinZernikeSolver(ABC):
         error at this iteration step.
         """
 
-        e = self.oz_solution_e_from_h(h_in)
+        e = self.oz_solution_e_from_h(h_in, rho)
         b = self.bridge_closure(e)
         h_out = np.exp(-phi + e + b) - 1
         if np.any(np.isnan(h_out)): raise ValueError
@@ -551,7 +551,7 @@ class OrnsteinZernikeSolver(ABC):
         else:
             assert method == 'h'
             h = f[-1]
-            self.e = self.oz_solution_e_from_h(h)
+            self.e = self.oz_solution_e_from_h(h, rho)
 
         self.b = self.bridge_closure(self.e)
         self.c = np.exp(-phi + self.e + self.b) - self.e - 1
