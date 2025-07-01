@@ -315,8 +315,8 @@ def test_gaussian_ion():
     from scipy.optimize import approx_fprime
     r = np.linspace(0, 10, 100)[1:]
 
-    for i in range(2):
-        for j in range(2):
+    for i in range(v.nspecies):
+        for j in range(v.nspecies):
             for vv in [v, v.short, v.long]:
                 f = lambda r: vv.potential(r)[i,j]
                 exact = np.array([-approx_fprime(rr, f) for rr in r]).reshape(-1)
