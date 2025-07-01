@@ -144,7 +144,7 @@ class DPD(Potential):
     def force(self, r: float | NDArray):
         r = np.atleast_1d(r)
 
-        f = -self.A[:,:,None] * (self.sigma[:,:,None] - r[None,None,:])
+        f = self.A[:,:,None] * (self.sigma[:,:,None] - r[None,None,:])
         f[r[None,None,:] > self.sigma[:,:,None]] = 0.
 
         f = np.squeeze(f)
@@ -176,7 +176,7 @@ def test_dpd():
     test_copy(v, pickle.loads(pickle.dumps(v)))
 
     from scipy.optimize import approx_fprime
-    exact = np.array([approx_fprime(rr, v.potential) for rr in r]).reshape(-1)
+    exact = np.array([-approx_fprime(rr, v.potential) for rr in r]).reshape(-1)
     assert np.allclose(v.force(r), exact, rtol=1e-6)
 
     sigma = 2.
