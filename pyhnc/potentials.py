@@ -30,6 +30,21 @@ from numpy.typing import NDArray
 
 
 class Potential(ABC):
+
+    def copy(self):
+        cls = self.__class__
+        new = cls.__new__(cls)
+        new.__setstate__(self.__getstate__())
+        return new
+
+    @abstractmethod
+    def __getstate__(self):
+        raise NotImplementedError
+
+    def __setstate__(self, state):
+        for key, value in state.items():
+            setattr(self, key, value)
+
     @property
     @abstractmethod
     def nspecies(self):
@@ -57,6 +72,13 @@ class DPD(Potential):
     decreases linearly from $r = 0$ to $\sigma$ making it very soft and thus
     suitable for large time-steps.
     """
+
+    def __getstate__(self):
+        return {'A': self.A.copy(),
+                'sigma': self.sigma.copy()}
+
+    def __repr__(self):
+        return rf'<DPD A={self.A} σ={self.sigma}>'
 
     def __init__(self, A: float | NDArray,
                  sigma: float | NDArray=1.):
@@ -97,6 +119,16 @@ class DPD(Potential):
 
 
 def test_dpd():
+    import pickle
+    def test_copy(v, v2):
+        assert v2 is not v
+        assert np.all(v.A == v2.A)
+        assert np.all(v.sigma == v2.sigma)
+        v2.A += 1
+        v2.sigma += 1
+        assert np.all(v.A != v2.A)
+        assert np.all(v.sigma != v2.sigma)
+
     r = np.linspace(0, 10, 100)
 
     # Tests for single-component systems.
@@ -105,6 +137,9 @@ def test_dpd():
     v = DPD(A)
     assert np.isscalar(v.potential(1.))
     assert not np.isscalar(v.potential(r))
+    assert v.copy().potential(1.) == v.potential(1.)
+    test_copy(v, v.copy())
+    test_copy(v, pickle.loads(pickle.dumps(v)))
 
     from scipy.optimize import approx_fprime
     exact = np.array([approx_fprime(rr, v.potential) for rr in r]).reshape(-1)
@@ -122,6 +157,8 @@ def test_dpd():
         v = DPD(A)
         assert v.potential(1.).shape == A.shape
         assert v.potential(r).shape == (n, n, r.size)
+        test_copy(v, v.copy())
+        test_copy(v, pickle.loads(pickle.dumps(v)))
 
 
 class LennardJones(Potential):
