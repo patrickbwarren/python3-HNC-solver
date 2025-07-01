@@ -243,31 +243,51 @@ class OrnsteinZernikeSolver(ABC):
         """Closure of the OZ equation for $b(r)$."""
         raise NotImplementedError
 
-    def oz_solution_hq_from_cq(self, cq: NDArray, rho: NDArray,
-                               *args, **kwargs):
-        """Solve the reciprocal OZ equation for $h(q)$ in terms of $c(q)$."""
+    def oz_solution_hq_from_cq(self, cq: NDArray, rho: NDArray, *args, 
+                               cq_long: NDArray | float=0., **kwargs):
+        r"""Solve the reciprocal OZ equation for $h(q)$ in terms of $c(q)$.
+
+        Args:
+            cq: $c(q)$ as an mxmxN array where m=num species and N=grid size,
+                    or an N-dimensional array if m=1.
+            rho: concentration of each species (m-dimensional array) or scalar
+                    if there is a single species.
+            cq_long: long-range (small $q$) limit of $c(q)$ if known for Ng
+                         splitting (of same dimensions as hq), or simply zero
+                         if no splitting is performed.
+        """
         if np.isscalar(rho):
-            return cq / (1 - rho*cq)
+            return (cq+cq_long) / (1 - rho*(cq+cq_long))
         else:
             nspecies = rho.size
             m, m2, n = cq.shape
             assert m == nspecies
             assert m2 == m
 
-            R = np.diag(rho)                            # (m, m)
-            CR = np.einsum('ijk, jl->ilk', cq, R)       # (m, m, n)
-            I = np.eye(nspecies)[:, :, None]            # (m, m, n)
+            R = np.diag(rho)                                # (m, m)
+            CR = np.einsum('ijk, jl->ilk', cq + cq_long, R) # (m, m, n)
+            I = np.eye(nspecies)[:, :, None]                # (m, m, n)
             A = I - CR
-            A_inv = np.linalg.inv(A.transpose(2, 0, 1)) # (n, m, m)
-            A_inv = A_inv.transpose(1, 2, 0)            # (m, m, n)
+            A_inv = np.linalg.inv(A.transpose(2, 0, 1))     # (n, m, m)
+            A_inv = A_inv.transpose(1, 2, 0)                # (m, m, n)
 
             return np.einsum('ijk, jlk->ilk', A_inv, cq)
 
-    def oz_solution_cq_from_hq(self, hq: NDArray, rho: NDArray,
-                               *args, **kwargs):
-        """Solve the reciprocal OZ equation for $c(q)$ in terms of $h(q)$."""
+    def oz_solution_cq_from_hq(self, hq: NDArray, rho: NDArray, *args,
+                               cq_long: NDArray | float=0., **kwargs):
+        r"""Solve the reciprocal OZ equation for $c(q)$ in terms of $h(q)$.
+
+        Args:
+            hq: $h(q)$ as an mxmxN array where m=num species and N=grid size,
+                    or an N-dimensional array if m=1.
+            rho: concentration of each species (m-dimensional array) or scalar
+                    if there is a single species.
+            cq_long: long-range (small $q$) limit of $c(q)$ if known for Ng
+                         splitting (of same dimensions as hq), or simply zero
+                         if no splitting is performed.
+        """
         if np.isscalar(rho):
-            return hq / (1 + rho*hq)
+            return hq / (1 + rho*hq) - cq_long
         else:
             nspecies = rho.size
             m, m2, n = hq.shape
@@ -282,7 +302,7 @@ class OrnsteinZernikeSolver(ABC):
             A_inv = np.linalg.inv(A.transpose(2, 0, 1)) # (n, m, m)
             A_inv = A_inv.transpose(1, 2, 0)            # (m, m, n)
 
-            return np.einsum('ij, jkl->ikl', R_inv, I - A_inv)
+            return np.einsum('ij, jkl->ikl', R_inv, I - A_inv) - cq_long
 
     def oz_solution_eq_from_cq(self, cq: NDArray, rho: NDArray,
                                *args, **kwargs):
@@ -388,7 +408,8 @@ class OrnsteinZernikeSolver(ABC):
         return step, step_size
 
     def e_iteration(self, e_in: NDArray,
-                    phi: NDArray, rho: NDArray):
+                    phi: NDArray, rho: NDArray,
+                    cq_long: NDArray | float=0.):
         """Determine the next 'output' indirect correlation
         $e(r) = h(r) - c(r)$ by solving the OZ equation (with appropriate
         closure) from the current 'input' $e(r)$.
@@ -399,12 +420,13 @@ class OrnsteinZernikeSolver(ABC):
 
         b = self.bridge_closure(e_in)
         c = np.exp(-phi + e_in + b) - e_in - 1
-        e_out = self.oz_solution_e_from_c(c, rho)
+        e_out = self.oz_solution_e_from_c(c, rho, cq_long=cq_long)
         if np.any(np.isnan(e_out)): raise ValueError
         return e_out
 
     def h_iteration(self, h_in: NDArray,
-                    phi: NDArray, rho: NDArray):
+                    phi: NDArray, rho: NDArray,
+                    cq_long: NDArray | float=0.):
         """Determine the next 'output' total correlation $h(r)$ by solving the
         OZ equation (with appropriate closure) from the current 'input' $h(r)$.
 
@@ -412,7 +434,7 @@ class OrnsteinZernikeSolver(ABC):
         error at this iteration step.
         """
 
-        e = self.oz_solution_e_from_h(h_in, rho)
+        e = self.oz_solution_e_from_h(h_in, rho, cq_long=cq_long)
         b = self.bridge_closure(e)
         h_out = np.exp(-phi + e + b) - 1
         if np.any(np.isnan(h_out)): raise ValueError
@@ -449,6 +471,15 @@ class OrnsteinZernikeSolver(ABC):
         n = potential.nspecies
         assert np.atleast_1d(rho).size == n
 
+        if hasattr(potential, 'long'):
+            # Optional Ng splitting into short- and long-ranged contributions
+            # in potential
+            assert hasattr(potential.long, 'potential_fourier')
+            cq_long = -potential.long.potential_fourier(self.grid.q) / T
+            potential = potential.short
+        else:
+            cq_long = 0
+
         phi = potential(self.r) / T
         if guess is not None:
             assert not restart
@@ -467,7 +498,7 @@ class OrnsteinZernikeSolver(ABC):
 
             if restart:
                 h = np.squeeze(np.zeros((n, n, self.r.size)))
-                e = self.oz_solution_e_from_h(h, rho)
+                e = self.oz_solution_e_from_h(h, rho, cq_long=cq_long)
             else:
                 h = self.h.copy()
                 b = self.b.copy()
@@ -522,7 +553,7 @@ class OrnsteinZernikeSolver(ABC):
 
                 new_change = np.inf
                 try:
-                    output = iteration(input, phi, rho)
+                    output = iteration(input, phi, rho, cq_long=cq_long)
                     if np.any(np.isnan(output)): raise ValueError
                     delta = output - input
                     new_change = self.magnitude(delta)
@@ -551,7 +582,7 @@ class OrnsteinZernikeSolver(ABC):
         else:
             assert method == 'h'
             h = f[-1]
-            self.e = self.oz_solution_e_from_h(h, rho)
+            self.e = self.oz_solution_e_from_h(h, rho, cq_long=cq_long)
 
         self.b = self.bridge_closure(self.e)
         self.c = np.exp(-phi + self.e + self.b) - self.e - 1
