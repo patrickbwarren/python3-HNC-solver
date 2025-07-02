@@ -302,7 +302,7 @@ class OrnsteinZernikeSolver(ABC):
             A_inv = np.linalg.inv(A.transpose(2, 0, 1)) # (n, m, m)
             A_inv = A_inv.transpose(1, 2, 0)            # (m, m, n)
 
-            return np.einsum('ij, jkl->ikl', R_inv, I - A_inv) - cq_long
+            return np.einsum('ijk, jlk->ilk', hq, A_inv) - cq_long
 
     def oz_solution_eq_from_cq(self, cq: NDArray, rho: NDArray,
                                *args, **kwargs):
@@ -691,7 +691,7 @@ def test_mixture_cq_from_hq(m, N=2**13, Δr=0.02):
     expected = np.empty_like(H)
     for i in range(N):
         HH = H[:,:,i]
-        expected[:,:,i] = Rinv - Rinv @ (np.linalg.inv(I + R @ HH))
+        expected[:,:,i] = HH @ (np.linalg.inv(I + R @ HH))
 
     assert np.allclose(C, expected)
 
