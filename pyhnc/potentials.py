@@ -203,6 +203,9 @@ class GaussianIonLongRange(Potential):
     def __getstate__(self):
         return {'full': self.full}
 
+    def __repr__(self):
+        return rf'<GaussianIonLongRange z={self.full.z} α={self.full.α} lB={self.full.lB}>'
+
     def __init__(self, full):
         self.full = full
 
