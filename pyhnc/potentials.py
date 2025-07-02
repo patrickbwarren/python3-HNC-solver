@@ -100,32 +100,32 @@ class DPD(Potential):
     r"""Quadratic potential used for coarse-graining in dissipative particle
     dynamics (DPD):
 
-        $$v(r) = \frac{A}{2} (\sigma - r)^2 \qquad \forall r \le \sigma\,,$$
+        $$v(r) = \frac{A}{2} (1 - r/r_c)^2 \qquad \forall r \le \rcut\,,$$
 
-    and $v(r) = 0$ for $r > \sigma$. This potential is convenient as the force
-    decreases linearly from $r = 0$ to $\sigma$ making it very soft and thus
+    and $v(r) = 0$ for $r > r_c$. This potential is convenient as the force
+    decreases linearly from $r = 0$ to $\rcut$ making it very soft and thus
     suitable for large time-steps.
     """
 
     def __getstate__(self):
         return {'A': self.A.copy(),
-                'sigma': self.sigma.copy()}
+                'rcut': self.rcut.copy()}
 
     def __repr__(self):
-        return rf'<DPD A={self.A.tolist()} σ={self.sigma.tolist()}>'
+        return rf'<DPD A={self.A.tolist()} rc={self.rcut.tolist()}>'
 
     def __init__(self, A: float | NDArray,
-                 sigma: float | NDArray=1.):
+                 rcut: float | NDArray=1.):
         A = np.atleast_2d(A)
         assert A.shape[0] == A.shape[1]
-        sigma = np.atleast_2d(sigma)
-        assert sigma.shape[0] == sigma.shape[1]
+        rcut = np.atleast_2d(rcut)
+        assert rcut.shape[0] == rcut.shape[1]
 
-        if 1 in sigma.shape:
-            sigma = sigma[0][0] * np.ones_like(A)
+        if 1 in rcut.shape:
+            rcut = rcut[0][0] * np.ones_like(A)
 
         self.A = A
-        self.sigma = sigma
+        self.rcut = rcut
 
     @property
     def nspecies(self):
@@ -134,8 +134,9 @@ class DPD(Potential):
     def potential(self, r: float | NDArray):
         r = np.atleast_1d(r)
 
-        v = 0.5 * self.A[:,:,None] * (self.sigma[:,:,None] - r[None,None,:])**2
-        v[r[None,None,:] > self.sigma[:,:,None]] = 0.
+        v = 0.5 * self.A[:,:,None] * (self.rcut[:,:,None] - r[None,None,:])**2
+        v[r[None,None,:] > self.rcut[:,:,None]] = 0.
+        v /= self.rcut[:,:,None]**2
 
         v = np.squeeze(v)
         if v.ndim == 0: v = v.item()
@@ -144,8 +145,9 @@ class DPD(Potential):
     def force(self, r: float | NDArray):
         r = np.atleast_1d(r)
 
-        f = self.A[:,:,None] * (self.sigma[:,:,None] - r[None,None,:])
-        f[r[None,None,:] > self.sigma[:,:,None]] = 0.
+        f = self.A[:,:,None] * (self.rcut[:,:,None] - r[None,None,:])
+        f[r[None,None,:] > self.rcut[:,:,None]] = 0.
+        f /= self.rcut[:,:,None]**2
 
         f = np.squeeze(f)
         if f.ndim == 0: f = f.item()
@@ -157,11 +159,11 @@ def test_dpd():
     def test_copy(v, v2):
         assert v2 is not v
         assert np.all(v.A == v2.A)
-        assert np.all(v.sigma == v2.sigma)
+        assert np.all(v.rcut == v2.rcut)
         v2.A += 1
-        v2.sigma += 1
+        v2.rcut += 1
         assert np.all(v.A != v2.A)
-        assert np.all(v.sigma != v2.sigma)
+        assert np.all(v.rcut != v2.rcut)
 
     r = np.linspace(0, 10, 100)
 
@@ -179,11 +181,11 @@ def test_dpd():
     exact = np.array([-approx_fprime(rr, v.potential) for rr in r]).reshape(-1)
     assert np.allclose(v.force(r), exact, rtol=1e-6)
 
-    sigma = 2.
-    v = DPD(A, sigma)
+    rcut = 2.
+    v = DPD(A, rcut)
     phi = v.potential(r)
-    assert np.all(np.isclose(phi[r > sigma], 0.))
-    assert np.all(~np.isclose(phi[r < sigma], 0.))
+    assert np.allclose(phi[r > rcut], 0.)
+    assert np.all(~np.isclose(phi[r < rcut], 0.))
 
     # Test it also works for binary and ternary mixtures.
     for n in [2, 3]:
@@ -333,7 +335,7 @@ def test_gaussian_ion():
                 assert np.allclose(vv.force(r)[i,j], exact, rtol=1e-6)
 
     short, long = v.short.potential(r), v.long.potential(r)
-    assert np.all(np.isclose(v.potential(r), short + long))
+    assert np.allclose(v.potential(r), short + long)
 
 
 class LennardJones(Potential):
@@ -426,7 +428,7 @@ def test_lj():
     rcut = 2.
     v = LennardJones(rcut=rcut)
     phi = v.potential(r)
-    assert np.all(np.isclose(phi[r > rcut], 0.))
+    assert np.allclose(phi[r > rcut], 0.)
     assert np.all(~np.isclose(phi[r < rcut], 0.))
 
 
