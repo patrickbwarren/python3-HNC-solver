@@ -112,7 +112,7 @@ class DPD(Potential):
                 'sigma': self.sigma.copy()}
 
     def __repr__(self):
-        return rf'<DPD A={self.A} σ={self.sigma}>'
+        return rf'<DPD A={self.A.tolist()} σ={self.sigma.tolist()}>'
 
     def __init__(self, A: float | NDArray,
                  sigma: float | NDArray=1.):
