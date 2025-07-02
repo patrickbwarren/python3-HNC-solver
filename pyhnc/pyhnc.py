@@ -488,6 +488,7 @@ class OrnsteinZernikeSolver(ABC):
         n = potential.nspecies
         assert np.atleast_1d(rho).size == n
 
+        full_potential = potential # save a copy of unsplit potential for end
         if hasattr(potential, 'long'):
             # Optional Ng splitting into short- and long-ranged contributions
             # in potential
@@ -537,7 +538,7 @@ class OrnsteinZernikeSolver(ABC):
         g = deque(maxlen=self.history_size) # output value in each step
         d = deque(maxlen=self.history_size) # change g[i] - f[i]
 
-        output = iteration(input, phi, rho)
+        output = iteration(input, phi, rho, cq_long=cq_long)
         f += [input]
         g += [output]
         d += [g[-1] - f[-1]]
@@ -605,7 +606,7 @@ class OrnsteinZernikeSolver(ABC):
         self.b = self.bridge_closure(self.e)
         self.c = np.exp(-phi + self.e + self.b) - self.e - 1
 
-        self.potential = potential
+        self.potential = full_potential
         self.rho = rho
         self.T = T
         self.error = prev_change
