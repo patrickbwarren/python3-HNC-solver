@@ -212,8 +212,8 @@ class GaussianIonLongRange(Potential):
         r = np.atleast_1d(r)
 
         with np.errstate(invalid='ignore'):
-            v = erf(self.full.α**0.5 * r) / (4*np.pi * r)
-        v = np.outer(self.full.q, self.full.q)[:,:,None] * v[None,None,:]
+            v = self.full.lB * erf(self.full.α**0.5 * r) / r
+        v = np.outer(self.full.z, self.full.z)[:,:,None] * v[None,None,:]
 
         v = np.squeeze(v)
         if v.ndim == 0: v = v.item()
@@ -223,8 +223,8 @@ class GaussianIonLongRange(Potential):
         k = np.atleast_1d(k)
 
         with np.errstate(invalid='ignore'):
-            v = np.exp(-k**2 / (4*self.full.α)) / k**2
-        v = np.outer(self.full.q, self.full.q)[:,:,None] * v[None,None,:]
+            v = 4*np.pi * self.full.lB * np.exp(-k**2 / (2*self.full.α)) / k**2
+        v = np.outer(self.full.z, self.full.z)[:,:,None] * v[None,None,:]
 
         v = np.squeeze(v)
         if v.ndim == 0: v = v.item()
@@ -235,9 +235,10 @@ class GaussianIonLongRange(Potential):
         α = self.full.α
 
         with np.errstate(invalid='ignore'):
-            f = (erf(α**0.5 * r)/r -
-                 2*(α/np.pi)**0.5 * np.exp(-α*r**2)) / (4*np.pi * r)
-        f = np.outer(self.full.q, self.full.q)[:,:,None] * f[None,None,:]
+            f = self.full.lB * (
+                    erf(α**0.5 * r)/r - 2*(α/np.pi)**0.5 * np.exp(-α*r**2)
+                ) / r
+        f = np.outer(self.full.z, self.full.z)[:,:,None] * f[None,None,:]
 
         f = np.squeeze(f)
         if f.ndim == 0: f = f.item()
@@ -247,36 +248,40 @@ class GaussianIonLongRange(Potential):
 class GaussianIon(Potential):
     r"""Interactions between ions with normally distributed charges:
 
-        $$\rho_i(r) = q_i \left( \frac{\alpha}{\pi} \right)^{3/2} e^{-\alpha r^2}\,,$$
+        $$\rho_i(r) = \ell_\mathrm{B} z_i
+        \left( \frac{\alpha}{\pi} \right)^{3/2} e^{-\alpha r^2}\,,$$
 
-    where $r$ is the distance from the atom centre.
+    where $r$ is the distance from the atom centre, $\ell_\mathrm{B}$ is the
+    Bjerrum length and $z_i$ is the valence of species $i$.
     """
 
     def __getstate__(self):
-        return {'q': self.q.copy(),
-                'α': self.α.copy()}
+        return {'z': self.z.copy(),
+                'α': self.α.copy(),
+                'lB': self.lB}
 
     def __repr__(self):
-        return rf'<GaussianIon q={self.q} α={self.α}>'
+        return rf'<GaussianIon z={self.z} α={self.α} lB={self.lB}>'
 
-    def __init__(self, q: float | NDArray, α: float):
-        self.q = np.atleast_1d(q)
+    def __init__(self, q: float | NDArray, α: float, lB: float=1.):
+        self.z = np.atleast_1d(q)
         self.α = np.array(α)
         assert self.α.size == 1
+        self.lB = lB
 
         self.long = GaussianIonLongRange(self)
         self.short = ShortRangeResidual(self, self.long)
 
     @property
     def nspecies(self):
-        return len(self.q)
+        return len(self.z)
 
     def potential(self, r: float | NDArray):
         r = np.atleast_1d(r)
 
         with np.errstate(invalid='ignore'):
-            v = erf((0.5*self.α)**0.5 * r) / (4*np.pi * r)
-        v = np.outer(self.q, self.q)[:,:,None] * v[None,None,:]
+            v = self.lB * erf((0.5*self.α)**0.5 * r) / r
+        v = np.outer(self.z, self.z)[:,:,None] * v[None,None,:]
 
         v = np.squeeze(v)
         if v.ndim == 0: v = v.item()
@@ -287,9 +292,11 @@ class GaussianIon(Potential):
         α = self.α
 
         with np.errstate(invalid='ignore'):
-            f = (erf((0.5*α)**0.5 * r)/r -
-                 (2*α/np.pi)**0.5 * np.exp(-0.5*α*r**2)) / (4*np.pi * r)
-        f = np.outer(self.q, self.q)[:,:,None] * f[None,None,:]
+            f = self.lB * (
+                    erf((0.5*self.α)**0.5 * r)/r -
+                    (2*self.α/np.pi)**0.5 * np.exp(-0.5*self.α*r**2)
+                ) / r
+        f = np.outer(self.z, self.z)[:,:,None] * f[None,None,:]
 
         f = np.squeeze(f)
         if f.ndim == 0: f = f.item()
@@ -301,11 +308,14 @@ def test_gaussian_ion():
     def test_copy(v, v2):
         assert v2 is not v
         assert np.all(v.α == v2.α)
-        assert np.all(v.q == v2.q)
+        assert np.all(v.z == v2.z)
+        assert v.lB == v2.lB
         v2.α += 1
-        v2.q *= 2
+        v2.z *= 2
+        v2.lB += 1
         assert np.all(v.α != v2.α)
-        assert np.all(v.q != v2.q)
+        assert np.all(v.z != v2.z)
+        assert v.lB != v2.lB
 
     v = GaussianIon([1, -1], 1)
     assert np.allclose(v.copy().potential(1.), v.potential(1.))
