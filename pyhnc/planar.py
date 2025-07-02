@@ -332,31 +332,9 @@ class PlanarSolver(pyhnc.SoluteSolver):
         return simpson(u*v, dx=self.dx) / L
 
     def optimal_direction(self, f, g, d):
-        """Algorithm will try to switch to limited-memory quasi-Newton method
-        of K.-C. Ng, J. Chem. Phys. 61, 2680 (1974) to speed up convergence.
-        """
-        # return self.picard_direction(f, g, d)
-        delta = [d[-1] - d[-i-1] for i in range(1, len(f))]
-        residual = [self.inner_product(d[-1], delta[i]) for i in range(len(f)-1)]
-
-        A = np.empty((len(f)-1, len(f)-1))
-        for i in range(len(A)):
-            for j in range(i, len(A)):
-                A[i,j] = self.inner_product(delta[i], delta[j])
-                A[j,i] = A[i,j]
-
-        if np.linalg.cond(A) > 1:
-            # Revert to Picard if matrix singular
-            return self.picard_direction(f, g, d)
-
-        α = np.zeros(len(f))
-        α[1:] = np.linalg.solve(A, residual)
-        α[0] = 1 - np.sum(α[1:])
-        α = np.flipud(α)
-        step = α.dot(g) - f[-1]
-        step_size = 1.
-
-        return step, step_size
+        """For some reason Ng's method doesn't work reliably for
+        wall potentials, so we just use Picard."""
+        return self.picard_direction(f, g, d)
 
     def solve(self, *args, method: str='h', **kwargs):
         """Change default method to total correlation $h(r)$ as there are

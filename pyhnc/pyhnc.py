@@ -397,7 +397,16 @@ class OrnsteinZernikeSolver(ABC):
                 A[j,i] = A[i,j]
 
         α = np.zeros(len(f))
-        α[1:] = np.linalg.solve(A, residual)
+        try:
+            α[1:] = np.linalg.solve(A, residual)
+        except:
+            # Error most likely due to badly conditioned matrix - need more
+            # information about fitness landscape before we can find the
+            # optimal direction
+            return self.picard_direction(f, g, d)
+            # print(f'matrix condition={np.linalg.cond(A)}')
+            # raise e from None
+
         α[0] = 1 - np.sum(α[1:])
         α = np.flipud(α)
         step = np.einsum('i,i...->...', α, g) - f[-1]
