@@ -263,8 +263,8 @@ class GaussianIon(Potential):
     def __repr__(self):
         return rf'<GaussianIon z={self.z} α={self.α} lB={self.lB}>'
 
-    def __init__(self, q: float | NDArray, α: float, lB: float=1.):
-        self.z = np.atleast_1d(q)
+    def __init__(self, z: float | NDArray, α: float, lB: float=1.):
+        self.z = np.atleast_1d(z)
         self.α = np.array(α)
         assert self.α.size == 1
         self.lB = lB
