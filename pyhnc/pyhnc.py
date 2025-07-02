@@ -754,7 +754,7 @@ class SoluteSolver(Solver):
         kwargs['solvent'] = self.solvent
         return kwargs
 
-    def oz_solution_hq_from_cq(self, cq: NDArray, rho: float):
+    def oz_solution_hq_from_cq(self, cq: NDArray, rho: float, *args, **kwargs):
         """Solve the modified OZ equation for h, in reciprocal space."""
         return self.solvent.Sq * cq
 
@@ -771,7 +771,7 @@ class TestParticleRPA(Solver):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def oz_solution_hq_from_cq(self, cq: NDArray, rho: float):
+    def oz_solution_hq_from_cq(self, cq: NDArray, rho: float, *args, **kwargs):
         """Solution to the OZ equation in reciprocal space."""
         return cq / (1 + rho*self.vq) # force RPA closure in reciprocal term
 
@@ -790,7 +790,7 @@ class SoluteTestParticleRPA(SoluteSolver):
             # If npicard given as positional argument drop it.
             super().__init__(*args, **kwargs)
 
-    def oz_solution_hq_from_cq(self, cq: NDArray, rho: float):
+    def oz_solution_hq_from_cq(self, cq: NDArray, rho: float, *args, **kwargs):
         """Solution to the OZ equation in reciprocal space."""
         return cq - self.solvent.rho * self.solvent.hq * self.vq01 # RPA closure
 
