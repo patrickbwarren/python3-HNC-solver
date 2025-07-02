@@ -115,6 +115,14 @@ def test_radial_grid(alpha, N=2**13, Δr=0.02):
             for j in range(m):
                 assert np.allclose(fq[i,j], exact)
 
+    # Test with random data.
+    for m in [2, 3]:
+        fr_matrix = np.random.random((m, m, fr.size))
+        fq = grid.fourier_bessel_forward(fr_matrix)
+        for i in range(m):
+            for j in range(m):
+                exact = grid.fourier_bessel_forward(fr_matrix[i,j])
+                assert np.allclose(fq[i,j], exact)
 
 # Assume radial by default as normally spherical polars will be used for
 # spherical pair potentials
@@ -677,6 +685,24 @@ def test_mixture_hq_from_cq(m, N=2**13, Δr=0.02):
     assert np.allclose(H, expected)
 
 @pytest.mark.parametrize('m', [2, 3])
+def test_mixture_eq_from_cq(m, N=2**13, Δr=0.02):
+    grid = Grid(N, Δr)
+    solver = Solver(grid)
+
+    C = np.random.random((m, m, N))
+    rho = np.random.random(m)
+    E = solver.oz_solution_eq_from_cq(C, rho)
+
+    I = np.identity(m)
+    R = np.diag(rho)
+    expected = np.empty_like(C)
+    for i in range(N):
+        CC = C[:,:,i]
+        expected[:,:,i] = np.linalg.inv(I - CC @ R) @ CC - CC
+
+    assert np.allclose(E, expected)
+
+@pytest.mark.parametrize('m', [2, 3])
 def test_mixture_cq_from_hq(m, N=2**13, Δr=0.02):
     grid = Grid(N, Δr)
     solver = Solver(grid)
@@ -694,6 +720,25 @@ def test_mixture_cq_from_hq(m, N=2**13, Δr=0.02):
         expected[:,:,i] = HH @ (np.linalg.inv(I + R @ HH))
 
     assert np.allclose(C, expected)
+
+@pytest.mark.parametrize('m', [2, 3])
+def test_mixture_eq_from_hq(m, N=2**13, Δr=0.02):
+    grid = Grid(N, Δr)
+    solver = Solver(grid)
+
+    H = np.random.random((m, m, N))
+    rho = np.random.random(m)
+    E = solver.oz_solution_eq_from_hq(H, rho)
+
+    I = np.identity(m)
+    R = np.diag(rho)
+    Rinv = np.linalg.inv(R)
+    expected = np.empty_like(H)
+    for i in range(N):
+        HH = H[:,:,i]
+        expected[:,:,i] = HH - HH @ (np.linalg.inv(I + R @ HH))
+
+    assert np.allclose(E, expected)
 
 @pytest.mark.parametrize('m', [2, 3])
 def test_identical_mixtures(m, A0=25, ρ=3.0, N=2**13, Δr=0.02):
@@ -850,5 +895,7 @@ if __name__ == '__main__':
     test_radial_grid(1)
     for m in [2, 3]:
         test_mixture_hq_from_cq(m)
+        test_mixture_eq_from_cq(m)
         test_mixture_cq_from_hq(m)
+        test_mixture_eq_from_hq(m)
         test_identical_mixtures(m)
