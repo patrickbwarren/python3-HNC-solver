@@ -761,6 +761,28 @@ def test_identical_mixtures(m, A0=25, ρ=3.0, N=2**13, Δr=0.02):
     for idx in np.ndindex(sol2.h.shape[:-1]):
         assert np.allclose(sol2.h[idx], sol1.h)
 
+def test_ng_splitting(N=2**13, Δr=0.02):
+    """Test Ng splitting with a simple potential where the Fourier
+    transform is trivial (the Gaussian)."""
+
+    grid = Grid(N, Δr)
+    solver = Solver(grid)
+
+    rho = 1
+    v1 = potentials.Gaussian()
+    v2 = potentials.GaussianSplit()
+    sol1 = solver.solve(v1, rho, restart=True)
+    sol2 = solver.solve(v2, rho, restart=True)
+    assert np.allclose(sol1.g, sol2.g)
+
+    sigma = np.ones((2, 2))
+    rho = 0.5 * np.ones(2)
+    v1 = potentials.Gaussian(sigma)
+    v2 = potentials.GaussianSplit(sigma)
+    sol1 = solver.solve(v1, rho, restart=True)
+    sol2 = solver.solve(v2, rho, restart=True)
+    assert np.allclose(sol1.g, sol2.g)
+
 
 # Below, the above is sub-classed to redefine the OZ equation in terms
 # of the product of the solvent structure factor S(q).  This enables
@@ -901,3 +923,4 @@ if __name__ == '__main__':
         test_mixture_cq_from_hq(m)
         test_mixture_eq_from_hq(m)
         test_identical_mixtures(m)
+    test_ng_splitting()

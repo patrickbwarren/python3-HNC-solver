@@ -77,7 +77,7 @@ class ShortRangeResidual(Potential):
         return {'full': self.full, 'long': self.long}
 
     def __repr__(self):
-        return rf'<ShortRangeResidual full={self.full} long={self.long}>'
+        return rf'<{type(self).__name__} full={self.full} long={self.long}>'
 
     def __init__(self, full, long):
         self.full = full
@@ -112,7 +112,7 @@ class DPD(Potential):
                 'rcut': self.rcut.copy()}
 
     def __repr__(self):
-        return rf'<DPD A={self.A.tolist()} rc={self.rcut.tolist()}>'
+        return rf'<{type(self).__name__} A={self.A.tolist()} rc={self.rcut.tolist()}>'
 
     def __init__(self, A: float | NDArray,
                  rcut: float | NDArray=1.):
@@ -204,7 +204,7 @@ class GaussianIonLongRange(Potential):
         return {'full': self.full}
 
     def __repr__(self):
-        return rf'<GaussianIonLongRange z={self.full.z} α={self.full.α} lB={self.full.lB}>'
+        return rf'<{type(self).__name__} z={self.full.z} α={self.full.α} lB={self.full.lB}>'
 
     def __init__(self, full):
         self.full = full
@@ -228,7 +228,7 @@ class GaussianIonLongRange(Potential):
         k = np.atleast_1d(k)
 
         with np.errstate(invalid='ignore'):
-            v = 4*np.pi * self.full.lB * np.exp(-k**2 / (2*self.full.α)) / k**2
+            v = 4*np.pi * self.full.lB * np.exp(-k**2 / (4*self.full.α)) / k**2
         v = np.outer(self.full.z, self.full.z)[:,:,None] * v[None,None,:]
 
         v = np.squeeze(v)
@@ -266,7 +266,7 @@ class GaussianIon(Potential):
                 'lB': self.lB}
 
     def __repr__(self):
-        return rf'<GaussianIon z={self.z} α={self.α} lB={self.lB}>'
+        return rf'<{type(self).__name__} z={self.z} α={self.α} lB={self.lB}>'
 
     def __init__(self, z: float | NDArray, α: float, lB: float=1.):
         self.z = np.atleast_1d(z)
@@ -435,7 +435,93 @@ def test_lj():
     assert np.all(~np.isclose(phi[r < rcut], 0.))
 
 
+class Gaussian(Potential):
+    r"""A simple Gaussian potential. This is primarily used to test Ng
+    splitting (cf. `GaussianSplit` and `pyhnc.OrnsteinZernikeSolver`)."""
+
+    def __getstate__(self):
+        return {'alpha': self.alpha.copy()}
+
+    def __repr__(self):
+        return rf'<Gaussian α={self.alpha.tolist()}>'
+
+    def __init__(self, alpha: float | NDArray=1.):
+        alpha = np.atleast_2d(alpha)
+        assert alpha.shape[0] == alpha.shape[1]
+        self.alpha = alpha
+
+    @property
+    def nspecies(self):
+        return len(self.alpha)
+
+    def potential(self, r: float | NDArray):
+        r = np.atleast_1d(r)
+
+        α = self.alpha[:,:,None]
+        v = (α/np.pi)**1.5 * np.exp(-α * r**2)
+
+        v = np.squeeze(v)
+        if v.ndim == 0: v = v.item()
+        return v
+
+    def potential_fourier(self, k: float | NDArray):
+        k = np.atleast_1d(k)
+
+        α = self.alpha[:,:,None]
+        v = np.exp(-k**2 / (4*α))
+
+        v = np.squeeze(v)
+        if v.ndim == 0: v = v.item()
+        return v
+
+    def force(self, r: float | NDArray):
+        r = np.atleast_1d(r)
+
+        α = self.alpha[:,:,None]
+        f = 2*r * (α/np.pi)**1.5 * np.exp(-α * r**2)
+
+        f = np.squeeze(f)
+        if f.ndim == 0: f = f.item()
+        return f
+
+class GaussianSplit(Gaussian):
+    r"""Helper class so that whole Gaussian will be splintered off while
+    solving the Ornstein-Zernike equation (cf. `pyhnc.OrnsteinZernikeSolver)
+    to test Ng splitting."""
+
+    def __init__(self, alpha: float | NDArray=1.):
+        super().__init__(alpha)
+        self.long = Gaussian(alpha)
+        self.short = ShortRangeResidual(self, self.long)
+
+
+def test_gaussian():
+    import pickle
+    def test_copy(v, v2):
+        assert v2 is not v
+        assert np.all(v.alpha == v2.alpha)
+        v2.alpha += 1
+        assert np.all(v.alpha != v2.alpha)
+
+    r = np.linspace(1, 10, 100)
+
+    # Tests for single-component systems.
+
+    v = Gaussian()
+    assert np.isscalar(v.potential(1.))
+    assert not np.isscalar(v.potential(r))
+    assert v.copy().potential(1.) == v.potential(1.)
+    test_copy(v, v.copy())
+    test_copy(v, pickle.loads(pickle.dumps(v)))
+
+    from scipy.optimize import approx_fprime
+    exact = np.array([-approx_fprime(rr, v.potential) for rr in r]).reshape(-1)
+    assert np.allclose(v.force(r), exact, rtol=1e-6)
+
+
+
 if __name__ == '__main__':
     test_dpd()
     test_gaussian_ion()
     test_lj()
+    test_gaussian()
