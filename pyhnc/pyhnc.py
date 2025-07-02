@@ -105,7 +105,7 @@ def test_radial_grid(alpha, N=2**13, Δr=0.02):
     fr = (alpha/np.pi)**1.5 * np.exp(-alpha * r**2)
     fq = grid.fourier_bessel_forward(fr)
     exact = np.exp(-q**2 / (4*alpha))
-    assert np.all(np.isclose(fq, exact))
+    assert np.allclose(fq, exact)
 
     # Test fourier transform of an (m x m x n) matrix of 1xn arrays.
     for m in [2, 3]:
@@ -113,7 +113,7 @@ def test_radial_grid(alpha, N=2**13, Δr=0.02):
         fq = grid.fourier_bessel_forward(fr_matrix)
         for i in range(m):
             for j in range(m):
-                assert np.all(np.isclose(fq[i,j], exact))
+                assert np.allclose(fq[i,j], exact)
 
 
 # Assume radial by default as normally spherical polars will be used for
@@ -658,9 +658,45 @@ class HypernettedChainSolver(OrnsteinZernikeSolver):
 # Default to HNC closure
 Solver = HypernettedChainSolver
 
+@pytest.mark.parametrize('m', [2, 3])
+def test_mixture_hq_from_cq(m, N=2**13, Δr=0.02):
+    grid = Grid(N, Δr)
+    solver = Solver(grid)
+
+    C = np.random.random((m, m, N))
+    rho = np.random.random(m)
+    H = solver.oz_solution_hq_from_cq(C, rho)
+
+    I = np.identity(m)
+    R = np.diag(rho)
+    expected = np.empty_like(C)
+    for i in range(N):
+        CC = C[:,:,i]
+        expected[:,:,i] = np.linalg.inv(I - CC @ R) @ CC
+
+    assert np.allclose(H, expected)
 
 @pytest.mark.parametrize('m', [2, 3])
-def test_mixtures(m, A0=25, ρ=3.0, N=2**13, Δr=0.02):
+def test_mixture_cq_from_hq(m, N=2**13, Δr=0.02):
+    grid = Grid(N, Δr)
+    solver = Solver(grid)
+
+    H = np.random.random((m, m, N))
+    rho = np.random.random(m)
+    C = solver.oz_solution_cq_from_hq(H, rho)
+
+    I = np.identity(m)
+    R = np.diag(rho)
+    Rinv = np.linalg.inv(R)
+    expected = np.empty_like(H)
+    for i in range(N):
+        HH = H[:,:,i]
+        expected[:,:,i] = Rinv - Rinv @ (np.linalg.inv(I + R @ HH))
+
+    assert np.allclose(C, expected)
+
+@pytest.mark.parametrize('m', [2, 3])
+def test_identical_mixtures(m, A0=25, ρ=3.0, N=2**13, Δr=0.02):
     """Test OZ solver for mixtures is consistent with single-component case."""
 
     grid = Grid(N, Δr)
@@ -676,7 +712,7 @@ def test_mixtures(m, A0=25, ρ=3.0, N=2**13, Δr=0.02):
     sol2 = solvent.solve(φ, ρi)
 
     for idx in np.ndindex(sol2.h.shape[:-1]):
-        assert np.all(np.isclose(sol2.h[idx], sol1.h))
+        assert np.allclose(sol2.h[idx], sol1.h)
 
 
 # Below, the above is sub-classed to redefine the OZ equation in terms
@@ -812,4 +848,7 @@ class SoluteTestParticleRPA(SoluteSolver):
 
 if __name__ == '__main__':
     test_radial_grid(1)
-    for m in [2, 3]: test_mixtures(m)
+    for m in [2, 3]:
+        test_mixture_hq_from_cq(m)
+        test_mixture_cq_from_hq(m)
+        test_identical_mixtures(m)
