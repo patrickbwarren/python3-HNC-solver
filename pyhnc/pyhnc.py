@@ -650,7 +650,7 @@ class PercusYevickSolver(OrnsteinZernikeSolver):
 class HypernettedChainSolver(OrnsteinZernikeSolver):
     def bridge_closure(self, e: NDArray, *args, **kwargs):
         """Closure to the OZ equation for $b(r)$."""
-        return np.zeros_like(e)
+        return np.asarray(0.)
 
     @property
     def excess_chemical_potential(self):
