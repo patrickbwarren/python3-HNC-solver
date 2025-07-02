@@ -530,6 +530,7 @@ class OrnsteinZernikeSolver(ABC):
             iteration = self.h_iteration
 
         if np.any(np.isnan(input)): raise ValueError
+        assert input.size == potential.nspecies**2 * self.r.size
 
         # Memory of iterations for inferring hessian
         f = deque(maxlen=self.history_size) # input value in each step
