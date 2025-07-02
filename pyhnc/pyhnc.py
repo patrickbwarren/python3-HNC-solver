@@ -279,7 +279,7 @@ class OrnsteinZernikeSolver(ABC):
             A_inv = np.linalg.inv(A.transpose(2, 0, 1))     # (n, m, m)
             A_inv = A_inv.transpose(1, 2, 0)                # (m, m, n)
 
-            return np.einsum('ijk, jlk->ilk', A_inv, cq)
+            return np.einsum('ijk, jlk->ilk', A_inv, cq + cq_long)
 
     def oz_solution_cq_from_hq(self, hq: NDArray, rho: NDArray, *args,
                                cq_long: NDArray | float=0., **kwargs):
