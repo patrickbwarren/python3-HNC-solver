@@ -194,7 +194,7 @@ Here the reference standard state corresponds to ρ = 1.  Since the
 Gibbs-Duhem relation in the form d*p* = ρ dμ can be integrated to find
 the pressure, this affords another route to the EoS: the chemical
 potential route.  The free energy can then be accessed by *f* = ρ μ −
-*p*, in contrast to the more generic the coupling constant integration
+*p*, in contrast to the more generic coupling constant integration
 method described next.
 
 #### Free energy and coupling constant integration
