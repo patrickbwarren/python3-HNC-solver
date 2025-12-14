@@ -193,12 +193,9 @@ thank Andrew Masters for drawing my attention to this),
 Here the reference standard state corresponds to ρ = 1.  Since the
 Gibbs-Duhem relation in the form d*p* = ρ dμ can be integrated to find
 the pressure, this affords another route to the EoS: the chemical
-potential route.  In HNC the chemical potential should verify *f* −
-ρμ + *p* = 0 where *f* is the free energy density.  This follows from
-the fact that the grand potential Ω = *F* − μ*N* = −*pV*.  In the form
-*f* = ρ μ − *p*, where *p* is the virial pressure, it can be used as a
-direct method to access the free energy, in contrast to the more
-generic the coupling constant integration method described next.
+potential route.  The free energy can then be accessed by *f* = ρ μ −
+*p*, in contrast to the more generic the coupling constant integration
+method described next.
 
 #### Free energy and coupling constant integration
 
@@ -256,12 +253,6 @@ number of numerical quadrature methods but typically (for me!) a basic
 trapezium rule suffices.  The derivative with respect to density would
 usually be computed numerically too.
 
-For the HNC closure, which is free energy based, in fact it should be
-_exactly_ true that the energy route pressure is the same as the
-virial route pressure, not just the mean-field contributions.  So
-differences here are a test of the numerics rather than the physical
-approximations.
-
 ### Solutes
 
 The above methodology can be repurposed to solve also the case of an
@@ -296,7 +287,7 @@ follows that the solute problem can be solved be re-purposing the
 exact same algorithm as for the one-component system, replacing the OZ
 equation step by the assignment,
 
-* set *e*<sub>01</sub>(*q*) = *S*<sub>00</sub>(*q*) *c*<sub>01</sub>(*q*)
+* *e*<sub>01</sub>(*q*) = *S*<sub>00</sub>(*q*) *c*<sub>01</sub>(*q*)
 − *c*<sub>01</sub>(*q*) .
 
 Applications of this infinitely-dilute solute limit are in the process
