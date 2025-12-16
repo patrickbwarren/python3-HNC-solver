@@ -55,19 +55,19 @@ args.script = os.path.basename(__file__)
 
 # The following are Tables from Sokhan et al., Soft Matter 19, 5824 (2023).
 
-Table1 = {'2': (2, 25.0, 3.02), # n, A, B, values
+table1 = {'2': (2, 25.0, 3.02), # n, A, B, values
           '3': (3, 15.0, 7.2),
           '4': (4, 10.0, 15.0)}
 
-Table2 = {'2': (1.025, 0.2951, 0.519), # T_c, p_c, ρ_c values
+table2 = {'2': (1.025, 0.2951, 0.519), # T_c, p_c, ρ_c values
           '3': (1.283, 0.3979, 0.504),
           '4': (1.290, 0.4095, 0.484)}
 
-if args.n in Table1:
-    n, A, B = Table1[args.n] # unpack the default values
-    Tc, _, ρcσ3 = Table2[args.n] # where available
+if args.n in table1:
+    n, A, B = table1[args.n] # unpack the default values
+    Tc, _, ρcσ3 = table2[args.n] # where available
 else:
-    print(f'{args.script}: currently n is restricted to', ', '.join(Table1.keys()))
+    print(f'{args.script}: currently n is restricted to', ', '.join(table1.keys()))
     exit(1)
 
 A = args.A if args.A is not None else A # overwrite if necessary
