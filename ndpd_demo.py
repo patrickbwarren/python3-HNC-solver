@@ -55,8 +55,8 @@ args.script = os.path.basename(__file__)
 
 # The following are Tables from Sokhan et al., Soft Matter 19, 5824 (2023).
 
-table1 = {'2': (2, 25.0, 3.02), # n, A, B, values
-          '3': (3, 15.0, 7.2),
+table1 = {'2': (2, 25.0,  3.02), # n, A, B, values
+          '3': (3, 15.0,  7.2),
           '4': (4, 10.0, 15.0)}
 
 table2 = {'2': (1.025, 0.2951, 0.519), # T_c, p_c, ρ_c values
