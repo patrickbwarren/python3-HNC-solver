@@ -412,7 +412,7 @@ find an optimized plan, than it does if it just uses the simple
 heuristic implied by `FFTW_ESTIMATE`.  Obviously some further
 investigations could be undertaken into this aspect.
 
-The TL;DR take-home message here is _use a power of two_ for the
+The TL ; DR take-home message here is _use a power of two_ for the
 $`N_g`$ parameter in the code!
 
 #### Choice of grid size
