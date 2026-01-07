@@ -248,7 +248,7 @@ virial route mean-field pressure.
 For the non-mean-field correlation contribution we sketch the algorithm:
 
 * solve the HNC closure of OZ equation for the _scaled_ pair potential
-$\lambda\,v(r)$ to get $h(r;\lambda)$ ;
+$`\lambda\,v(r)`$ to get $h(r;\lambda)$ ;
 * calculate $`\Delta e(\lambda)=2\pi\rho^2\int_0^\infty\text{d}r\,
 r^2\,v(r)\,h(r;\lambda)`$ with the _unscaled_ pair potential;
 * the excess correlation free energy is then the integral 
@@ -260,9 +260,9 @@ excess pressure, and the whole added to the ideal contribution to find
 the total pressure.
 
 In practice the coupling constant integration can be performed by any
-number of numerical quadrature methods but typically (for me!) a basic
-trapezium rule suffices.  The derivative with respect to density would
-usually be computed numerically too.
+number of numerical quadrature methods but a basic trapezium rule can
+often suffice.  The derivative with respect to density would usually
+be computed numerically too.
 
 ### Solutes
 
