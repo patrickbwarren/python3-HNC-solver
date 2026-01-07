@@ -129,15 +129,11 @@ second CPU time).
 Once converged, the pair correlation function and static structure
 factor can be found from:
 ```math
-g(r) = 1 + h(r) = 1 + e(r) + c(r)\,,
-```
-```math
+\begin{align}
+g(r) = 1 + h(r) = 1 + e(r) + c(r)\,,\\
 S(q) = 1 + \rho\,h(q) = 1 + \rho\,[e(q) + c(q)]\,.
+\end{align}
 ```
-
-* *g*(*r*) = 1 + *h*(*r*) where *h*(*r*) = *e*(*r*) + *c*(*r*) ;
-* *S*(*q*) = 1 + ρ *h*(*q*) where *h*(*q*) = *e*(*q*) + *c*(*q*) .
-
 ### Thermodynamics
 
 #### Energy density and virial pressure
