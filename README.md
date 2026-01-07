@@ -339,11 +339,6 @@ For the desired Fourier-Bessel forward transform  we can then write
 g(q_k) = \frac{2\pi\Delta r}{q_k}\times
 2\sum_{j=0}^{n-1}r_j\,f(r_j)\,\sin\,q_kr_j\,,
 ```
-
-*g*(*q*<sub>*k*</sub>) = 2 π Δ*r* / *q*<sub>*k*</sub> × 2
-∑<sub>*j*=0</sub><sup>*n*−1</sup> *r*<sub>*j*</sub>
-*f*(*r*<sub>*j*</sub>) sin *q*<sub>*k*</sub>*r*<sub>*j*</sub> ,
-
 with the factor after the multiplication sign being calculated by
 `RODFT00`.
 
@@ -352,13 +347,13 @@ The Fourier-Bessel back transform is handled similarly.
 #### On FFTW efficiency
 
 Timing tests (below) indicate that FFTW is very fast when the array
-length *n* in the above is a power of two _minus one_, which
-doesn't quite seem to fit with the
+length $n$ in the above is a power of two _minus one_, which doesn't
+quite seem to fit with the
 [documentation](https://www.fftw.org/fftw3_doc/Real_002dto_002dReal-Transforms.html).
-Hence, the grid size *N*<sub>g</sub> = *n* + 1 in pyHNC
-is typically a power of two, but the arrays passed to FFTW are
-shortened to *N*<sub>g</sub> − 1.  Some typical timing results
-on a moderately fast [Intel<sup>®</sup>
+
+Hence, the grid size $`N_g=n+1`$ in pyHNC is typically a power of two,
+but the arrays passed to FFTW are shortened to $`N_g-1`$.
+Some typical timing results on a moderately fast [Intel<sup>®</sup>
 NUC11TZi7](https://www.intel.com/content/www/us/en/products/sku/205605/intel-nuc-11-pro-kit-nuc11tnhi7/specifications.html)
 with an [11th Gen Intel<sup>®</sup> Core™
 i7-1165G7](https://www.intel.com/content/www/us/en/products/sku/205605/intel-nuc-11-pro-kit-nuc11tnhi7/specifications.html)
@@ -418,17 +413,16 @@ heuristic implied by `FFTW_ESTIMATE`.  Obviously some further
 investigations could be undertaken into this aspect.
 
 The TL;DR take-home message here is _use a power of two_ for the
-*N*<sub>g</sub> parameter in the code!
+$`N_g`$ parameter in the code!
 
 #### Choice of grid size
 
-From above Δ*r* × Δ*q* = π / *N*<sub>g</sub> can be
-inverted to suggest *N*<sub>g</sub> = π /
-Δ*r* Δ*q*.  Since presumably we want the grid resolution
-in real space and reciprocal space to be comparable, Δ*r* ≈
-Δ*q*, and we want *N*<sub>g</sub> =
-2<sup>*r*</sup>, this suggests the following table (where
-Δ*q* is computed from Δ*r* and *N*<sub>g</sub>):
+From above $`\Delta r\times\Delta q=\pi/N_g`$ can be inverted to
+suggest $`N_g=\pi/\Delta r\,\Delta q`$.  Since presumably we want the
+grid resolution in real space and reciprocal space to be comparable,
+$\Delta r\simeq\Delta q$, and we want $`N_g = 2^r`$, this suggests the
+following table (where $\Delta q$ is computed from $\Delta r$ and
+$`N_g`$,
 ```
 --deltar=0.05 --ng=2^11 (ng=2048 ⇒ Δq ≈ 0.031  )
 --deltar=0.02 --ng=2^13 (ng=8192 ⇒ Δq ≈ 0.019  )
