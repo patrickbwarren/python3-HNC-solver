@@ -324,7 +324,7 @@ From the [FFTW
 documentation](https://www.fftw.org/fftw3_doc/1d-Real_002dodd-DFTs-_0028DSTs_0029.html),
 `RODFT00` implements
 ```math
-Y_k=2\sum_{j=0}^{n-1} X_j\.\sin\Bigl[\frac{\pi(j+1)(k+1)}{n+1}\,,
+Y_k=2\sum_{j=0}^{n-1} X_j\,\sin\Bigl[\frac{\pi(j+1)(k+1)}{n+1}\Bigr]\,,
 ```
 
 *Y*<sub>*k*</sub> = 2 ∑<sub>*j*=0</sub><sup>*n*−1</sup>
