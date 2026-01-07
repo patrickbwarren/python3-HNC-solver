@@ -183,7 +183,7 @@ Further, in reciprocal space the OZ equation (above) can be written as
 ```
 Employing this at $q = 0$, one therefore obtains
 ```math
-\frac{\text{d}p}{\text{d}\rho = [\rho\chi_\text{T}]^{-1}
+\frac{\text{d}p}{\text{d}\rho} = [\rho\chi_\text{T}]^{-1}
 =1-4\pi\rho\int_0^\infty \text{d}r\, r^2\, c(r)\,.
 ```
 
