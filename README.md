@@ -144,7 +144,7 @@ Hansen and McDonald, "Theory of Simple Liquids" (3rd edition) as:
 ```math
 \begin{align}
 &e = \frac{3\rho}{2} + 2\pi\rho^2 
-\int_0^\infty \text{d}r\,r^2 v(r)\,g(r)\,,\\
+\int_0^\infty \text{d}r\,r^2\, v(r)\,g(r)\,,\\
 &p = \rho + \frac{2\pi\rho^2}{3}
 \int_0^\infty \text{d}r\,r^3 f(r)\,g(r)
 \end{align}
@@ -159,8 +159,8 @@ actually the same, and are essentially equal to the value of the
 potential at the origin in reciprocal space: 
 ```math
 \frac{2\pi\rho^2}{3}\int_0^\infty \text{d}r\,r^3 f(r)
-=2\pi\rho^2\int_0^\infty \text{d}r\, r^2 v(r)
-=\frac{\rho^2}{2}\int \text{d}^3\mathbf{r}\,v(r)
+=2\pi\rho^2\int_0^\infty \text{d}r\, r^2\, v(r)
+=\frac{\rho^2}{2}\int \text{d}^3{\mathbf r}\,v(r)
 =\frac{\rho^2}{2}\,v(q=0)\,.
 ```
 
