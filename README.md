@@ -128,6 +128,10 @@ second CPU time).
 
 Once converged, the pair correlation function and static structure
 factor can be found from:
+```math
+g(r) = 1 + h(r) \>\text{where}\> h(r) = e(r) + c(r)\,,\\
+S(q) = 1 + \rho\,h(q) \>\text{where}\> h(q) = e(q) + c(q)\,.
+```
 
 * *g*(*r*) = 1 + *h*(*r*) where *h*(*r*) = *e*(*r*) + *c*(*r*) ;
 * *S*(*q*) = 1 + ρ *h*(*q*) where *h*(*q*) = *e*(*q*) + *c*(*q*) .
@@ -139,6 +143,11 @@ factor can be found from:
 Thermodynamic quantities can also now be computed, for example the excess
 energy density and virial pressure follow from Eqs. (2.5.20) and (2.5.22) in
 Hansen and McDonald, "Theory of Simple Liquids" (3rd edition) as:
+
+```math
+e = 3\rho/2 + 2\pi\rho^2 \int_0^\infty \text{d}r\,
+r^2\,v(r)\,g(r)\,,\\
+```
 
 * *e* = 3ρ/2 + 2πρ<sup>2</sup> ∫<sub>0</sub><sup>∞</sup> d*r*
   *r*<sup>2</sup> *v*(*r*) *g*(*r*) ;
