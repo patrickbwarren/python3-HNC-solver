@@ -218,16 +218,15 @@ potential function $U$.
 
 We can therefore calculate the free energy from 
 $`F = F_0 + \int_0^1\text{d}\lambda\,
-\langle\partial U/\partial\lambda\range_\lambda`$
-*F* =
-*F*<sub>0</sub> + ∫<sub>0</sub><sup>1</sup> dλ ⟨∂*U*/∂λ⟩<sub>λ</sub>.
-If λ is simply a multiplicative scaling, *U* → λ *U*, then ∂*U*/∂λ =
-*U* and we have a _coupling constant integration_ scheme *F* =
-*F*<sub>0</sub> + ∫<sub>0</sub><sup>1</sup> dλ ⟨*U*⟩<sub>λ</sub> where
-the indicated average should be taken with the potential energy scaled
-by a factor λ. In this scheme *F*<sub>0</sub> is just the free energy
-of an ideal gas of non-interacting particles since λ → 0 switches off
-the interactions.
+\langle\partial U/\partial\lambda\rangle_\lambda`$
+If $\lambda$ is simply a multiplicative scaling, $U\to\lambda U$, then
+$\partial U/\partial\lambda = U$ and we have a _coupling constant
+integration_ scheme, 
+$`F = F_0 + \int_0^1\text{d}\lambda\,\langle U\rangle_\lambda`$
+where the indicated average should be taken with the potential energy
+scaled by a factor $\lambda$. In this scheme $`F_0`$ is just the free
+energy of an ideal gas of non-interacting particles since
+$\lambda\to0$ switches off the interactions.
 
 Since the free energy can be differentiated to find the pressure, this
 is the basis for the so-called energy route to the EoS.  For example,
