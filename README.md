@@ -174,7 +174,7 @@ $`k_\text{B} T`$ the isothermal compressibility satisfies
 r^2\,h(r)
 ```
 
-where $`\chi_\text{T} = - (1/V) \partial V/\partial p`$.
+where $`\chi_\text{T} = - (1/V)\, \partial V/\partial p`$.
 In terms of the EoS, this last expression can be written as
 $`\chi_\text{T}^{-1} = \rho\,\text{d}p/\text{d}\rho`$.
 Further, in reciprocal space the OZ equation (above) can be written as
@@ -186,12 +186,8 @@ Employing this at $q = 0$, one therefore obtains
 \frac{\text{d}p}{\text{d}\rho} = [\rho\chi_\text{T}]^{-1}
 =1-4\pi\rho\int_0^\infty \!\text{d}r\, r^2\, c(r)\,.
 ```
-
-* d*p*/dρ = [ρχ<sub>T</sub>]<sup>−1</sup> = 1 − 4πρ
-  ∫<sub>0</sub><sup>∞</sup> d*r* *r*<sup>2</sup> *c*(*r*) .
-
-Given *c*(*r*) as a function of density, this can be integrated to
-find *p*(ρ).  This is known as the compressibility route to the EoS.
+Given $c(r)$ as a function of density, this can be integrated to
+find $p(\rho)$.  This is known as the compressibility route to the EoS.
 
 #### Chemical potential
 
