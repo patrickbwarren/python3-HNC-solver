@@ -219,7 +219,7 @@ potential function $U$.
 We can therefore calculate the free energy from 
 $`F = F_0 + \int_0^1\text{d}\lambda\,
 \langle\partial U/\partial\lambda\rangle_\lambda`$
-If $\lambda$ is simply a multiplicative scaling, $U\to\lambda U$, then
+If $\lambda$ is simply a multiplicative scaling, then
 $\partial U/\partial\lambda = U$ and we have a _coupling constant
 integration_ scheme, 
 $`F = F_0 + \int_0^1\text{d}\lambda\,\langle U\rangle_\lambda`$
