@@ -304,6 +304,15 @@ of being investigated.
 The code illustrates how to implement three-dimensional Fourier
 transforms using FFTW.  The starting point is the Fourier transform
 pair
+```math
+\begin{align}
+&g(\mathbf{q}) = \int\!\text{d}^3\mathbf{r}\,
+\exp(-i\mathbf{q}\cdot\mathbf{r}\,f(\mathbf{r})\,,\\
+&f(\mathbf{r}) = \frac{1}{(2\pi)^3}\int\!\text{d}^3\mathbf{q}\,
+\exp(i\mathbf{q}\cdot\mathbf{r}\,g(\mathbf{q})\,,\\
+\end{align}
+```
+
 
 *g*(**q**) = ∫ d<sup>3</sup>**r** 
 *e*<sup>−*i***q**∙**r**</sup> *f*(**r**) ,
