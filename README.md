@@ -237,8 +237,8 @@ It also follows that
 $`[\rho\chi_\text{T}]^{-1} = \text{d}p/\text{d}\rho
 = \rho\,\text{d}^2f/\text{d}\rho^2`$.
 
-The mean-field contribution to this can be calculated immediately
-since the contribution to the energy density 
+The mean-field contribution to the free energy can be calculated
+immediately since the contribution to the energy density
 $`2\pi\rho^2\int_0^\infty\text{d}r\,r^2\,v(r)`$
 is independent of $\lambda$ and therefore
 $`\int_0^1\,\text{d}\lambda`$
