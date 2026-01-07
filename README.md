@@ -160,7 +160,7 @@ potential at the origin in reciprocal space:
 ```math
 \frac{2\pi\rho^2}{3}\int_0^\infty \text{d}r\,r^3 f(r)
 =2\pi\rho^2\int_0^\infty \text{d}r\, r^2\, v(r)
-=\frac{\rho^2}{2}\int \text{d}^3\bm{r}\,v(r)
+=\frac{\rho^2}{2}\int \text{d}^3\mathbf{r}\,v(r)
 =\frac{\rho^2}{2}\,v(q=0)\,.
 ```
 
