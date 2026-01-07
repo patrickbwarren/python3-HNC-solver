@@ -211,15 +211,15 @@ coupling constant integration method described next.
 It follows from the basic definition of the free energy 
 $`F=-\ln\int\text{d}^N\{\mathbf{r}\}\,\exp(-U)`$
 that 
-$`\partial F/\partial\lambda = \langle\partial U/\partial\lambda\rangle`$ 
+$`\partial F/\partial\lambda = 
+\langle\partial U/\partial\lambda\rangle`$ 
 where $\lambda$ is a parameter in the
 potential function $U$.
 
-*F* = − ln ∫
-d<sup>*N*</sup>{**r**} e<sup>−*U*</sup> that ∂*F*/∂λ = ⟨∂*U*/∂λ⟩ where
-λ is a parameter in the potential function *U*.
-
-We can therefore calculate the free energy from *F* =
+We can therefore calculate the free energy from 
+$`F = F_0 + \int_0^1\text{d}\lambda\,
+\langle\partial U/\partial\lambda\range_\lambda`$
+*F* =
 *F*<sub>0</sub> + ∫<sub>0</sub><sup>1</sup> dλ ⟨∂*U*/∂λ⟩<sub>λ</sub>.
 If λ is simply a multiplicative scaling, *U* → λ *U*, then ∂*U*/∂λ =
 *U* and we have a _coupling constant integration_ scheme *F* =
