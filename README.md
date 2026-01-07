@@ -210,6 +210,10 @@ coupling constant integration method described next.
 
 It follows from the basic definition of the free energy 
 $`F=-\ln\int\text{d}^N\{\mathbf{r}\}\,\exp(-U)`$
+that 
+$`\partial F/\partial\lambda = \langle\partial U/\partial\lambda\rangle`$ 
+where $\lambda$ is a parameter in the
+potential function $U$.
 
 *F* = − ln ∫
 d<sup>*N*</sup>{**r**} e<sup>−*U*</sup> that ∂*F*/∂λ = ⟨∂*U*/∂λ⟩ where
