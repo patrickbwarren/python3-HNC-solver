@@ -450,7 +450,7 @@ along with this program.  If not, see
 
 ### Copyright
 
-This program is copyright &copy; 2023 Patrick B Warren (STFC).  
+This program is copyright &copy; 2023-2026 Patrick B Warren (STFC).  
 Additional modifications copyright &copy; 2025 Joshua F Robinson (STFC).  
 
 ### Contact
