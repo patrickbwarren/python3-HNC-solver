@@ -390,7 +390,7 @@ find an optimized plan, than it does if it just uses the simple
 heuristic implied by `FFTW_ESTIMATE`.  Obviously some further
 investigations could be undertaken into this aspect.
 
-The TL ; DR take-home message here is for speed use $`N_g = 2^r`$ !
+The TL ; DR take-home message here is set $`N_g`$ to a power of two !
 
 #### Choice of grid size
 
