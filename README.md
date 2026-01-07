@@ -213,10 +213,8 @@ $`F=-\ln\int\text{d}^N\{\mathbf{r}\}\,\exp(-U)`$
 that 
 $`\partial F/\partial\lambda = 
 \langle\partial U/\partial\lambda\rangle`$ 
-where $\lambda$ is a parameter in the
-potential function $U$.
-
-We can therefore calculate the free energy from 
+where $\lambda$ is a parameter in the potential function $U$.
+We can therefore calculate the free energy from
 $`F = F_0 + \int_0^1\text{d}\lambda\,
 \langle\partial U/\partial\lambda\rangle_\lambda`$.
 If $\lambda$ is simply a multiplicative scaling, then
