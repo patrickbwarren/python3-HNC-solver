@@ -111,11 +111,10 @@ scheme (*cf*
 [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC)):
 
 * Fourier-Bessel forward transform $c(r) \to c(q)$ ;
-* solve the OZ equation for $e(q) = c(q) / [1-\rho\,c(q)]-c(q)$ ;
+* solve the OZ equation for $e(q) = c(q) / [1-\rho c(q)]-c(q)$ ;
 * Fourier-Bessel back transform $e(q) \to e(r)$ ;
-* implement the HNC closure as $c'(r)=\exp[-v(r)+e(r)]-e(r)-1$ ;
-* replace $c(r)$ by $\alpha\,c'(r)+(1-\alpha)\,c(r)$
-(Picard mixing step);
+* implement the HNC closure as $`c'(r)=\exp[-v(r)+e(r)]-e(r)-1`$ ;
+* replace $c(r)$ by $`\alpha\,c'(r)+(1-\alpha)\,c(r)`$ (Picard mixing step);
 * check for convergence by comparing $c(r)$ and $c'(r)$ ;
 * if not converged, repeat.
 
