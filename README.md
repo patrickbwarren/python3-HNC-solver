@@ -170,7 +170,7 @@ origin in reciprocal space:
 Eq. (2.6.12) in Hansen and McDonald shows that in units of
 $`k_\text{B} T`$ the isothermal compressibility satisfies
 ```math
-\rho\chi_\text{T} = 1 +4\pi\rho\int_0^\infty \!\text{d}r\,
+\rho\chi_\text{T} = 1 +4\pi\rho\int_0^\infty \!\!\text{d}r\,
 r^2\,h(r)
 ```
 
@@ -184,7 +184,7 @@ Further, in reciprocal space the OZ equation (above) can be written as
 Employing this at $q = 0$, one therefore obtains
 ```math
 \frac{\text{d}p}{\text{d}\rho} = [\rho\chi_\text{T}]^{-1}
-=1-4\pi\rho\int_0^\infty \!\text{d}r\, r^2\, c(r)\,.
+=1-4\pi\rho\int_0^\infty \!\!\text{d}r\, r^2\, c(r)\,.
 ```
 Given $c(r)$ as a function of density, this can be integrated to
 find $p(\rho)$.  This is known as the compressibility route to the EoS.
