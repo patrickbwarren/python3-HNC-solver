@@ -208,7 +208,10 @@ coupling constant integration method described next.
 
 #### Free energy and coupling constant integration
 
-It follows from the basic definition of the free energy *F* = − ln ∫
+It follows from the basic definition of the free energy 
+$`F=-\ln\int\text{d}^N\{\mathbf{r}\}\,\exp(-U)`$
+
+*F* = − ln ∫
 d<sup>*N*</sup>{**r**} e<sup>−*U*</sup> that ∂*F*/∂λ = ⟨∂*U*/∂λ⟩ where
 λ is a parameter in the potential function *U*.
 
