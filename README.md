@@ -307,21 +307,19 @@ pair
 ```math
 \begin{align}
 &g(\mathbf{q}) = \int\!\text{d}^3\mathbf{r}\,
-\exp(-i\mathbf{q}\cdot\mathbf{r}\,f(\mathbf{r})\,,\\
+\exp(-i\mathbf{q}\cdot\mathbf{r})\,f(\mathbf{r})\,,\\
 &f(\mathbf{r}) = \frac{1}{(2\pi)^3}\int\!\text{d}^3\mathbf{q}\,
-\exp(i\mathbf{q}\cdot\mathbf{r}\,g(\mathbf{q})\,,\\
+\exp(i\mathbf{q}\cdot\mathbf{r})\,g(\mathbf{q})\,,\\
 \end{align}
 ```
-
-
-*g*(**q**) = ∫ d<sup>3</sup>**r** 
-*e*<sup>−*i***q**∙**r**</sup> *f*(**r**) ,
-
-*f*(**r**) = 1 / (2π)<sup>3</sup> ∫ d<sup>3</sup>**q** 
-*e*<sup>*i***q**∙**r**</sup> *g*(**q**) .
-
 If the functions have radial symmetry, these reduce to the forward and
 backward Fourier-Bessel transforms
+```math
+\begin{align}
+&g(q)=\frac{4\pi}{q}\int_0^\infty\!\!\text{d}r\,r\,f(r)\,\sin(qr)\,,\\
+&f(r)=\frac{1}{2\pi^2r}\int_0^\infty\!\!\text{d}q\,q\,f(q)\,\sin(qr)\,.
+\end{align}
+```
 
 *g*(*q*) = 4π / *q* ∫<sub>0</sub><sup>∞</sup> 
 d*r* *r* *f*(*r*) sin *qr* ,
