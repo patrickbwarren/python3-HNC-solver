@@ -130,8 +130,8 @@ Once converged, the pair correlation function and static structure
 factor can be found from:
 ```math
 \begin{align}
-g(r) = 1 + h(r) = 1 + e(r) + c(r)\,,\\
-S(q) = 1 + \rho\,h(q) = 1 + \rho\,[e(q) + c(q)]\,.
+g(r) &= 1 + h(r) = 1 + e(r) + c(r)\,,\\
+S(q) &= 1 + \rho\,h(q) = 1 + \rho\,[e(q) + c(q)]\,.
 \end{align}
 ```
 ### Thermodynamics
