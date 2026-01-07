@@ -352,35 +352,13 @@ quite seem to fit with the
 [documentation](https://www.fftw.org/fftw3_doc/Real_002dto_002dReal-Transforms.html).
 
 Hence, the grid size $`N_g=n+1`$ in pyHNC is typically a power of two,
-but the arrays passed to FFTW are shortened to $`N_g-1`$.
-Some typical timing results on a moderately fast [Intel<sup>®</sup>
+but the arrays passed to FFTW are shortened to $`N_g-1`$.  Some
+typical timing results on a moderately fast [Intel<sup>®</sup>
 NUC11TZi7](https://www.intel.com/content/www/us/en/products/sku/205605/intel-nuc-11-pro-kit-nuc11tnhi7/specifications.html)
 with an [11th Gen Intel<sup>®</sup> Core™
 i7-1165G7](https://www.intel.com/content/www/us/en/products/sku/205605/intel-nuc-11-pro-kit-nuc11tnhi7/specifications.html)
-processor (up to 4.70GHz) support this.  For example
-```
-$ time ./fftw_demo.py --ng=8192 --deltar=0.02
-ng, Δr, Δq, iters = 8192 0.02 0.019174759848570515 10
-FFTW array sizes = 8191
-real	0m0.321s
-user	0m0.399s
-sys	0m0.580s
-
-$ time ./fftw_demo.py --ng=8193 --deltar=0.02
-ng, Δr, Δq, iters = 8193 0.02 0.019172419465335 10
-FFTW array sizes = 8192
-real	0m0.347s
-user	0m0.498s
-sys	0m0.518s
-
-$ time ./fftw_demo.py --ng=8191 --deltar=0.02
-ng, Δr, Δq, iters = 8191 0.02 0.019177100803258414 10
-FFTW array sizes = 8190
-real	0m0.337s
-user	0m0.457s
-sys	0m0.547s
-```
-The same, but with 4.2 million grid points
+processor (up to 4.70GHz) support this.  For example with 4.2 million
+grid points
 ```
 $ time ./fftw_demo.py --ng=2^22 --deltar=1e-3
 ng, Δr, Δq, iters = 4194304 0.001 0.0007490140565847857 10
