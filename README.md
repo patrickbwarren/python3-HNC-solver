@@ -106,7 +106,7 @@ without hard cores is equivalent to the mean spherical approximation
 
 #### Algorithm
 
-Given an initial guess *c*(*r*), the solver implements the following
+Given an initial guess $c(r)$, the solver implements the following
 scheme (*cf*
 [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC)):
 
@@ -150,13 +150,14 @@ Hansen and McDonald, "Theory of Simple Liquids" (3rd edition) as:
 \end{align}
 ```
 where $f(r) = -\text{d}v/\text{d}r$. The first terms here are the
-ideal contributions, in units of $k_\text{B} T$.
+ideal contributions, in units of $`k_\text{B} T`$.
 
-In practice these should usually be calculated with $h(r) =  g(r) - 1$, since the mean-field contributions (i.e. the above
-with $g(r) = 1$) can usually be calculated analytically.  Note that
-in this case an integration by parts shows that the two integrals are
-actually the same, and are essentially equal to the value of the
-potential at the origin in reciprocal space: 
+In practice these should usually be calculated with $h(r) = g(r) - 1$,
+since the mean-field contributions (i.e. the above with $g(r) = 1$)
+can usually be calculated analytically.  Note that in this case an
+integration by parts shows that the two integrals are actually the
+same, and are essentially equal to the value of the potential at the
+origin in reciprocal space:
 ```math
 \frac{2\pi\rho^2}{3}\int_0^\infty \text{d}r\,r^3 f(r)
 =2\pi\rho^2\int_0^\infty \text{d}r\, r^2\, v(r)
@@ -164,25 +165,27 @@ potential at the origin in reciprocal space:
 =\frac{\rho^2}{2}\,v(q=0)\,.
 ```
 
-2πρ<sup>2</sup>/3
-∫<sub>0</sub><sup>∞</sup> d*r* *r*<sup>3</sup> *f*(*r*) =
-2πρ<sup>2</sup> ∫<sub>0</sub><sup>∞</sup> d*r* *r*<sup>2</sup>
-*v*(*r*) = ρ<sup>2</sup>/2 ∫ d<sup>3</sup>**r** *v*(*r*) =
-ρ<sup>2</sup>/2 *v*(*q*=0).
-
 #### Compressibility
 
 Eq. (2.6.12) in Hansen and McDonald shows that in units of
-*k*<sub>B</sub>*T* the isothermal compressibility satisfies ρ
-χ<sub>T</sub> = 1 + 4πρ ∫<sub>0</sub><sup>∞</sup> d*r* *r*<sup>2</sup>
-*h*(*r*) where χ<sub>T</sub> = − (1/*V*) ∂*V*/∂*p*.  In terms of the
-EoS, this last expression can be written as χ<sub>T</sub><sup>−1</sup>
-= ρ d*p*/dρ.  Further, in reciprocal space the OZ equation (above) can
-be written as
+$`k_\text{B} T`$ the isothermal compressibility satisfies
+```math
+\rho\xhi_\text{T} = 1 +4\pi\rho\int_0^\infty \text{d}r\,
+r^2\,h(r)
+```
 
-* [1 + ρ *h*(*q*)] [1 − ρ *c*(*q*)] = 1 .
-
-Employing this at *q* = 0, one therefore obtains
+where $`\chi_\text{T} = - (1/V) \partial V/\partial p`$.
+In terms of the EoS, this last expression can be written as
+$`\chi_\text{T}^{-1} = \rho\,\text{d}p/\text{d}\rho`$.
+Further, in reciprocal space the OZ equation (above) can be written as
+```math
+[1+\rho\,h(q)]\,[1-\rho\,c(q)] = 1\,.
+```
+Employing this at $q = 0$, one therefore obtains
+```math
+\frac{\text{d}p}{\text{d}\rho = [\rho\chi_\text{T}]^{-1}
+=1-4\pi\rho\int_0^\infty \text{d}r\, r^2\, c(r)\,.
+```
 
 * d*p*/dρ = [ρχ<sub>T</sub>]<sup>−1</sup> = 1 − 4πρ
   ∫<sub>0</sub><sup>∞</sup> d*r* *r*<sup>2</sup> *c*(*r*) .
