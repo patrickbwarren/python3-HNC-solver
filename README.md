@@ -130,8 +130,8 @@ Once converged, the pair correlation function and static structure
 factor can be found from:
 ```math
 \begin{align}
-g(r) &= 1 + h(r) = 1 + e(r) + c(r)\,,\\
-S(q) &= 1 + \rho\,h(q) = 1 + \rho\,[e(q) + c(q)]\,.
+&g(r) = 1 + h(r) = 1 + e(r) + c(r)\,,\\
+&S(q) = 1 + \rho\,h(q) = 1 + \rho\,[e(q) + c(q)]\,.
 \end{align}
 ```
 ### Thermodynamics
@@ -141,19 +141,14 @@ S(q) &= 1 + \rho\,h(q) = 1 + \rho\,[e(q) + c(q)]\,.
 Thermodynamic quantities can also now be computed, for example the excess
 energy density and virial pressure follow from Eqs. (2.5.20) and (2.5.22) in
 Hansen and McDonald, "Theory of Simple Liquids" (3rd edition) as:
-
 ```math
-e = 3\rho/2 + 2\pi\rho^2 \int_0^\infty \text{d}r\,
-r^2\,v(r)\,g(r)\,,\\
+\begin{align}
+&e = 3\rho/2 + 2\pi\rho^2 \int_0^\infty \text{d}r\,r^2 v(r)\,g(r)\,,\\
+&p = \rho + 2\pi\rho^2/3\int_0^\infty \text{d}r\,r^3 f(r)\,g(r)
+\end{align}
 ```
-
-* *e* = 3ρ/2 + 2πρ<sup>2</sup> ∫<sub>0</sub><sup>∞</sup> d*r*
-  *r*<sup>2</sup> *v*(*r*) *g*(*r*) ;
-* *p* = ρ + 2πρ<sup>2</sup>/3 ∫<sub>0</sub><sup>∞</sup> d*r*
-  *r*<sup>3</sup> *f*(*r*) *g*(*r*) where *f*(*r*) = − d*v*/d*r* ,
-
-where the first terms here are the ideal contributions, in units of
-*k*<sub>B</sub>*T*.
+where $f(r) = -\text{d}v/\text{d}r$. The first terms here are the
+ideal contributions, in units of $k_\text{B} T$.
 
 In practice these should usually be calculated with *h*(*r*) =
 *g*(*r*) − 1, since the mean-field contributions (*i. e.* the above
