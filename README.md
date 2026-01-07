@@ -55,7 +55,7 @@ object (`*.so`) dynamically-linked library from
 made acessible to `dpd_demo.py`.  This can be done for example by
 copying `oz.pyf` and `oz.*.so` from
 [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC)
-(avaliable after running `make`) to the directory containing
+(available after running `make`) to the directory containing
 `dpd_demo.py`.
 
 The other codes are all experimental, and under development:
@@ -316,8 +316,10 @@ If the functions have radial symmetry, these reduce to the forward and
 backward Fourier-Bessel transforms
 ```math
 \begin{align}
-&g(q)=\frac{4\pi}{q}\int_0^\infty\!\!\text{d}r\,r\,f(r)\,\sin\,qr \,,\\
-&f(r)=\frac{1}{2\pi^2r}\int_0^\infty\!\!\text{d}q\,q\,f(q)\,\sin\,qr \,.
+&g(q)=\frac{4\pi}{q}\int_0^\infty\!\!
+\text{d}r\,r\,f(r)\,\sin\,qr \,,\\
+&f(r)=\frac{1}{2\pi^2\,r}\int_0^\infty\!\!
+\text{d}q\,q\,f(q)\,\sin\,qr \,.
 \end{align}
 ```
 From the [FFTW
