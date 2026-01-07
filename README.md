@@ -121,10 +121,12 @@ second CPU time).
 
 #### Initial guess
 
-A suitable initial guess for soft potentials if the solver is not
-warmed up is $c(r) = -v(r)$ ; this is the random-phase approximation
-(RPA), which for systems without hard cores is equivalent to the mean
-spherical approximation (MSA).
+A suitable initial guess for soft potentials is $c(r) = -v(r)$ ; this
+is the random-phase approximation (RPA), which for systems without
+hard cores is equivalent to the mean spherical approximation (MSA).
+If a similar problem has already been solved then it is often
+convenient to use the previous solution as the starting point (the
+solver has been 'warmed up' as it were).  This is the default approach.
 
 ### Structural properties
 
@@ -133,7 +135,7 @@ factor can be found from:
 ```math
 \begin{align}
 &g(r) = 1 + h(r) = 1 + e(r) + c(r)\,,\\
-&S(q) = 1 + \rho h(q) = 1 + \rho\,[e(q) + c(q)]\,.
+&S(q) = 1 + \rho h(q) = 1 + \rho[e(q) + c(q)]\,.
 \end{align}
 ```
 ### Thermodynamics
@@ -145,7 +147,7 @@ energy density and virial pressure follow from Eqs. (2.5.20) and (2.5.22) in
 Hansen and McDonald, "Theory of Simple Liquids" (3rd edition) as:
 ```math
 \begin{align}
-&e = \frac{3\rho}{2} + 2\pi\rho^2 
+&e = \frac{3}{2}\rho + 2\pi\rho^2 
 \int_0^\infty \text{d}r\,r^2\, v(r)\,g(r)\,,\\
 &p = \rho + \frac{2\pi\rho^2}{3}
 \int_0^\infty \text{d}r\,r^3 f(r)\,g(r)
