@@ -206,9 +206,7 @@ r^2\Big[\frac{1}{2}h(h-c)-c\Bigr]\,.
 Here the reference standard state corresponds to $\rho = 1$.  Since
 the Gibbs-Duhem relation in the form $`\text{d}p=\rho\,\text{d}\mu`$
 can be integrated to find the pressure, this affords another route to
-the EoS: the chemical potential route.  The free energy density can
-then be accessed by $`f=\rho\,\mu-p`$, in contrast to the more generic
-coupling constant integration method described next.
+the EoS: the chemical potential route.
 
 #### Free energy and coupling constant integration
 
