@@ -307,9 +307,9 @@ pair
 ```math
 \begin{align}
 &g(\mathbf{q}) = \int\!\text{d}^3\mathbf{r}\,
-\exp(-i\mathbf{q}\cdot\mathbf{r})\,f(\mathbf{r})\,,\\
+e^{-i\mathbf{q}\cdot\mathbf{r}}\,f(\mathbf{r})\,,\\
 &f(\mathbf{r}) = \frac{1}{(2\pi)^3}\int\!\text{d}^3\mathbf{q}\,
-\exp(i\mathbf{q}\cdot\mathbf{r})\,g(\mathbf{q})\,,\\
+e^{i\mathbf{q}\cdot\mathbf{r}}\,g(\mathbf{q})\,,\\
 \end{align}
 ```
 If the functions have radial symmetry, these reduce to the forward and
