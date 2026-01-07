@@ -91,18 +91,18 @@ g(r)=\exp[-v(r)+h(r)-c(r)]
 ```
 using Picard iteration.
 
-Here ρ is the number density, *v*(*r*) is the potential in units of
-*k*<sub>B</sub>*T*, *g*(*r*) is the pair correlation function,
-*h*(*r*) = *g*(*r*) − 1 is the total correlation function, and
-*c*(*r*) is the direct correlation function which is defined by the OZ
-equation.  In practice the OZ equation and the HNC closure are written
-and solved iteratively (see next) in terms of the indirect correlation
-function *e*(*r*) = *h*(*r*) − *c*(*r*).
+Here $\rho$ is the number density, $v(r)$ is the potential in units of
+$`k_\text{B}T`$, $g(r)$ is the pair correlation function, $h(r) =
+g(r) - 1$ is the total correlation function, and $c(r)$ is the direct
+correlation function which is defined by the OZ equation.  In practice
+the OZ equation and the HNC closure are written and solved iteratively
+(see next) in terms of the indirect correlation function $e(r) =
+h(r) - c(r)$.
 
-An initial guess if the solver is not warmed up is *c*(*r*) = −
-*v*(*r*) ; this is the random-phase approximation (RPA), which for
-systems without hard cores is equivalent to the mean spherical
-approximation (MSA).
+An initial guess if the solver is not warmed up is $c(r) = -v(r)$ ;
+this is the random-phase approximation (RPA), which for systems
+without hard cores is equivalent to the mean spherical approximation
+(MSA).
 
 #### Algorithm
 
