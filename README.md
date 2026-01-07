@@ -222,7 +222,7 @@ $`F = F_0 + \int_0^1\text{d}\lambda\,
 If $\lambda$ is simply a multiplicative scaling, then
 $\partial U/\partial\lambda = U$ and we have a _coupling constant
 integration_ scheme, 
-$`F = F_0 + \int_0^1\text{d}\lambda\,\langle U\rangle_\lambda`$
+$`F = F_0 + \int_0^1\,\text{d}\lambda\,\langle U\rangle_\lambda`$
 where the indicated average should be taken with the potential energy
 scaled by a factor $\lambda$. In this scheme $`F_0`$ is just the free
 energy of an ideal gas of non-interacting particles since
@@ -231,16 +231,16 @@ $\lambda\to0$ switches off the interactions.
 Since the free energy can be differentiated to find the pressure, this
 is the basis for the so-called energy route to the EoS.  For example,
 if the free energy density is available as a function of density,
-$f(\rho)$, the pressure follows from $p = -\partial F/\partial V$ as
-$`p = \rho^2\,\text{d}(f/\rho)/\text{d}\rho`$ where $f/\rho$ is the
-free energy per particle.  It also follows that the compressibility
+$f(\rho)$, the pressure follows from 
+$`p = -\partial F/\partial V = \rho\,\text{d}f/\text{d}\rho-f`$.
+It also follows that the compressibility
 $`[\rho\chi_\text{T}]^{-1}=\rho\,\text{d}^2f/\text{d}\rho^2`$.
 
 The mean-field contribution to this can be calculated immediately
 since the contribution to the energy density 
 $`2\pi\rho^2\int_0^\infty\text{d}r\,r^2\,v(r)`$
 is independent of $\lambda$ and therefore
-$`\int_0^1\text{d}\lambda`$
+$`\int_0^1\,\text{d}\lambda`$
 applied to this term trivially evaluates to the same.  Furthermore,
 since this term is $\propto\rho^2$, following the indicated route to
 the pressure shows that this exact same term appears there too.  So
