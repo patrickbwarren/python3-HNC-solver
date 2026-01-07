@@ -82,15 +82,13 @@ Other files herein:
 What's being solved here is the Ornstein-Zernike (OZ) equation in
 reciprocal space in the form
 ```math
-h(q) = c(q) + \rho h(q) c(q)
+h(q) = c(q) + \rho\, h(q)\, c(q)
 ```
-* *h*(*q*) = *c*(*q*) + ρ *h*(*q*) *c*(*q*) ,
-
 in combination with the hypernetted-chain (HNC) closure in real space
 as
-
-* *g*(*r*) = exp[ − *v*(*r*) + *h*(*r*) − *c*(*r*)] ,
-
+```math
+g(r)=\exp[-v(r)+h(r)-c(r)]
+```
 using Picard iteration.
 
 Here ρ is the number density, *v*(*r*) is the potential in units of
