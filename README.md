@@ -275,38 +275,21 @@ solvent case reduces to the above one-component problem, which can be
 solved as already indicated.  The off-diagonal OZ relations become
 ```math
 \begin{align}
-&h_{01}(q) v= c_{01}(q)+\rho_0\,h_{01}(q)\,c_{00}(q)\,,\\
-&h_{01}(q) v= c_{01}(q)+\rho_0\,h_{00}(q)\,c_{01}(q)\,.
+&h_{01}(q) = c_{01}(q)+\rho_0\,h_{01}(q)\,c_{00}(q)\,,\\
+&h_{01}(q) = c_{01}(q)+\rho_0\,h_{00}(q)\,c_{01}(q)\,.
 \end{align}
 ```
-
-
-* *h*<sub>01</sub>(*q*) = *c*<sub>01</sub>(*q*) +
-ρ<sub>0</sub> *h*<sub>01</sub>(*q*) *c*<sub>00</sub>(*q*) ,
-
-* *h*<sub>01</sub>(*q*) = *c*<sub>01</sub>(*q*) +
-ρ<sub>0</sub> *h*<sub>00</sub>(*q*) *c*<sub>01</sub>(*q*) .
-
 The equivalence between the two can be proven from the OZ relation for
 the solvent.  These should be supplemented by the HNC closure for the
 off-diagonal case
 ```math
 g_{01}(r) = \exp[-v_{01}(r)+h_{01}(r)-c_{01}(r)]\,.
 ```
-
-* *g*<sub>01</sub>(*r*) = exp[ − *v*<sub>01</sub>(*r*) +
-*h*<sub>01</sub>(*r*) − *c*<sub>01</sub>(*r*)] .
-
 The second off-diagonal OZ relation can be written as 
 ```math
-h_{01}(q) = c_{01}(q)\,[`+\rho_0\,h_{00}(q)]
+h_{01}(q) = c_{01}(q)\,[1+\rho_{0}\,h_{00}(q)]
 =S_{00}(q)\,c_{01}(q)\,,
 ```
-
-* *h*<sub>01</sub>(*q*) = *c*<sub>01</sub>(*q*) 
-(1 + ρ<sub>0</sub> *h*<sub>00</sub>(*q*)) 
-= *S*<sub>00</sub>(*q*) *c*<sub>01</sub>(*q*) ,
-
 where $`S_{00}(q)`$ is the solvent structure factor.  It follows that
 the solute problem can be solved be re-purposing the exact same
 algorithm as for the one-component system, replacing the OZ equation
@@ -314,10 +297,6 @@ step by the assignment,
 ```math
 e_{01}(q)=S_{00}(q)\,c_{01}(q)-c_{01}(q)\,.
 ```
-
-* *e*<sub>01</sub>(*q*) = *S*<sub>00</sub>(*q*) *c*<sub>01</sub>(*q*)
-− *c*<sub>01</sub>(*q*) .
-
 Applications of this infinitely-dilute solute limit are in the process
 of being investigated.
 
