@@ -316,8 +316,8 @@ If the functions have radial symmetry, these reduce to the forward and
 backward Fourier-Bessel transforms
 ```math
 \begin{align}
-&g(q)=\frac{4\pi}{q}\int_0^\infty\!\!\text{d}r\,r\,f(r)\,\sin(qr)\,,\\
-&f(r)=\frac{1}{2\pi^2r}\int_0^\infty\!\!\text{d}q\,q\,f(q)\,\sin(qr)\,.
+&g(q)=\frac{4\pi}{q}\int_0^\infty\!\!\text{d}r\,r\,f(r)\,\sin qr \,,\\
+&f(r)=\frac{1}{2\pi^2r}\int_0^\infty\!\!\text{d}q\,q\,f(q)\,\sin qr \,.
 \end{align}
 ```
 From the [FFTW
@@ -331,7 +331,9 @@ where $n$ is the common length of the arrays $`X_j`$ and $1Y_k`$.
 To cast this into the right form, set $`\Delta r\times\Delta q=\pi/(n+1)`$
 and assign $`r_j=(j+1)\times\Delta r`$ for $j=0$ to $n-1$, and
 likewise  $`q_k=(k+1)\times\Delta q`$ for $k=0$ to $n-1$, so that
-
+```math
+Y_k=2\sum_{j=0}^{n-1}X_j\,\sin q_k\,r_j\,.
+```
 
 *Y*<sub>*k*</sub> = 2 ∑<sub>*j*=0</sub><sup>*n*−1</sup>
 *X*<sub>*j*</sub> sin *q*<sub>*k*</sub>*r*<sub>*j*</sub> .
