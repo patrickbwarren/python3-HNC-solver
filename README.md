@@ -326,17 +326,12 @@ documentation](https://www.fftw.org/fftw3_doc/1d-Real_002dodd-DFTs-_0028DSTs_002
 ```math
 Y_k=2\sum_{j=0}^{n-1} X_j\,\sin\Bigl[\frac{\pi(j+1)(k+1)}{n+1}\Bigr]\,,
 ```
+where $n$ is the common length of the arrays $`X_j`$ and $1Y_k`$.
 
-*Y*<sub>*k*</sub> = 2 ∑<sub>*j*=0</sub><sup>*n*−1</sup>
-*X*<sub>*j*</sub> sin[π (*j*+1) (*k*+1) / (*n*+1)] ,
+To cast this into the right form, set $`\Delta r\times\Delta q=\pi/(n+1)`$
+and assign $`r_j=(j+1)\times\Delta r`$ for $j=0$ to $n-1$, and
+likewise  $`q_k=(k+1)\times\Delta q`$ for $k=0$ to $n-1$, so that
 
-where *n* is the common length of the arrays *X*<sub>*j*</sub> and
-*Y*<sub>*k*</sub>.
-
-To cast this into the right form, set Δ*r* × Δ*q* = π / (*n*+1) and
-assign *r*<sub>*j*</sub> = (*j*+1) × Δ*r* for *j* = 0 to *n*−1, and
-likewise *q*<sub>*k*</sub> = (*k*+1) × Δ*q* for *k* = 0 to *n*−1, so
-that
 
 *Y*<sub>*k*</sub> = 2 ∑<sub>*j*=0</sub><sup>*n*−1</sup>
 *X*<sub>*j*</sub> sin *q*<sub>*k*</sub>*r*<sub>*j*</sub> .
