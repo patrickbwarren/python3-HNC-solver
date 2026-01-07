@@ -287,15 +287,14 @@ g_{01}(r) = \exp[-v_{01}(r)+h_{01}(r)-c_{01}(r)]\,.
 ```
 The second off-diagonal OZ relation can be written as 
 ```math
-h_{01}(q) = c_{01}(q)\,[1+\rho_{0}\,h_{00}(q)]
-=S_{00}(q)\,c_{01}(q)\,,
+h_{01}(q) = [1+\rho_{0}\,h_{00}(q)]\,c_{01}(q) = S_{00}(q)\,c_{01}(q)\,,
 ```
 where $`S_{00}(q)`$ is the solvent structure factor.  It follows that
 the solute problem can be solved be re-purposing the exact same
 algorithm as for the one-component system, replacing the OZ equation
 step by the assignment,
 ```math
-e_{01}(q)=S_{00}(q)\,c_{01}(q)-c_{01}(q)\,.
+e_{01}(q) = [S_{00}(q)-1]\,c_{01}(q)\,.
 ```
 Applications of this infinitely-dilute solute limit are in the process
 of being investigated.
