@@ -230,9 +230,9 @@ Since the free energy can be differentiated to find the pressure, this
 is the basis for the so-called energy route to the EoS.  For example,
 if the free energy density is available as a function of density,
 $f(\rho)$, the pressure follows from $p = -\partial F/\partial V$ as
-$p = \rho^2\text{d}(f/\rho)/\text{d}\rho$ where $f/\rho$ is the free
-energy per particle.  It also follows that the compressibility
-$`[\rho\chi_\text{T}]=\rho\,\text{d}^2f/\text{d}\rho^2`$.
+$`p = \rho^2\,\text{d}(f/\rho)/\text{d}\rho`$ where $f/\rho$ is the
+free energy per particle.  It also follows that the compressibility
+$`[\rho\chi_\text{T}]^{-1}=\rho\,\text{d}^2f/\text{d}\rho^2`$.
 
 The mean-field contribution to this can be calculated immediately
 since the contribution to the energy density 2πρ<sup>2</sup>
