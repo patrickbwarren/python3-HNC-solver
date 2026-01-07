@@ -245,8 +245,8 @@ $`\int_0^1\,\text{d}\lambda`$
 applied to this term trivially evaluates to the same.  Furthermore,
 since this term is $\propto\rho^2$, following the indicated route to
 the pressure shows that this exact same term appears there too.  So
-the mean-field contribution to the pressure here is the same as the
-virial route mean-field pressure.
+the mean-field contribution to the pressure by coupling constant
+integration is the same as the virial route mean-field pressure.
 
 For the non-mean-field correlation contribution we sketch the algorithm:
 
