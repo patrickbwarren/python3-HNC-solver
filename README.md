@@ -152,12 +152,19 @@ Hansen and McDonald, "Theory of Simple Liquids" (3rd edition) as:
 where $f(r) = -\text{d}v/\text{d}r$. The first terms here are the
 ideal contributions, in units of $k_\text{B} T$.
 
-In practice these should usually be calculated with *h*(*r*) =
-*g*(*r*) − 1, since the mean-field contributions (*i. e.* the above
-with *g*(*r*) = 1) can usually be calculated analytically.  Note that
+In practice these should usually be calculated with $h(r) =  g(r) - 1$, since the mean-field contributions (i.e. the above
+with $g(r) = 1$) can usually be calculated analytically.  Note that
 in this case an integration by parts shows that the two integrals are
 actually the same, and are essentially equal to the value of the
-potential at the origin in reciprocal space: 2πρ<sup>2</sup>/3
+potential at the origin in reciprocal space: 
+```math
+\frac{2\pi\rho^2}{3}\int_0^\infty \text{d}r\,r^3 f(r)
+=2\pi\rho^2\int_0^\infty \text{d}r\, r^2 v(r)
+=\frac{\rho^2}{2}\int \text{d}^3\mathbf{r}\,v(r)
+=\frac{\rho^2}{2}\,v(q=0)\,.
+```
+
+2πρ<sup>2</sup>/3
 ∫<sub>0</sub><sup>∞</sup> d*r* *r*<sup>3</sup> *f*(*r*) =
 2πρ<sup>2</sup> ∫<sub>0</sub><sup>∞</sup> d*r* *r*<sup>2</sup>
 *v*(*r*) = ρ<sup>2</sup>/2 ∫ d<sup>3</sup>**r** *v*(*r*) =
