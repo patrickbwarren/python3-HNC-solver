@@ -332,13 +332,13 @@ To cast this into the right form, set $`\Delta r\times\Delta q=\pi/(n+1)`$
 and assign $`r_j=(j+1)\times\Delta r`$ for $j=0$ to $n-1$, and
 likewise  $`q_k=(k+1)\times\Delta q`$ for $k=0$ to $n-1$, so that
 ```math
-Y_k=2\sum_{j=0}^{n-1}X_j\,\sin\,q_k\,r_j\,.
+Y_k=2\sum_{j=0}^{n-1}X_j\,\sin\,q_kr_j\,.
 ```
-
-*Y*<sub>*k*</sub> = 2 ∑<sub>*j*=0</sub><sup>*n*−1</sup>
-*X*<sub>*j*</sub> sin *q*<sub>*k*</sub>*r*<sub>*j*</sub> .
-
 For the desired Fourier-Bessel forward transform  we can then write
+```math
+g(q_k) = \frac{2\pi\Delta r}{q_k}\times
+2\sum_{j=0}^{n-1}r_j\,f(r_j)\,\sin\,q_kr_j\,,
+```
 
 *g*(*q*<sub>*k*</sub>) = 2 π Δ*r* / *q*<sub>*k*</sub> × 2
 ∑<sub>*j*=0</sub><sup>*n*−1</sup> *r*<sub>*j*</sub>
