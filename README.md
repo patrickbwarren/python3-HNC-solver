@@ -147,7 +147,7 @@ energy density and virial pressure follow from Eqs. (2.5.20) and (2.5.22) in
 Hansen and McDonald, "Theory of Simple Liquids" (3rd edition) as:
 ```math
 \begin{align}
-&e = \frac{3}{2}\rho + 2\pi\rho^2 
+&e = \frac{3}{2}\,\rho + 2\pi\rho^2 
 \int_0^\infty \text{d}r\,r^2\, v(r)\,g(r)\,,\\
 &p = \rho + \frac{2\pi\rho^2}{3}
 \int_0^\infty \text{d}r\,r^3 f(r)\,g(r)
@@ -199,7 +199,7 @@ A result peculiar to the HNC is the closed-form expression for the
 chemical potential given in Eq. (4.3.21) in Hansen and McDonald (I
 thank Andrew Masters for drawing my attention to this),
 ```math
-\frac{\mu}{k_\text{B}T}=\ln\rho
+\frac{\mu}{k_\text{B}T}=\ln\,\rho
 +4\pi\rho\int_0^\infty\!\!\text{d}r\,
 r^2\Big[\frac{1}{2}h(h-c)-c\Bigr]\,.
 ```
