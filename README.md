@@ -235,14 +235,15 @@ free energy per particle.  It also follows that the compressibility
 $`[\rho\chi_\text{T}]^{-1}=\rho\,\text{d}^2f/\text{d}\rho^2`$.
 
 The mean-field contribution to this can be calculated immediately
-since the contribution to the energy density 2πρ<sup>2</sup>
-∫<sub>0</sub><sup>∞</sup> d*r* *r*<sup>2</sup> *v*(*r*) is independent
-of λ and therefore ∫<sub>0</sub><sup>1</sup> dλ applied to this term
-trivially evaluates to the same.  Furthermore, since this term is ∝
-ρ<sup>2</sup>, following the indicated route to the pressure shows
-that this exact same term appears there too.  So the mean-field
-contribution to the pressure here is the same as the virial route
-mean-field pressure.
+since the contribution to the energy density 
+$`2\pi\rho^2\int_0^\infty\text{d}r\,r^2\,v(r)`$
+is independent of $\lambda$ and therefore
+$`\int_0^1\text{d}\lambda`$
+applied to this term trivially evaluates to the same.  Furthermore,
+since this term is $\propto\rho^2$, following the indicated route to
+the pressure shows that this exact same term appears there too.  So
+the mean-field contribution to the pressure here is the same as the
+virial route mean-field pressure.
 
 For the non-mean-field correlation contribution we sketch the algorithm:
 
