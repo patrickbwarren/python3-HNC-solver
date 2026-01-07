@@ -99,11 +99,6 @@ the OZ equation and the HNC closure are written and solved iteratively
 (see next) in terms of the indirect correlation function $e(r) =
 h(r) - c(r)$.
 
-An initial guess if the solver is not warmed up is $c(r) = -v(r)$ ;
-this is the random-phase approximation (RPA), which for systems
-without hard cores is equivalent to the mean spherical approximation
-(MSA).
-
 #### Algorithm
 
 Given an initial guess $c(r)$, the solver implements the following
@@ -124,6 +119,13 @@ for a grid size $N_g = 2^{12} = 8192$ with a grid spacing $\Delta r =
 0.02$ is achieved with a few hundred iterations (a fraction of a
 second CPU time).
 
+#### Initial guess
+
+A suitable initial guess for soft potentials if the solver is not
+warmed up is $c(r) = -v(r)$ ; this is the random-phase approximation
+(RPA), which for systems without hard cores is equivalent to the mean
+spherical approximation (MSA).
+
 ### Structural properties
 
 Once converged, the pair correlation function and static structure
@@ -131,7 +133,7 @@ factor can be found from:
 ```math
 \begin{align}
 &g(r) = 1 + h(r) = 1 + e(r) + c(r)\,,\\
-&S(q) = 1 + \rho\,h(q) = 1 + \rho\,[e(q) + c(q)]\,.
+&S(q) = 1 + \rho h(q) = 1 + \rho\,[e(q) + c(q)]\,.
 \end{align}
 ```
 ### Thermodynamics
