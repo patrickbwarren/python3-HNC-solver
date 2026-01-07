@@ -197,18 +197,14 @@ thank Andrew Masters for drawing my attention to this),
 ```math
 \frac{\mu}{k_\text{B}T}=\ln\rho
 +4\pi\rho\int_0^\infty\!\text{d}r\,
-r^2\Big[\frac{1}{2}h(h-c)-c\bigr]\,.
+r^2\Big[\frac{1}{2}h(h-c)-c\Bigr]\,.
 ```
-
-* μ / *k*<sub>B</sub>*T* = ln ρ + 4πρ ∫<sub>0</sub><sup>∞</sup> d*r*
-  *r*<sup>2</sup> [ ½ *h* (*h* − *c*) − *c* ] .
-
-Here the reference standard state corresponds to ρ = 1.  Since the
-Gibbs-Duhem relation in the form d*p* = ρ dμ can be integrated to find
-the pressure, this affords another route to the EoS: the chemical
-potential route.  The free energy can then be accessed by *f* = ρ μ −
-*p*, in contrast to the more generic coupling constant integration
-method described next.
+Here the reference standard state corresponds to $\rho = 1$.  Since
+the Gibbs-Duhem relation in the form $\text{d}p=\rho\,\text{d}\mu$ can
+be integrated to find the pressure, this affords another route to the
+EoS: the chemical potential route.  The free energy density can then
+be accessed by $f=\rho\,\mu-p$, in contrast to the more generic
+coupling constant integration method described next.
 
 #### Free energy and coupling constant integration
 
