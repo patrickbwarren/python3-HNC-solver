@@ -129,10 +129,10 @@ second CPU time).
 Once converged, the pair correlation function and static structure
 factor can be found from:
 ```math
-g(r) = 1 + h(r) \>\text{where}\> h(r) = e(r) + c(r)\,,
+g(r) = 1 + h(r) = 1 + e(r) + c(r)\,,
 ```
 ```math
-S(q) = 1 + \rho\,h(q) \>\text{where}\> h(q) = e(q) + c(q)\,.
+S(q) = 1 + \rho\,h(q) = 1 + \rho\,[e(q) + c(q)]\,.
 ```
 
 * *g*(*r*) = 1 + *h*(*r*) where *h*(*r*) = *e*(*r*) + *c*(*r*) ;
