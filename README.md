@@ -278,8 +278,8 @@ solvent case reduces to the above one-component problem, which can be
 solved as already indicated.  The off-diagonal OZ relations become
 ```math
 \begin{align}
-&h_{01}(q) = c_{01}(q)+\rho_0\,h_{01}(q)\,c_{00}(q)\,,\\
-&h_{01}(q) = c_{01}(q)+\rho_0\,h_{00}(q)\,c_{01}(q)\,.
+&h_{01}(q) = c_{01}(q)+\rho_{0}\,h_{01}(q)\,c_{00}(q)\,,\\
+&h_{01}(q) = c_{01}(q)+\rho_{0}\,h_{00}(q)\,c_{01}(q)\,.
 \end{align}
 ```
 The equivalence between the two can be proven from the OZ relation for
