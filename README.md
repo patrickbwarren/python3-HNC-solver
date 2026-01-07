@@ -320,16 +320,12 @@ backward Fourier-Bessel transforms
 &f(r)=\frac{1}{2\pi^2r}\int_0^\infty\!\!\text{d}q\,q\,f(q)\,\sin(qr)\,.
 \end{align}
 ```
-
-*g*(*q*) = 4π / *q* ∫<sub>0</sub><sup>∞</sup> 
-d*r* *r* *f*(*r*) sin *qr* ,
-
-*f*(*r*) = 1 / (2π<sup>2</sup>*r*) ∫<sub>0</sub><sup>∞</sup> 
-d*q* *q* *g*(*q*) sin *qr* .
-
 From the [FFTW
 documentation](https://www.fftw.org/fftw3_doc/1d-Real_002dodd-DFTs-_0028DSTs_0029.html),
 `RODFT00` implements
+```math
+Y_k=2\sum_{j=0}^{n-1} X_j\.\sin\Bigl[\frac{\pi(j+1)(k+1)}{n+1}\,,
+```
 
 *Y*<sub>*k*</sub> = 2 ∑<sub>*j*=0</sub><sup>*n*−1</sup>
 *X*<sub>*j*</sub> sin[π (*j*+1) (*k*+1) / (*n*+1)] ,
