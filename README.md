@@ -194,6 +194,11 @@ find $p(\rho)$.  This is known as the compressibility route to the EoS.
 A result peculiar to the HNC is the closed-form expression for the
 chemical potential given in Eq. (4.3.21) in Hansen and McDonald (I
 thank Andrew Masters for drawing my attention to this),
+```math
+\frac{\mu}{k_\text{B}T}=\ln\rho
++4\pi\rho\int_0^\infty\!\text{d}r\,
+r^2\Big[\frac{1}{2}h(h-c)-c\bigr]\,.
+```
 
 * μ / *k*<sub>B</sub>*T* = ln ρ + 4πρ ∫<sub>0</sub><sup>∞</sup> d*r*
   *r*<sup>2</sup> [ ½ *h* (*h* − *c*) − *c* ] .
