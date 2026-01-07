@@ -81,7 +81,9 @@ Other files herein:
 
 What's being solved here is the Ornstein-Zernike (OZ) equation in
 reciprocal space in the form
-
+```math
+h(q) = c(q) + \rho h(q) c(q)
+```
 * *h*(*q*) = *c*(*q*) + ρ *h*(*q*) *c*(*q*) ,
 
 in combination with the hypernetted-chain (HNC) closure in real space
