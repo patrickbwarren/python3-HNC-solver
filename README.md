@@ -110,21 +110,20 @@ Given an initial guess *c*(*r*), the solver implements the following
 scheme (*cf*
 [SunlightHNC](https://github.com/patrickbwarren/SunlightHNC)):
 
-* Fourier-Bessel forward transform *c*(*r*) → *c*(*q*) ;
-* solve the OZ equation for *e*(*q*) = *c*(*q*) / [1 − ρ *c*(*q*)] −
-  *c*(*q*) ;
-* Fourier-Bessel back transform *e*(*q*) → *e*(*r*) ;
-* implement the HNC closure as *c*'(*r*) = exp[ − *v*(*r*) + *e*(*r*)]
-  − *e*(*r*) − 1 ;
-* replace *c*(*r*) by α *c*'(*r*) + (1−α) *c*(*r*) (Picard mixing step);
-* check for convergence by comparing *c*(*r*) and *c*'(*r*) ;
+* Fourier-Bessel forward transform $c(r) \to c(q)$ ;
+* solve the OZ equation for $e(q) = c(q) / [1-\rho\,c(q)]-c(q)$ ;
+* Fourier-Bessel back transform $e(q) \to e(r)$ ;
+* implement the HNC closure as $c'(r)=\exp[-v(r)+e(r)]-e(r)-1$ ;
+* replace $c(r)$ by $\alpha\,c'(r)+(1-\alpha)\,c(r)$
+(Picard mixing step);
+* check for convergence by comparing $c(r)$ and $c'(r)$ ;
 * if not converged, repeat.
 
-Typically this works for a Picard mixing fraction α = 0.2, and for
-standard DPD for example convergence to an accuracy of
-10<sup>−12</sup> for a grid size *N*<sub>g</sub> = 2<sup>12</sup> =
-8192 with a grid spacing Δ*r* = 0.02 is achieved with a few hundred
-iterations (a fraction of a second CPU time).
+Typically this works for a Picard mixing fraction $\alpha = 0.2$, and
+for standard DPD for example convergence to an accuracy of $10^{-12}$
+for a grid size $N_g = 2^{12} = 8192$ with a grid spacing $\Delta r =
+0.02$ is achieved with a few hundred iterations (a fraction of a
+second CPU time).
 
 ### Structural properties
 
