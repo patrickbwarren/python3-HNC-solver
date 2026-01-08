@@ -331,7 +331,7 @@ documentation](https://www.fftw.org/fftw3_doc/1d-Real_002dodd-DFTs-_0028DSTs_002
 ```math
 Y_k=2\sum_{j=0}^{n-1} X_j\,\sin\Bigl[\frac{\pi(j+1)(k+1)}{n+1}\Bigr]\,,
 ```
-where $n$ is the common length of the arrays $`X_j`$ and $1Y_k`$.
+where $n$ is the common length of the arrays $`X_j`$ and $`Y_k`$.
 
 To cast this into the right form, set $`\Delta r\times\Delta q=\pi/(n+1)`$
 and assign $`r_j=(j+1)\times\Delta r`$ for $j=0$ to $n-1$, and
