@@ -65,6 +65,7 @@ The other codes are all experimental, and under development:
 * `ndpd_rpa.py` : implement the RPA and EXP approximations for the EoS;
 * `ndpd_wca.py` : implement Weeks-Chandler-Andersen (WCA) high-temperature approx for EoS;
 * `ndpd_liquidus.py` : estimate the liquidus as the point where *p* = 0; condor-enabled;
+
 * `mdpd_hnc.py` : various HNC variants for many-body (MB) DPD; condor-enabled;
 * `mdpd_dft.py` : 'vanilla' DFT for MB DPD;
 * `mdpd_percus.py` : Percus-like DFT for MB DPD;
