@@ -61,7 +61,7 @@ copying `oz.pyf` and `oz.*.so` from
 Codes related to the nDPD model in
 [Sokhan *et al.*, Soft Matter **19**, 5824 (2023)](https://doi.org/10.1039/D3SM00835E);
 
-* `ndpd_demo.py` : *n*DPD, as in the above paper;
+* `ndpd_demo.py` : vanilla nDPD, as in the above paper;
 * `ndpd_rpa.py` : implement the RPA and EXP approximations for the EoS;
 * `ndpd_wca.py` : implement Weeks-Chandler-Andersen (WCA) high-temperature approx for EoS;
 * `ndpd_liquidus.py` : estimate the liquidus as the point where *p* = 0; condor-enabled;
