@@ -58,21 +58,23 @@ copying `oz.pyf` and `oz.*.so` from
 (available after running `make`) to the directory containing
 `dpd_demo.py`.
 
-The other codes are all experimental, and under development:
+Codes related to the nDPD model in
+[Sokhan *et al.*, Soft Matter **19**, 5824 (2023)](https://doi.org/10.1039/D3SM00835E);
 
-* `ndpd_demo.py` : *n*DPD, as in [Sokhan *et al.*,
-   Soft Matter **19**, 5824 (2023)](https://doi.org/10.1039/D3SM00835E);
+* `ndpd_demo.py` : *n*DPD, as in the above paper;
 * `ndpd_rpa.py` : implement the RPA and EXP approximations for the EoS;
 * `ndpd_wca.py` : implement Weeks-Chandler-Andersen (WCA) high-temperature approx for EoS;
 * `ndpd_liquidus.py` : estimate the liquidus as the point where *p* = 0; condor-enabled;
 
-* `mdpd_hnc.py` : various HNC variants for many-body (MB) DPD; condor-enabled;
-* `mdpd_dft.py` : 'vanilla' DFT for MB DPD;
-* `mdpd_percus.py` : Percus-like DFT for MB DPD;
-* `timing.py` : for measuring performance of condor DAGMan jobs.
+Other codes related to many-body DPD (MBDPD).
+
+* `mdpd_hnc.py` : various HNC variants for MBDPD; condor-enabled;
+* `mdpd_dft.py` : 'vanilla' DFT for MBDPD;
+* `mdpd_percus.py` : Percus-like DFT for MBDPD;
 
 Other files herein:
 
+* `timing.py` : for measuring performance of condor DAGMan jobs.
 * `solute_demo.ipynb` : jupyter notebook illustrating solute calculations;
 * `mu_dpd_hendrikse2025.csv` : solute excess chemical potential data digitised from Fig. 1 of
 [Hendrikse *et al.*, Phys. Chem. Chem. Phys. **27**, 1554-66 (2025)](https://doi.org/10.1039/D4CP03791J).
