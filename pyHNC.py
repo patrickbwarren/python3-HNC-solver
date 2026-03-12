@@ -339,7 +339,7 @@ def as_linspace(as_range):
         xarr = np.array([float(as_range)])
     return xarr
 
-def truncate_to_zero(v, r, rc):
+def truncate_to_zero(v, r, rc=1):
     '''Utility function to truncate a potential'''
     v[r>rc] = 0.0
     return v
