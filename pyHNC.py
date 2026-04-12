@@ -91,6 +91,7 @@ class PicardHNC:
         self.nmonitor = nmonitor
         self.converged = False
         self.warmed_up = False
+        self.iters = 0
         self.parstrings = [f'α = {self.alpha}', f'tol = {self.tol:0.1e}',
                            f'npicard = {self.npicard}']
         self.name = 'PicardHNC'
@@ -120,6 +121,7 @@ class PicardHNC:
                 print(f'{iter_s} error = {self.error:0.3e}')
             if self.converged:
                 break
+        self.iters = i
         if self.converged: 
             self.cr = cr_new # use the most recent calculation
             self.cq = self.grid.fourier_bessel_forward(cr)
@@ -129,11 +131,8 @@ class PicardHNC:
         else: # we leave it to the user to check if self.converged is False :-)
             pass
         if monitor:
-            if self.converged:
-                print(f'{self_name}: Picard converged')
-            else:
-                print(f'{self_name}: Picard iteration {i:3d}, error = {self.error:0.3e}')
-                print(f'{self_name}: Picard failed to converge')
+            status = 'converged' if self.converged else 'failed to converge'
+            print(f'{self_name}: Picard iteration {self.iters:3d}, error = {self.error:0.3e} [{status}]')
         return self # the user can name this 'soln' or something
 
 # Below, the above is sub-classed to redefine the OZ equation in terms
